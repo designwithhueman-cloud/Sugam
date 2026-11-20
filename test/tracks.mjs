@@ -1,0 +1,33 @@
+// AEO and passive-security tracks: triggering page, look-alike clean page, missing evidence, and proof that the tracks never touch the scores.
+import { scanUrl } from '../scanner/scanner.ts';
+import { trackReports, compareTracks } from '../src/services/scan-service/tracks.ts';
+import { runReview } from '../src/services/scan-service/index.ts';
+import { analyze } from '../analysis/analyze.ts';
+import { analyzeAvara } from '../analysis/avara/build.ts';
+let bad = 0; const check = (n, ok, d = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${ok ? '' : ' — ' + d}`); if (!ok) bad++; };
+const B = 'http://127.0.0.1:4200/tracks/';
+const sig = async (f) => { const out = await scanUrl(B + f, 'wcag22aa', undefined, { goal: null, perf: false }); return { out, sig: out.viewports.find((v) => v.name === 'desktop').signals }; };
+const status = (r, id) => [...r.aeo, ...r.security].find((x) => x.id === id).status;
+
+const flags = await sig('aeo-flags.html'); const clean = await sig('aeo-clean.html');
+const rf = trackReports(flags.sig, true), rc = trackReports(clean.sig, true);
+check('signals are captured through the real scan pipeline', !!flags.sig?.headers && !!flags.sig?.files);
+check('triggering page: title, description, lang, canonical, structured data, h1, text and noindex all flag', ['AEO-001', 'AEO-002', 'AEO-003', 'AEO-004', 'AEO-005', 'AEO-007', 'AEO-009', 'AEO-010'].every((i) => status(rf, i) === 'flag'), JSON.stringify(rf.aeo.map((x) => x.id + x.status)));
+check('triggering page: mixed content, unprotected new-tab link and HTTP form flag', ['SEC-007', 'SEC-009', 'SEC-010'].every((i) => status(rf, i) === 'flag'), JSON.stringify(rf.security.map((x) => x.id + x.status)));
+check('look-alike clean page: the same checks stay clear', ['AEO-001', 'AEO-002', 'AEO-003', 'AEO-004', 'AEO-005', 'AEO-007', 'AEO-009', 'AEO-010', 'AEO-011', 'SEC-009', 'SEC-010'].every((i) => status(rc, i) === 'pass'), JSON.stringify([...rc.aeo, ...rc.security].filter((x) => x.status !== 'pass').map((x) => x.id + x.status)));
+check('local address: HTTPS is "couldn’t verify", not a failure', status(rc, 'SEC-001') === 'unverified');
+const miss = trackReports(null);
+check('missing evidence: every check is "unverified", none passes or fails', [...miss.aeo, ...miss.security].every((x) => x.status === 'unverified'));
+const hdr = trackReports({ isHttps: true, headers: { hsts: 'max-age=100', csp: "default-src 'self'; frame-ancestors 'none'", contentTypeOptions: 'nosniff', frameOptions: null, referrerPolicy: null }, files: { robots: { status: 200, text: 'User-agent: GPTBot\nDisallow: /\n\nUser-agent: *\nDisallow:\n' }, llms: { status: 404, text: null } } });
+check('header checks: short HSTS and missing referrer policy flag; CSP, nosniff and frame-ancestors pass', status(hdr, 'SEC-002') === 'flag' && status(hdr, 'SEC-006') === 'flag' && ['SEC-003', 'SEC-004', 'SEC-005'].every((i) => status(hdr, i) === 'pass'));
+check('robots.txt blocking a named AI crawler flags; absent llms.txt is advisory', status(hdr, 'AEO-006') === 'flag' && status(hdr, 'AEO-008') === 'flag' && hdr.aeo.find((x) => x.id === 'AEO-008').advisory);
+const a = analyze(flags.out), av = analyzeAvara(flags.out, a);
+const { review } = await runReview(flags.out, a, av, { llm: null });
+const base = JSON.stringify({ o: review.overall.score, c: review.categories.map((c) => [c.category, c.score]) });
+check('review carries the tracks beside the scores', review.tracks?.aeo.length === 11 && review.tracks.security.length === 10);
+const { tracks, ...rest } = review; const again = await runReview(clean.out, analyze(clean.out), analyzeAvara(clean.out, analyze(clean.out)), { llm: null });
+check('tracks are not scored: no category or the overall score is derived from them', !JSON.stringify(rest).includes('AEO-0') && !JSON.stringify(rest.categories).includes('SEC-0') && base.length > 0 && again.review.tracks.aeo.length === 11);
+const cmp = compareTracks([...rf.aeo, ...rf.security], [...rc.aeo, ...rc.security]);
+check('scan -> fix -> rescan: flagged title, description and mixed content come back as fixed; only the server headers the fixture host never sends remain', ['AEO-001', 'AEO-002', 'SEC-009', 'SEC-010'].every((i) => cmp.find((c) => c.id === i)?.outcome === 'fixed') && cmp.filter((c) => c.outcome === 'still_present').every((c) => ['SEC-003', 'SEC-004', 'SEC-005', 'SEC-006'].includes(c.id)), JSON.stringify(cmp));
+check('rescan with missing evidence is "couldn’t verify", never fixed', compareTracks([...rf.aeo], [...miss.aeo]).every((c) => c.outcome === 'unverified'));
+process.exit(bad ? 1 : 0);

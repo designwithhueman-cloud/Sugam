@@ -43,7 +43,7 @@ export function Agencies() {
           <div className="rounded-[1.75rem] border border-black/10 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3 border-b border-black/10 pb-4">
               <span className="grid size-10 place-items-center rounded-full bg-vio-deep text-sm font-bold text-white">YA</span>
-              <span><b className="block text-base text-ink">Your Agency</b><span className="text-sm text-neutral-700">Accessibility review · Client A</span></span>
+              <span><b className="block text-base text-ink">Your Agency</b><span className="text-sm text-neutral-700">Website review · Client A</span></span>
             </div>
             <div className="mt-4 flex flex-wrap gap-2"><Chip label="Critical" tone="bg-[#ffd9d4]" /><Chip label="Serious" tone="bg-[#ffe9b8]" /><Chip label="To check" tone="bg-[#e6dcff]" /></div>
             <ul className="mt-4 space-y-2.5 text-base text-ink">

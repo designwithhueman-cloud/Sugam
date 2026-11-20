@@ -467,17 +467,27 @@
       "confidenceBasis": null,
       "evaluator": {
         "type": "detector",
-        "detectors": []
+        "detectors": [
+          "a11y/reading-order"
+        ]
       },
       "recommendationTemplate": "Fix \"Reading Order\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",
       "recommendationTemplateStatus": "generic",
       "related": [],
       "lenses": [],
-      "status": "catalogued",
+      "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "Interpret the measured evidence for \"Reading Order\". SC 1.3.2. Verify a meaningful sequence where sequence affects understanding. Do not guess beyond the measurements supplied.",
-      "valueTier": 2
+      "valueTier": 2,
+      "parameters": {
+        "backJumpPx": 300,
+        "minJumps": 2
+      },
+      "coverageSources": [
+        "mgifford/accessibility-skills@3f7adea81270 (reference)",
+        "W3C WCAG 2.2 SC 1.3.2, 2.4.3"
+      ]
     },
     {
       "ruleId": "A11Y-014",
@@ -684,7 +694,8 @@
           "sugam/auth-captcha",
           "sugam/auth-paste-blocked",
           "sugam/auth-autocomplete-off",
-          "sugam/forced-colors-optout"
+          "sugam/forced-colors-optout",
+          "nav/fragment-target"
         ]
       },
       "recommendationTemplate": "Fix \"Accessible Navigation\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",

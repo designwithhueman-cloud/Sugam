@@ -23,8 +23,8 @@ export function LandingPage() {
           <section aria-labelledby="hero-h" className="px-5 pb-8 pt-10 sm:px-10 sm:pt-14 sm:pb-12 lg:pb-[6rem]">
             <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:gap-10">
               <div>
-                <h1 id="hero-h" className="text-[2.75rem] font-semibold leading-[1.06] tracking-[-0.035em] text-ink sm:text-6xl lg:text-[clamp(2.4rem,3.6vw,3.4rem)]"><span className="block lg:whitespace-nowrap">Find accessibility issues.</span> <span className="block text-vio-deep lg:whitespace-nowrap">Fix them in your AI builder.</span></h1>
-                <p className="mt-6 text-xl leading-relaxed text-ink sm:text-2xl sm:leading-relaxed lg:text-[clamp(1rem,1.4vw,1.3rem)] lg:leading-[1.6] lg:max-w-[36rem] text-balance">Scan a public page to see what could block your visitors. Get <span className="font-semibold text-vio-deep">a prompt you can paste into your AI builder</span>.</p>
+                <h1 id="hero-h" className="text-[2.75rem] font-semibold leading-[1.06] tracking-[-0.035em] text-ink sm:text-6xl lg:text-[clamp(2.4rem,3.6vw,3.4rem)]"><span className="block lg:whitespace-nowrap">Build with AI.</span> <span className="block text-vio-deep lg:whitespace-nowrap">Launch with confidence.</span></h1>
+                <p className="mt-6 text-xl leading-relaxed text-ink sm:text-2xl sm:leading-relaxed lg:text-[clamp(1rem,1.4vw,1.3rem)] lg:leading-[1.6] lg:max-w-[36rem] text-balance">Scan a page to see what could block real visitors before you launch. Get <span className="font-semibold text-vio-deep">plain-language fixes you can apply right away</span>.</p>
                 <div className="mt-8"><ScanBar idPrefix="hero" align="start" extras={false} where="top of page" /></div>
               </div>
               <HeroArt />
@@ -36,26 +36,26 @@ export function LandingPage() {
             <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-16">
               <div className="lg:order-2">
                 <p className={kicker}>The problem</p>
-                <h2 id="problem-h" className={`mt-4 text-balance ${h2}`}>A site can look fine and still <span className="text-vio-deep">lock people out</span>.</h2>
-                <p className="mt-5 max-w-xl text-xl leading-relaxed text-neutral-800">When people with disabilities can’t use your product, you can lose customers before you know there’s a problem.</p>
+                <h2 id="problem-h" className={`mt-4 text-balance ${h2}`}>AI can make a page look <span className="text-vio-deep">finished before it’s ready</span>.</h2>
+                <p className="mt-5 max-w-xl text-xl leading-relaxed text-neutral-800">Launch without checking and the problems show up as lost visitors: people who can’t use it with a screen reader, a button out of reach on a phone, a pitch nobody understands. You hear about it after they’ve gone.</p>
               </div>
               <div className="lg:order-1"><ProblemVisual /></div>
             </div>
           </section>
 
+          {/* How it works: scan, pins, fix: right after the problem */}
+          <section id="how" aria-labelledby="how-h"><HowItWorks /></section>
+
           {/* What we check: the answer to the problem, one group of people at a time */}
           <section id="pillars" aria-labelledby="pillars-h" className={section}>
             <p className={kicker}>What we check</p>
-            <h2 id="pillars-h" className={`mt-4 ${h2}`}>Four ways visitors <span className="text-vio-deep">get stuck</span> on your site</h2>
-            <p className="mt-5 max-w-3xl text-xl leading-relaxed text-neutral-800">{SHOW_PERSON_NOTE ? 'Sugam checks for each of these on desktop and at phone width, then writes the fix. It flags what still needs a person.' : 'Sugam checks for each of these on desktop and at phone width, then writes the fix.'}</p>
+            <h2 id="pillars-h" className={`mt-4 ${h2}`}>Where visitors <span className="text-vio-deep">get stuck</span> on your site</h2>
+            <p className="mt-5 max-w-3xl text-xl leading-relaxed text-neutral-800">{SHOW_PERSON_NOTE ? 'Every scan covers accessibility, usability, mobile layout, clarity and trust, on desktop and at phone width, then writes the fix. It flags what still needs a person.' : 'Every scan covers accessibility, usability, mobile layout, clarity and trust, on desktop and at phone width, then writes the fix.'}</p>
             <div className="mt-10 lg:mt-12"><Pillars /></div>
           </section>
 
           {/* One real customer: it happened, and they fixed it themselves */}
           <QuoteBand />
-
-          {/* How it works: what you paste, right after the hero */}
-          <section id="how" aria-labelledby="how-h"><HowItWorks /></section>
 
           {/* Where a fix goes: the tools, after how it works: can I use this in my tool? */}
           <section id="works" aria-labelledby="platforms-h" className="pb-20 lg:pb-32"><Platforms /></section>
@@ -65,7 +65,7 @@ export function LandingPage() {
           <section id="try" aria-labelledby="try-h" className="px-3 pb-20 sm:px-8 lg:pb-32">
             <div className="grid items-center gap-8 rounded-[2.25rem] bg-[#e6f9b6] px-7 py-12 sm:px-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12 lg:py-14">
               <div>
-                <h2 id="try-h" className="text-3xl font-semibold leading-[1.08] tracking-[-0.025em] text-ink sm:text-4xl">See what’s blocking <span className="text-vio-deep">your own visitors</span></h2>
+                <h2 id="try-h" className="text-3xl font-semibold leading-[1.08] tracking-[-0.025em] text-ink sm:text-4xl">Check <span className="text-vio-deep">your own page</span> before launch</h2>
                 <p className="mt-4 max-w-xl text-xl leading-relaxed text-ink">Paste your home page or sign-up page. You’ll get your score, the top issues and one fix to apply.</p>
               </div>
               <ScanBar idPrefix="mid" align="start" extras={false} terms={false} where="middle of page" />
@@ -106,8 +106,8 @@ export function LandingPage() {
           <section aria-labelledby="cta-h" className="px-3 pb-20 sm:px-8 lg:pb-32">
             <div className="grid items-center gap-8 rounded-[2.25rem] bg-[#e6f9b6] px-7 py-14 sm:px-14 sm:py-16 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
               <div>
-                <h2 id="cta-h" className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-ink sm:text-5xl">Everyone deserves a site that <span className="text-vio-deep">works for them</span></h2>
-                <p className="mt-5 max-w-2xl text-xl leading-relaxed text-ink">Paste a URL and see what’s in your visitors’ way, with the first fix included.</p>
+                <h2 id="cta-h" className="max-w-3xl text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-ink sm:text-5xl">Build with AI. <span className="text-vio-deep">Launch with confidence.</span></h2>
+                <p className="mt-5 max-w-2xl text-xl leading-relaxed text-ink">Paste a link. No account, no setup. See what could block your visitors, with your first fix included.</p>
                 <div className="mt-8"><ScanBar idPrefix="end" align="start" extras={false} where="bottom of page" /></div>
               </div>
               <CtaArt className="mx-auto hidden w-full max-w-sm lg:block" />

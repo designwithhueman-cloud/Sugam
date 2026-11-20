@@ -25,7 +25,7 @@ check('every Product Clarity rule has objective criteria, required evidence, an 
 check('13 of 15 Product Clarity rules have a deterministic detector; PC-014 needs the owner and PC-015 a person', pcRules.filter((r) => r.evaluator?.detectors?.length).length === 13 && !byId.get('PC-014').evaluator.detectors?.length && byId.get('PC-015').evaluator.type === 'human');
 check('every detector id belongs to exactly one rule', rules.flatMap((r) => r.evaluator?.detectors ?? []).length === ownerOf.size);
 check('lexicons and thresholds are in the rules, not the code', byId.get('PC-009').parameters.buzzwords.length > 20 && byId.get('DIFF-001').parameters.templateSequence.length === 7 && byId.get('DIFF-009').parameters.failGrids === 3);
-check('the library has 77 detector-backed rules (51 before the customer-value work, 74 after it), none removed', rules.filter((r) => r.evaluator?.detectors?.length).length === 77);
+check('the library has 81 detector-backed rules (51 before the customer-value work, 74 after it, 77 before the detector pack), none removed', rules.filter((r) => r.evaluator?.detectors?.length).length === 81);
 
 // ---- 2. real pages ----
 const base = process.env.FIX || 'http://127.0.0.1:4200/detectors/';

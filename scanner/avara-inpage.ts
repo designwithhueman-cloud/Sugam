@@ -339,3 +339,47 @@ export const VALIDATION_PROBE = `function () {
   }
   return out;
 }`;
+
+// Same-page links (href="#id") whose target is absent from the hydrated DOM. Reads only; one record per distinct fragment, capped.
+// A missing target is a snapshot observation: script routing or a deferred panel can mount it later, so the detector asks a person.
+export const FRAGMENT_PROBE = `function () {
+  const out = [], seen = new Set();
+  for (const el of document.querySelectorAll('a[href^="#"]')) {
+    if (out.length >= 20 || !el.getClientRects().length || getComputedStyle(el).visibility !== 'visible') continue;
+    const url = new URL(el.href, document.baseURI);
+    if (url.href.split('#')[0] !== location.href.split('#')[0]) continue;
+    let id; try { id = decodeURIComponent(url.hash.slice(1)); } catch { continue; }
+    if (!id || id.toLowerCase() === 'top' || id.includes(':~:') || seen.has(id)) continue; seen.add(id);
+    const target = document.getElementById(id) || [...document.getElementsByName(id)].find((n) => n.localName === 'a');
+    out.push({ id, label: (el.getAttribute('aria-label') || el.textContent || '').replace(/\\s+/g, ' ').trim().slice(0, 80), found: !!target });
+  }
+  return out;
+}`;
+
+// Passive page signals for the two tracks that sit outside the eight scored categories: answer-engine readiness (AEO) and security hygiene.
+// Reads the document only: no requests, no clicks. Resource lists are capped so a heavy page stays cheap.
+export const SIGNALS_PROBE = `function () {
+  const q = (s) => document.querySelector(s);
+  const meta = (n) => { const e = q('meta[name="' + n + '"]') || q('meta[property="' + n + '"]'); return e ? (e.content || '').trim() : null; };
+  const ld = [];
+  for (const s of document.querySelectorAll('script[type="application/ld+json"]')) {
+    try { const j = JSON.parse(s.textContent || ''); const walk = (n) => { if (!n || typeof n !== 'object') return; if (Array.isArray(n)) return n.forEach(walk); if (n['@type']) ld.push(...[].concat(n['@type']).map(String)); walk(n['@graph']); }; walk(j); } catch { ld.push('(invalid JSON-LD)'); }
+  }
+  const origin = location.origin;
+  const mixed = [...document.querySelectorAll('script[src], link[rel=stylesheet][href], img[src], iframe[src], audio[src], video[src], source[src]')].map((e) => e.src || e.href || '').filter((u) => /^http:\\/\\//i.test(u)).slice(0, 10);
+  const external = (u) => { try { return new URL(u, document.baseURI).origin !== origin; } catch { return false; } };
+  const extScripts = [...document.querySelectorAll('script[src]')].filter((s) => external(s.src));
+  const noSri = extScripts.filter((s) => !s.integrity).slice(0, 8).map((s) => s.src);
+  const blank = [...document.querySelectorAll('a[target=_blank]')].filter((a) => external(a.href) && !/\\b(noopener|noreferrer)\\b/i.test(a.rel || '')).slice(0, 8).map((a) => a.href);
+  const insecureForms = [...document.querySelectorAll('form[action]')].filter((f) => /^http:\\/\\//i.test(f.action)).slice(0, 5).map((f) => f.action);
+  const pwd = [...document.querySelectorAll('input[type=password]')].length;
+  const h1s = document.querySelectorAll('h1').length;
+  const faq = [...document.querySelectorAll('h2, h3, h4, summary')].filter((h) => /\\?\\s*$/.test((h.textContent || '').trim())).length;
+  return {
+    title: document.title || null, lang: document.documentElement.lang || null, description: meta('description'), canonical: (q('link[rel=canonical]') || {}).href || null,
+    robotsMeta: meta('robots'), og: { title: meta('og:title'), description: meta('og:description'), image: meta('og:image') }, jsonLdTypes: [...new Set(ld)], h1Count: h1s, questionHeadings: faq,
+    isHttps: location.protocol === 'https:', mixed, extScriptCount: extScripts.length, extScriptsWithoutSri: noSri, blankWithoutNoopener: blank, insecureForms, passwordFields: pwd,
+    fontFamilies: (() => { const m = {}; for (const e of document.querySelectorAll('h1,h2,h3,h4,p,li,a,button,label,span,td')) { if (!e.getClientRects().length) continue; const own = [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.nodeValue.trim()).join(' '); if (own.length < 4) continue; const f = getComputedStyle(e).fontFamily.split(',')[0].replace(/["']/g, '').trim().toLowerCase(); m[f] = (m[f] || 0) + own.length; } return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 8); })(),
+    textWords: (document.body.innerText || '').trim().split(/\\s+/).filter(Boolean).length,
+  };
+}`;

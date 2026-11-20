@@ -104,4 +104,6 @@ export interface ReviewResult {
   overall: { score: number | null; status: 'provisional' | 'final'; assessedCategories: number; totalCategories: number; weightAssessed: number; coveragePct: number; note: string };
   ai: { used: boolean; model?: string; reason?: string; rulesJudged: number };
   loaderIssues: string[];
+  /** AEO and passive-security results. Reported beside the scores, never inside them. */
+  tracks?: { aeo: { id: string; title: string; status: 'pass' | 'flag' | 'unverified'; evidence: string; recommendation: string; source: string; advisory: boolean }[]; security: { id: string; title: string; status: 'pass' | 'flag' | 'unverified'; evidence: string; recommendation: string; source: string; advisory: boolean }[] };
 }

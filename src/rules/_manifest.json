@@ -257,6 +257,7 @@
     "sugam/form-error-not-linked",
     "sugam/form-autocomplete-missing",
     "sugam/forced-colors-optout",
+    "nav/fragment-target",
     "sugam/focus-not-visible",
     "sugam/focus-context-change",
     "sugam/duplicate-cta-label",
@@ -309,6 +310,8 @@
     "pc/problem-signal",
     "pc/outcome-language",
     "pc/buzzwords",
+    "conv/generic-primary-action",
+    "trust/unfinished-proof",
     "conv/cta-saturation",
     "diff/template-sequence",
     "diff/default-styling",
@@ -321,6 +324,8 @@
     "pc/cta-context",
     "design/visual-hierarchy",
     "design/spacing-rhythm",
-    "ux/error-recovery"
+    "ux/error-recovery",
+    "a11y/reading-order",
+    "design/font-families"
   ]
 }

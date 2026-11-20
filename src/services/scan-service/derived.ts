@@ -237,7 +237,7 @@ export function derivedReports(out: ScanOutput): Record<string, DetectorReport> 
     'mobile/typography': mobileTypography(out), 'mobile/form-usability': mobileForm(out), 'mobile/image-responsiveness': imageResponsiveness(out),
     'trust/privacy-link': privacy(pc), 'trust/terms-link': terms(pc), 'trust/contact-route': contact(pc), 'trust/review-route': reviewRoute(pc), 'trust/support-route': supportRoute(pc),
     'conv/trial-visibility': trial(pc), 'conv/cta-consistency': ctaConsistency(pc), 'conv/field-count': fieldCount(pc),
-    'ux/scannability': scannability(pc), 'design/visual-hierarchy': visualHierarchy(out, vc), 'design/spacing-rhythm': spacingRhythm(vc), 'ux/error-recovery': errorRecovery(out), 'design/typography-hierarchy': typographyHierarchy(pc), 'design/cta-emphasis': ctaEmphasis(out, pc), 'design/component-consistency': componentConsistency(pc),
+    'ux/scannability': scannability(pc), 'design/visual-hierarchy': visualHierarchy(out, vc), 'design/spacing-rhythm': spacingRhythm(vc), 'ux/error-recovery': errorRecovery(out), 'nav/fragment-target': fragmentTarget(out), 'a11y/reading-order': readingOrder(out), 'design/font-families': fontFamilies(out), 'conv/generic-primary-action': genericPrimaryAction(out), 'trust/unfinished-proof': unfinishedProof(vc), 'design/typography-hierarchy': typographyHierarchy(pc), 'design/cta-emphasis': ctaEmphasis(out, pc), 'design/component-consistency': componentConsistency(pc),
     'perf/image-optimization': perfImages(out), 'perf/font-optimization': perfFonts(out), 'perf/javascript-efficiency': perfJs(out), 'perf/css-efficiency': perfCss(out), 'perf/render-blocking': perfBlocking(out), 'perf/third-party': perfThirdParty(out),
   };
 }
@@ -497,4 +497,46 @@ function errorRecovery(out: ScanOutput): DetectorReport {
   }
   if (!hits.length && !tested) return na('Every form was pre-filled or valid when empty, so no invalid state could be produced without submitting.');
   return ran(hits);
+}
+
+
+// ---- Detector pack: three advisory reads. Each says what was observed and asks a person; none can fail a page. ----
+// A same-page link whose target is missing from the DOM captured after load. Script routing or a deferred panel can mount it later.
+function fragmentTarget(out: ScanOutput): DetectorReport {
+  const d = vp(out, 'desktop'); if (!d || d.fragments === undefined || d.fragments === null) return off('The same-page link check did not run.');
+  if (!d.fragments.length) return na('No visible same-page links.');
+  const gone = d.fragments.filter((f) => !f.found);
+  return ran(gone.length ? [review('A same-page link points to nothing in the page we captured', `${gone.length} same-page link${gone.length === 1 ? '' : 's'} had no element with the matching id when the page finished loading. If a script adds it later, check it in a browser.`, gone.map((f) => `“${f.label || f.id}” -> #${f.id}`))] : []);
+}
+// The selected main action is named with a generic label. Whether the surrounding context makes it clear is a person's call.
+function genericPrimaryAction(out: ScanOutput): DetectorReport {
+  const v = vp(out, 'desktop'); if (!v?.avara) return off('The main-action check did not run.');
+  const a = mainAction(v); if (!a) return na('No single main action was identified.');
+  const terms = param<string[]>('CONV-001', 'genericLabels', []); const label = norm(a.text);
+  return ran(terms.includes(label) ? [review('The main button uses a generic label', `The main action is labelled “${a.text}”. Check whether the words around it say what happens next, and name the next step where helpful.`, [`${a.selector}  label “${a.text}”`])] : []);
+}
+// Visible copy that looks like an unfinished editorial placeholder. Only the matched excerpt is kept.
+function unfinishedProof(pc: VPC | undefined): DetectorReport {
+  if (!pc?.bodyText) return off('The page text was not captured.');
+  const terms = param<string[]>('TRUST-005', 'placeholderTerms', []); const t = pc.bodyText.toLowerCase(); const hits: string[] = [];
+  for (const term of terms) { const i = t.indexOf(term); if (i >= 0) hits.push(quote(pc.bodyText.slice(Math.max(0, i - 20), i + term.length + 40).replace(/\s+/g, ' '), 100)); }
+  return ran(hits.length ? [review('Copy on the page looks unfinished', 'Text that looks like an editorial placeholder is visible. If it stands in for a testimonial or other proof, publish approved evidence or remove it.', hits)] : []);
+}
+
+// WCAG 1.3.2 / 2.4.3: does Tab move through the page in an order that follows how it reads? Counts focus moves that jump well back up the page.
+// Order can be deliberate (a skip link, a dialog), so the result is for a person, with each jump named.
+function readingOrder(out: ScanOutput): DetectorReport {
+  const d = vp(out, 'desktop'); if (!d?.keyboard?.length) return off('The keyboard trace was not captured.');
+  const back = param('A11Y-013', 'backJumpPx', 300), min = param('A11Y-013', 'minJumps', 2);
+  const seen = new Set<string>(); const steps = d.keyboard.filter((s) => { if (!s.selector || !s.box?.visible || s.iframe || seen.has(s.selector)) return false; seen.add(s.selector); return true; });   // a repeat means focus wrapped round to the start if (steps.length < 6) return na('Too few focusable items to judge order.');
+  const jumps: string[] = [];
+  for (let i = 1; i < steps.length; i++) { const a = steps[i - 1].box!, b = steps[i].box!; if (b.y < a.y - back && steps[i].press > 1) jumps.push(`press ${steps[i].press}: ${steps[i].name || steps[i].selector} is ${Math.round(a.y - b.y)}px above the previous stop (${steps[i - 1].name || steps[i - 1].selector})`); }
+  return ran(jumps.length >= min ? [review('Keyboard order jumps back up the page', `Tab moved back up the page ${jumps.length} times, which can disorient keyboard and screen-reader users. A person should confirm the order is intended.`, jumps.slice(0, 4))] : []);
+}
+// Typography consistency: how many font families carry the page text. Counted by characters so a one-off icon font does not count.
+function fontFamilies(out: ScanOutput): DetectorReport {
+  const g = vp(out, 'desktop')?.signals as { fontFamilies?: [string, number][] } | null | undefined; if (!g?.fontFamilies) return off('Font use was not captured.');
+  const max = param('DESIGN-002', 'maxFamilies', 3), share = param('DESIGN-002', 'minShare', 0.05); const total = g.fontFamilies.reduce((n, [, c]) => n + c, 0); if (total < 200) return na('Too little text to judge type use.');
+  const used = g.fontFamilies.filter(([, c]) => c / total >= share);
+  return ran(used.length > max ? [review('The page uses many typefaces', `${used.length} font families each carry more than ${Math.round(share * 100)}% of the text; most brands settle on one or two.`, used.map(([f, c]) => `${f}: ${Math.round((c / total) * 100)}% of text`))] : []);
 }

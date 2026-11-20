@@ -16,7 +16,7 @@ import { BOXES, PAGE_METRICS, HEURISTICS, EXTRA, FOCUS_SNAPSHOT, MOTION } from '
 import { STANDARDS, type StandardId } from '../lib/standards.ts';
 import { checkUrl, BlockedUrlError } from '../lib/net/guard.ts';
 import { probeActions, runWorkflow, type ActionProbe } from './avara.ts';
-import { PAGE_CONTEXT, MOBILE_PROBE, TEXT_RESIZE, STRUCTURE_CONTEXT, VALIDATION_PROBE } from './avara-inpage.ts';
+import { PAGE_CONTEXT, MOBILE_PROBE, TEXT_RESIZE, STRUCTURE_CONTEXT, VALIDATION_PROBE, FRAGMENT_PROBE, SIGNALS_PROBE } from './avara-inpage.ts';
 import { runLighthouse, type PerfResult } from './perf.ts';
 
 export type ViewportId = 'desktop' | 'mobile';
@@ -59,6 +59,8 @@ export type ViewportResult = {
   axe: { violations: AxeResult[]; incomplete: AxeResult[]; passes: { id: string; help: string; tags: string[] }[] };
   heuristics: Heuristics; keyboard: FocusStep[]; motion: Motion | null; boxes: Record<string, Box | null>;
   avara: ActionProbe | null; avaraError?: string;   // the main-action probe for this screen size
+  signals?: Record<string, unknown> | null;   // desktop: passive head, header and file signals for the separate AEO and security tracks
+  fragments?: { id: string; label: string; found: boolean }[] | null;   // desktop: same-page links and whether their target exists
   validation?: Record<string, unknown>[] | null;   // desktop: what the browser's own form validation did (never submits)
   mobileProbe?: Record<string, unknown> | null; orientation?: { docW: number; vw: number; action: { text: string; level: string; reasons: string[] } | null } | null; textResize?: Record<string, unknown> | null;   // 320px-only observations
   pageContext?: Record<string, unknown> | null;    // what a reviewer reads on the page (desktop pass), as data for the rule engine
@@ -203,6 +205,19 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     }
     for (const s of keyboard) if (s.box && s.selector) boxes[s.selector] = boxes[s.selector] ?? s.box;
     let validation: Record<string, unknown>[] | null = null;
+    let fragments: { id: string; label: string; found: boolean }[] | null = null;
+    let signals: Record<string, unknown> | null = null;
+    if (vp.name === 'desktop') {
+      try {
+        signals = (await page.evaluate(`(${SIGNALS_PROBE})()`)) as Record<string, unknown>;
+        const h = res.headers(); const pick = (k: string) => h[k] ?? null;
+        signals.headers = { csp: pick('content-security-policy'), hsts: pick('strict-transport-security'), contentTypeOptions: pick('x-content-type-options'), frameOptions: pick('x-frame-options'), referrerPolicy: pick('referrer-policy'), xRobotsTag: pick('x-robots-tag') };
+        const origin = new URL(page.url()).origin;
+        const get = async (p: string) => { try { const u = origin + p; await checkUrl(u); const r = await context.request.get(u, { timeout: 6000, maxRedirects: 2, failOnStatusCode: false }); const ct = r.headers()['content-type'] ?? ''; return { status: r.status(), text: r.ok() && /text|xml|json/i.test(ct) ? (await r.text()).slice(0, 20000) : null }; } catch { return null; } };
+        signals.files = { robots: await get('/robots.txt'), llms: await get('/llms.txt'), sitemap: await get('/sitemap.xml') };
+      } catch { signals = null; }
+    }
+    if (vp.name === 'desktop') { try { fragments = (await page.evaluate(`(${FRAGMENT_PROBE})()`)) as typeof fragments; } catch { fragments = null; } }
     if (vp.name === 'desktop') { try { validation = (await page.evaluate(`(${VALIDATION_PROBE})()`)) as Record<string, unknown>[]; } catch { validation = null; } }
     // Landscape: does the page still fit and the main action still work when a phone is turned on its side?
     let orientation: ViewportResult['orientation'] = null;
@@ -235,7 +250,7 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
         name: vp.name, width: vp.width, height: vp.height, pageWidth: Math.max(vp.width, metrics.width), pageHeight: shotHeight,
         screenshot, viewportShot, truncated: metrics.height > MAX_SHOT_HEIGHT,
         axe: { violations: axe.violations, incomplete: axe.incomplete, passes: axe.passes.map((p) => ({ id: p.id, help: p.help, tags: p.tags })) },
-        heuristics, keyboard, motion, boxes, avara, avaraError, pageContext, mobileProbe, orientation, textResize, validation,
+        heuristics, keyboard, motion, boxes, avara, avaraError, pageContext, mobileProbe, orientation, textResize, validation, fragments, signals,
       },
     };
   } finally { await context.close(); }

@@ -1,0 +1,93 @@
+{
+ "track": "security",
+ "scored": false,
+ "description": "Passive security hygiene. Reads response headers and the page as delivered; sends nothing a visitor would not send. No probing, no payloads. Review of the project's own source is a separate local script.",
+ "checks": [
+  {
+   "id": "SEC-001",
+   "title": "Page is served over HTTPS",
+   "check": "https",
+   "parameters": {
+    "localHostsExempt": true
+   },
+   "recommendation": "Serve the page over HTTPS only and redirect HTTP to it.",
+   "source": "trailofbits/skills@149d7b21f406"
+  },
+  {
+   "id": "SEC-002",
+   "title": "HSTS header is present",
+   "check": "hsts",
+   "parameters": {
+    "minMaxAge": 15552000
+   },
+   "recommendation": "Send Strict-Transport-Security so browsers stay on HTTPS.",
+   "source": "trailofbits/skills@149d7b21f406"
+  },
+  {
+   "id": "SEC-003",
+   "title": "Content-Security-Policy is present",
+   "check": "csp",
+   "parameters": {},
+   "recommendation": "Send a Content-Security-Policy that limits where scripts can load from.",
+   "source": "trailofbits/skills@149d7b21f406"
+  },
+  {
+   "id": "SEC-004",
+   "title": "MIME sniffing is disabled",
+   "check": "nosniff",
+   "parameters": {},
+   "recommendation": "Send X-Content-Type-Options: nosniff.",
+   "source": "trailofbits/skills@149d7b21f406"
+  },
+  {
+   "id": "SEC-005",
+   "title": "Page cannot be framed by other sites",
+   "check": "frame",
+   "parameters": {},
+   "recommendation": "Send frame-ancestors in CSP or X-Frame-Options.",
+   "source": "trailofbits/skills@149d7b21f406"
+  },
+  {
+   "id": "SEC-006",
+   "title": "Referrer policy is set",
+   "check": "referrer",
+   "parameters": {},
+   "recommendation": "Send a Referrer-Policy such as strict-origin-when-cross-origin.",
+   "source": "trailofbits/skills@149d7b21f406"
+  },
+  {
+   "id": "SEC-007",
+   "title": "No mixed content",
+   "check": "mixed",
+   "parameters": {},
+   "recommendation": "Load every script, style, image and frame over HTTPS.",
+   "source": "trailofbits/skills@149d7b21f406"
+  },
+  {
+   "id": "SEC-008",
+   "title": "Third-party scripts use integrity hashes",
+   "check": "sri",
+   "parameters": {
+    "maxUnpinnedBeforeFlag": 1
+   },
+   "recommendation": "Add integrity attributes to third-party scripts you pin, or host them yourself.",
+   "source": "trailofbits/skills@149d7b21f406"
+  },
+  {
+   "id": "SEC-009",
+   "title": "External new-tab links are protected",
+   "check": "noopener",
+   "parameters": {},
+   "recommendation": "Add rel=\"noopener\" to external links that open a new tab.",
+   "source": "trailofbits/skills@149d7b21f406"
+  },
+  {
+   "id": "SEC-010",
+   "title": "Forms do not post over HTTP",
+   "check": "insecureform",
+   "parameters": {},
+   "recommendation": "Point every form action at an HTTPS address.",
+   "source": "trailofbits/skills@149d7b21f406"
+  }
+ ]
+}

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, BookOpen, Contrast, Wand2 } from 'lucide-react';
 
 const TOOLS = [
-  { icon: Wand2, name: 'Rules for your AI builder', text: 'A short rules file to paste into your project, so every new page starts accessible.', href: '/tools/ai-builder-rules', cta: 'Get the rules' },
+  { icon: Wand2, name: 'Rules for your AI builder', text: 'A short rules file to paste into your project, so every new page starts clear, usable and accessible.', href: '/tools/ai-builder-rules', cta: 'Get the rules' },
   { icon: Contrast, name: 'Contrast checker', text: 'Check a text and background colour, and get the closest colour that passes.', href: '/tools/contrast-checker', cta: 'Check colours' },
   { icon: BookOpen, name: 'Plain-language guides', text: 'WCAG, keyboard use, alt text and more, one idea at a time.', href: '/learn', cta: 'Read the guides' },
 ] as const;

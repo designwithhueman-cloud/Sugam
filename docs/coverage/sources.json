@@ -1,0 +1,23 @@
+{
+  "reviewed": "2026-11-20",
+  "policy": "Reviewed once and pinned. AGPL and CC BY-SA material is referenced only; no text is copied. Rule criteria in src/rules are written independently.",
+  "sources": [
+    {"id":"mgifford","repo":"mgifford/accessibility-skills","sha":"3f7adea81270","license":"AGPL-3.0","use":"reference only","categories":["Accessibility","Mobile Responsiveness"]},
+    {"id":"joao-ux","repo":"JoaoMonteiro100/ux-design-skills","sha":"ef9596b06350","license":"MIT","use":"criteria paraphrased","categories":["UX & Workflow","Product Clarity"]},
+    {"id":"plugin87","repo":"plugin87/ux-ui-agent-skills","sha":"d0ee2fa38ede","license":"MIT","use":"criteria paraphrased","categories":["Design & Brand","UX & Workflow"]},
+    {"id":"uiux-pro-max","repo":"nextlevelbuilder/ui-ux-pro-max-skill","sha":"2de1134dc4d1","license":"MIT","use":"criteria paraphrased","categories":["Design & Brand"]},
+    {"id":"anthropics-skills","repo":"anthropics/skills","sha":"e4bb5d960d87","license":"per-skill (Apache-2.0 / source-available)","use":"reference only","categories":["Design & Brand"]},
+    {"id":"impeccable","repo":"pbakaus/impeccable","sha":"b49177d32788","license":"Apache-2.0","use":"criteria paraphrased","categories":["Design & Brand","Mobile Responsiveness"]},
+    {"id":"emil","repo":"emilkowalski/skills","sha":"64eb3deb9a5f","license":"MIT","use":"criteria paraphrased","categories":["Design & Brand","Performance"]},
+    {"id":"playwright-skill","repo":"lackeyjb/playwright-skill","sha":"dd47a6a023e2","license":"MIT","use":"method reference","categories":["Mobile Responsiveness"]},
+    {"id":"vercel","repo":"vercel-labs/agent-skills","sha":"1a2c79d4e6c4","license":"none declared","use":"reference only","categories":["Accessibility","Performance","UX & Workflow"]},
+    {"id":"marketingskills","repo":"coreyhaines31/marketingskills","sha":"5b2b400eec1e","license":"MIT","use":"criteria paraphrased","categories":["Conversion Readiness","Trust & Credibility","Product Clarity","AEO"]},
+    {"id":"karanb192","repo":"karanb192/awesome-claude-skills","sha":"7b2650b08cd3","license":"MIT","use":"directory only","resolved":[]},
+    {"id":"behisecc","repo":"BehiSecc/awesome-claude-skills","sha":"adf99015a0ad","license":"none declared","use":"directory only","resolved":["pchewlo/aeo-check","wwewtech/anti-slop-design"]},
+    {"id":"aeo-check","repo":"pchewlo/aeo-check","sha":"5e7a84a2757b","license":"MIT","use":"criteria paraphrased","via":"behisecc","categories":["AEO"]},
+    {"id":"anti-slop","repo":"wwewtech/anti-slop-design","sha":"071fd3c40a57","license":"MIT","use":"criteria paraphrased","via":"behisecc","categories":["Design & Brand"]},
+    {"id":"design-auditor","repo":"Ashutos1997/claude-design-auditor-skill","sha":"e7a1f3153d8e","license":"none declared","use":"reference only","via":"directory","categories":["Design & Brand"]},
+    {"id":"superseo","repo":"inhouseseo/superseo-skills","sha":"9cf22cc065a2","license":"Apache-2.0","use":"criteria paraphrased","via":"directory","categories":["AEO"]},
+    {"id":"trailofbits","repo":"trailofbits/skills","sha":"149d7b21f406","license":"CC BY-SA 4.0","use":"reference only; passive and local-source review","categories":["Security"]}
+  ]
+}

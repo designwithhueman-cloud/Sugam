@@ -56,17 +56,27 @@
       "confidenceBasis": null,
       "evaluator": {
         "type": "llm",
-        "detectors": []
+        "detectors": [
+          "design/font-families"
+        ]
       },
       "evaluationPrompt": "Evaluate ONLY this rule: \"Typography Consistency\". Compare equivalent text roles with the approved design system. Use only the supplied page context. Quote the exact words or elements you rely on. If the context is not enough to decide, answer \"inconclusive\". If the rule does not apply to this page, answer \"not_applicable\".",
       "recommendationTemplate": "Fix \"Typography Consistency\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",
       "recommendationTemplateStatus": "generic",
       "related": [],
       "lenses": [],
-      "status": "catalogued",
+      "status": "partial",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 4
+      "valueTier": 4,
+      "parameters": {
+        "maxFamilies": 3,
+        "minShare": 0.05
+      },
+      "coverageSources": [
+        "nextlevelbuilder/ui-ux-pro-max-skill@2de1134dc4d1",
+        "wwewtech/anti-slop-design@071fd3c40a57"
+      ]
     },
     {
       "ruleId": "DESIGN-003",

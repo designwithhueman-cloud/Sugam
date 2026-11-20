@@ -21,18 +21,30 @@
       "confidence": null,
       "confidenceBasis": null,
       "evaluator": {
-        "type": "llm",
-        "detectors": []
+        "type": "detector",
+        "detectors": [
+          "conv/generic-primary-action"
+        ]
       },
       "evaluationPrompt": "Evaluate ONLY this rule: \"Primary CTA Clarity\". Inspect what the button label promises and its actual destination. Use only the supplied page context. Quote the exact words or elements you rely on. If the context is not enough to decide, answer \"inconclusive\". If the rule does not apply to this page, answer \"not_applicable\".",
       "recommendationTemplate": "Make the main button say what happens when it is pressed, and make the destination match that promise.",
       "recommendationTemplateStatus": "authored",
       "related": [],
       "lenses": [],
-      "status": "catalogued",
+      "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 1
+      "valueTier": 1,
+      "parameters": {
+        "genericLabels": [
+          "click here",
+          "submit",
+          "go",
+          "here",
+          "click",
+          "continue"
+        ]
+      }
     },
     {
       "ruleId": "CONV-002",

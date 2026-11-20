@@ -6,6 +6,7 @@ import { RuleEngine } from '../../engines/rule-engine/RuleEngine.ts';
 import { ruleLoader } from '../../engines/rule-engine/RuleLoader.ts';
 import { createClaudeClient } from '../../engines/rule-engine/llm/ClaudeClient.ts';
 import { derivedReports } from './derived.ts';
+import { trackReports } from './tracks.ts';
 import type { DetectorReport, LlmClient, ReviewResult, WebsiteContext } from '../../engines/rule-engine/RuleTypes.ts';
 
 const short = (s: string, n = 300) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
@@ -48,6 +49,9 @@ export async function runReview(out: ScanOutput, a: Analysis | null, av: AvaraAn
     const loader = ruleLoader(); const ids = new Set(loader.loadAllRules().flatMap((r) => (r.evaluator && 'detectors' in r.evaluator ? r.evaluator.detectors ?? [] : [])));
     const ctx = buildWebsiteContext(out, a, av, ids);
     const llm = opts.llm === undefined ? createClaudeClient() : opts.llm;
-    return { review: await new RuleEngine(loader, llm).review(ctx) };
+    const review = await new RuleEngine(loader, llm).review(ctx);
+    const sig = out.viewports.find((v) => v.name === 'desktop')?.signals ?? null;
+    let local = false; try { const h = new URL(out.finalUrl).hostname; local = h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || h.endsWith('.localhost'); } catch { /* keep false */ }
+    return { review: { ...review, tracks: trackReports(sig, local) } };
   } catch (e) { return { review: null, error: (e as Error).message.split('\n')[0].slice(0, 160) }; }
 }

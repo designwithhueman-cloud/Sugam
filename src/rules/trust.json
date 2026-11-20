@@ -159,18 +159,29 @@
       "confidence": null,
       "confidenceBasis": null,
       "evaluator": {
-        "type": "llm",
-        "detectors": []
+        "type": "detector",
+        "detectors": [
+          "trust/unfinished-proof"
+        ]
       },
       "evaluationPrompt": "Evaluate ONLY this rule: \"Testimonial Quality\". For an existing testimonial, inspect context and attribution. Authenticity requires corroboration. Use only the supplied page context. Quote the exact words or elements you rely on. If the context is not enough to decide, answer \"inconclusive\". If the rule does not apply to this page, answer \"not_applicable\".",
       "recommendationTemplate": "Fix \"Testimonial Quality\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",
       "recommendationTemplateStatus": "generic",
       "related": [],
       "lenses": [],
-      "status": "catalogued",
+      "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "parameters": {
+        "placeholderTerms": [
+          "[need:",
+          "[insert testimonial",
+          "[customer quote]",
+          "[testimonial",
+          "lorem ipsum"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-006",

@@ -8,9 +8,9 @@ import { Check, Menu, X } from 'lucide-react';
 
 const at = (s: number) => ({ animationDelay: `${s}s` });
 const CALLOUTS = [
-  { text: 'A screen reader announces only “button”.', pos: 'md:right-[-1rem] md:top-[-1.6rem]', t: 1.2 },
-  { text: 'People with low vision cannot read it.', pos: 'md:left-[-1.5rem] md:top-[11.5rem]', t: 2.0 },
-  { text: 'Keyboard users cannot reach it.', pos: 'md:bottom-[2.2rem] md:right-[-0.5rem]', t: 2.8 },
+  { text: 'A first-time visitor can’t tell what it does.', pos: 'md:right-[-1rem] md:top-[-1.6rem]', t: 1.2 },
+  { text: 'On a phone the button is out of reach.', pos: 'md:left-[-1.5rem] md:top-[11.5rem]', t: 2.0 },
+  { text: 'A screen reader announces only “button”.', pos: 'md:bottom-[2.2rem] md:right-[-0.5rem]', t: 2.8 },
 ] as const;
 
 export function ProblemVisual() {

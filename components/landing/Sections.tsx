@@ -68,7 +68,7 @@ export function LandingFooter({ nav = NAV }: { nav?: NavLinks }) {
       <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <Wordmark className="text-2xl" />
-          <p className="mt-5 max-w-sm text-lg leading-relaxed text-neutral-800">Accessibility review for sites built with AI builders, no-code tools and code. Fixes go into your own source, not an overlay.</p>
+          <p className="mt-5 max-w-sm text-lg leading-relaxed text-neutral-800">Website review for sites built with AI builders, no-code tools and code. Fixes go into your own source, not an overlay.</p>
           <Link href="/website-accessibility-checker" className="mt-6 inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-lg font-semibold text-white hover:bg-neutral-800">Scan a site free</Link>
         </div>
         {col('Product', [['Free accessibility checker', '/website-accessibility-checker'], ...nav, ['Free tools', '/#tools'], ['Dashboard', '/app']])}
@@ -77,7 +77,7 @@ export function LandingFooter({ nav = NAV }: { nav?: NavLinks }) {
       </div>
       <div className="mt-14 flex flex-wrap items-center justify-between gap-x-10 gap-y-3 border-t border-black/10 pt-6 text-base text-neutral-700">
         <p>Build with AI. Build for more people. <span aria-hidden className="text-vio-deep">♥</span> © {new Date().getFullYear()} Sugam</p>
-        <p className="flex items-center gap-2.5"><Info aria-hidden className="size-4 shrink-0 text-vio-deep" /><span>Automated testing finds a share of accessibility barriers. Sugam does not certify legal compliance.</span></p>
+        <p className="flex items-center gap-2.5"><Info aria-hidden className="size-4 shrink-0 text-vio-deep" /><span>Automated testing finds a share of issues. Sugam does not certify legal or accessibility compliance.</span></p>
       </div>
     </footer>
   );

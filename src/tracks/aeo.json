@@ -1,0 +1,123 @@
+{
+ "track": "aeo",
+ "scored": false,
+ "description": "Answer-engine readiness. Passive reads of the page head, body and public discovery files. Never enters the eight category scores.",
+ "checks": [
+  {
+   "id": "AEO-001",
+   "title": "Page has a clear title",
+   "check": "title",
+   "parameters": {
+    "minChars": 10,
+    "maxChars": 70
+   },
+   "recommendation": "Give the page a specific title that says what the product is.",
+   "source": "pchewlo/aeo-check@5e7a84a2757b"
+  },
+  {
+   "id": "AEO-002",
+   "title": "Page has a meta description",
+   "check": "description",
+   "parameters": {
+    "minChars": 50,
+    "maxChars": 170
+   },
+   "recommendation": "Add a meta description that states what the product does and for whom, in one or two sentences.",
+   "source": "inhouseseo/superseo-skills@9cf22cc065a2"
+  },
+  {
+   "id": "AEO-003",
+   "title": "Page declares its language",
+   "check": "lang",
+   "parameters": {},
+   "recommendation": "Set the lang attribute on the html element.",
+   "source": "MDN / W3C (public specification)"
+  },
+  {
+   "id": "AEO-004",
+   "title": "Page has one canonical address",
+   "check": "canonical",
+   "parameters": {},
+   "recommendation": "Add a canonical link so answer engines cite one address.",
+   "source": "inhouseseo/superseo-skills@9cf22cc065a2"
+  },
+  {
+   "id": "AEO-005",
+   "title": "Page has structured data",
+   "check": "jsonld",
+   "parameters": {
+    "expectedTypes": [
+     "Organization",
+     "Product",
+     "SoftwareApplication",
+     "WebSite",
+     "FAQPage",
+     "Article",
+     "LocalBusiness"
+    ]
+   },
+   "recommendation": "Add JSON-LD for Organization or Product (and FAQPage if you answer questions on the page).",
+   "source": "coreyhaines31/marketingskills@5b2b400eec1e (ai-seo)"
+  },
+  {
+   "id": "AEO-006",
+   "title": "Crawlers are not blocked",
+   "check": "robots",
+   "parameters": {
+    "crawlers": [
+     "GPTBot",
+     "ClaudeBot",
+     "PerplexityBot",
+     "Google-Extended",
+     "OAI-SearchBot"
+    ]
+   },
+   "recommendation": "Allow the search and answer-engine crawlers you want in robots.txt, or remove the blanket disallow.",
+   "source": "pchewlo/aeo-check@5e7a84a2757b"
+  },
+  {
+   "id": "AEO-007",
+   "title": "Page is not marked noindex",
+   "check": "noindex",
+   "parameters": {},
+   "recommendation": "Remove noindex from the page if you want it found.",
+   "source": "inhouseseo/superseo-skills@9cf22cc065a2"
+  },
+  {
+   "id": "AEO-008",
+   "title": "Site offers an llms.txt",
+   "check": "llms",
+   "parameters": {
+    "advisory": true
+   },
+   "recommendation": "Optional: publish /llms.txt with a short map of your key pages. Treated as an emerging practice, not a requirement.",
+   "source": "coreyhaines31/marketingskills@5b2b400eec1e (ai-seo)"
+  },
+  {
+   "id": "AEO-009",
+   "title": "Page has one main heading",
+   "check": "h1",
+   "parameters": {},
+   "recommendation": "Use exactly one h1 that names the product.",
+   "source": "inhouseseo/superseo-skills@9cf22cc065a2"
+  },
+  {
+   "id": "AEO-010",
+   "title": "Page has enough readable text",
+   "check": "text",
+   "parameters": {
+    "minWords": 120
+   },
+   "recommendation": "Pages with almost no text give answer engines nothing to quote. Add a plain-language summary.",
+   "source": "pchewlo/aeo-check@5e7a84a2757b"
+  },
+  {
+   "id": "AEO-011",
+   "title": "Page has social preview data",
+   "check": "og",
+   "parameters": {},
+   "recommendation": "Add og:title, og:description and og:image so shared links read well.",
+   "source": "inhouseseo/superseo-skills@9cf22cc065a2"
+  }
+ ]
+}

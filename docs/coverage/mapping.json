@@ -1,0 +1,724 @@
+{
+ "entries": [
+  {
+   "source": "mgifford",
+   "check": "Text and non-text colour contrast",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-001",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Images have text alternatives",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-002",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Form controls have names, autocomplete and input types",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-003",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Everything works from the keyboard; no traps",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-004",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Focus is visible and not hidden behind sticky UI",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-005",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Headings are in order and not empty",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-007",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Landmarks and a main region exist",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-008",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Links have meaningful names",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-009",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Same-page links point at an element that exists",
+   "category": "Accessibility",
+   "kind": "improved",
+   "ref": "A11Y-019",
+   "note": "nav/fragment-target added in the Detector-Pack batch"
+  },
+  {
+   "source": "mgifford",
+   "check": "Tables have headers",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-012",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Audio and video have captions or transcripts",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-014",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Pointer targets are large enough",
+   "category": "Mobile Responsiveness",
+   "kind": "reused",
+   "ref": "MOB-003",
+   "note": "axe target-size"
+  },
+  {
+   "source": "mgifford",
+   "check": "Dark mode and forced colours are respected",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-019",
+   "note": "sugam/forced-colors-optout"
+  },
+  {
+   "source": "mgifford",
+   "check": "Focus order follows reading order",
+   "category": "Accessibility",
+   "kind": "new",
+   "ref": "A11Y-013",
+   "note": "a11y/reading-order; advisory (a person confirms intent)"
+  },
+  {
+   "source": "mgifford",
+   "check": "Live regions announce changes",
+   "category": "Accessibility",
+   "kind": "blocked",
+   "ref": "A11Y-018",
+   "note": "needs a screen reader; recorded as needs a person"
+  },
+  {
+   "source": "mgifford",
+   "check": "Tooltips and hover content are reachable",
+   "category": "Accessibility",
+   "kind": "blocked",
+   "ref": "A11Y-018",
+   "note": "needs scripted interaction on each widget; recorded as needs a person"
+  },
+  {
+   "source": "mgifford",
+   "check": "Progressive enhancement (works without scripts)",
+   "category": "Accessibility",
+   "kind": "advisory",
+   "ref": "A11Y-018",
+   "note": "not measurable from a rendered scan"
+  },
+  {
+   "source": "vercel",
+   "check": "Respect prefers-reduced-motion",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-016",
+   "note": "sugam/reduced-motion"
+  },
+  {
+   "source": "vercel",
+   "check": "Icon-only buttons have an accessible name",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-015",
+   "note": "button-name"
+  },
+  {
+   "source": "vercel",
+   "check": "Inputs are labelled and use the right type",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-003",
+   "note": ""
+  },
+  {
+   "source": "vercel",
+   "check": "Images declare width and height",
+   "category": "Performance",
+   "kind": "reused",
+   "ref": "PERF-002",
+   "note": "perf/cls-unsized-images"
+  },
+  {
+   "source": "emil",
+   "check": "Animations respect reduced motion",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-016",
+   "note": ""
+  },
+  {
+   "source": "emil",
+   "check": "Animation does not delay interaction",
+   "category": "Performance",
+   "kind": "blocked",
+   "ref": "PERF-003",
+   "note": "INP needs field data or scripted interaction; recorded as couldn't verify"
+  },
+  {
+   "source": "joao-ux",
+   "check": "Primary task is visible",
+   "category": "UX & Workflow Quality",
+   "kind": "reused",
+   "ref": "UX-002",
+   "note": ""
+  },
+  {
+   "source": "joao-ux",
+   "check": "Content can be scanned",
+   "category": "UX & Workflow Quality",
+   "kind": "reused",
+   "ref": "UX-010",
+   "note": ""
+  },
+  {
+   "source": "joao-ux",
+   "check": "System shows feedback after an action",
+   "category": "UX & Workflow Quality",
+   "kind": "reused",
+   "ref": "UX-011",
+   "note": "workflow/action-no-response"
+  },
+  {
+   "source": "joao-ux",
+   "check": "Errors say what went wrong and how to fix it",
+   "category": "UX & Workflow Quality",
+   "kind": "reused",
+   "ref": "UX-017",
+   "note": "ux/error-recovery"
+  },
+  {
+   "source": "joao-ux",
+   "check": "Navigation is easy to find",
+   "category": "UX & Workflow Quality",
+   "kind": "advisory",
+   "ref": "UX-001",
+   "note": "judgement; needs the model or a person"
+  },
+  {
+   "source": "joao-ux",
+   "check": "Cognitive load, choice overload, progressive disclosure",
+   "category": "UX & Workflow Quality",
+   "kind": "advisory",
+   "ref": "UX-004",
+   "note": "judgement; needs the model or a person"
+  },
+  {
+   "source": "joao-ux",
+   "check": "Error prevention before submit",
+   "category": "UX & Workflow Quality",
+   "kind": "blocked",
+   "ref": "UX-016",
+   "note": "needs a person to confirm intent"
+  },
+  {
+   "source": "vercel",
+   "check": "Interface feedback and empty states",
+   "category": "UX & Workflow Quality",
+   "kind": "advisory",
+   "ref": "UX-015",
+   "note": "judgement"
+  },
+  {
+   "source": "playwright-skill",
+   "check": "Responsive layout holds at 320px and 375px",
+   "category": "Mobile Responsiveness",
+   "kind": "reused",
+   "ref": "MOB-001",
+   "note": "real browser at two sizes"
+  },
+  {
+   "source": "playwright-skill",
+   "check": "No horizontal scroll",
+   "category": "Mobile Responsiveness",
+   "kind": "reused",
+   "ref": "MOB-002",
+   "note": ""
+  },
+  {
+   "source": "playwright-skill",
+   "check": "Main action reachable on mobile (below-fold and hidden duplicates are not blocked)",
+   "category": "Mobile Responsiveness",
+   "kind": "improved",
+   "ref": "MOB-010",
+   "note": "test/cta-regression.mjs"
+  },
+  {
+   "source": "impeccable",
+   "check": "Readable mobile type",
+   "category": "Mobile Responsiveness",
+   "kind": "reused",
+   "ref": "MOB-005",
+   "note": ""
+  },
+  {
+   "source": "impeccable",
+   "check": "Content scales and images fit",
+   "category": "Mobile Responsiveness",
+   "kind": "reused",
+   "ref": "MOB-006",
+   "note": ""
+  },
+  {
+   "source": "impeccable",
+   "check": "Sticky bars do not cover content",
+   "category": "Mobile Responsiveness",
+   "kind": "reused",
+   "ref": "MOB-013",
+   "note": ""
+  },
+  {
+   "source": "impeccable",
+   "check": "Mobile forms use suitable controls",
+   "category": "Mobile Responsiveness",
+   "kind": "reused",
+   "ref": "MOB-009",
+   "note": ""
+  },
+  {
+   "source": "mgifford",
+   "check": "Orientation is not locked",
+   "category": "Mobile Responsiveness",
+   "kind": "reused",
+   "ref": "MOB-011",
+   "note": ""
+  },
+  {
+   "source": "impeccable",
+   "check": "Mobile menu works by keyboard and returns focus",
+   "category": "Mobile Responsiveness",
+   "kind": "blocked",
+   "ref": "MOB-008",
+   "note": "needs scripted menu interaction per site; needs a person"
+  },
+  {
+   "source": "uiux-pro-max",
+   "check": "Clear type hierarchy",
+   "category": "Design & Brand Quality",
+   "kind": "reused",
+   "ref": "DESIGN-001",
+   "note": ""
+  },
+  {
+   "source": "anti-slop",
+   "check": "Few typefaces",
+   "category": "Design & Brand Quality",
+   "kind": "new",
+   "ref": "DESIGN-002",
+   "note": "design/font-families; advisory"
+  },
+  {
+   "source": "plugin87",
+   "check": "Primary action stands out",
+   "category": "Design & Brand Quality",
+   "kind": "reused",
+   "ref": "DESIGN-005",
+   "note": ""
+  },
+  {
+   "source": "plugin87",
+   "check": "Consistent components",
+   "category": "Design & Brand Quality",
+   "kind": "reused",
+   "ref": "DESIGN-008",
+   "note": ""
+  },
+  {
+   "source": "plugin87",
+   "check": "Consistent spacing rhythm",
+   "category": "Design & Brand Quality",
+   "kind": "reused",
+   "ref": "DESIGN-010",
+   "note": ""
+  },
+  {
+   "source": "anti-slop",
+   "check": "Template-default look",
+   "category": "Differentiation & Design Maturity",
+   "kind": "reused",
+   "ref": "DIFF-002",
+   "note": "observation only"
+  },
+  {
+   "source": "anti-slop",
+   "check": "Same section sequence as other AI-built sites",
+   "category": "Differentiation & Design Maturity",
+   "kind": "reused",
+   "ref": "DIFF-001",
+   "note": "observation only"
+  },
+  {
+   "source": "design-auditor",
+   "check": "Colour palette consistency and restraint",
+   "category": "Design & Brand Quality",
+   "kind": "blocked",
+   "ref": "DESIGN-006",
+   "note": "needs a brand palette input"
+  },
+  {
+   "source": "uiux-pro-max",
+   "check": "Heading uses the approved brand font",
+   "category": "Design & Brand Quality",
+   "kind": "blocked",
+   "ref": "DESIGN-012",
+   "note": "no approved-font input; couldn't verify"
+  },
+  {
+   "source": "marketingskills",
+   "check": "Primary call to action is specific, not generic",
+   "category": "Conversion Readiness",
+   "kind": "improved",
+   "ref": "CONV-001",
+   "note": "conv/generic-primary-action"
+  },
+  {
+   "source": "marketingskills",
+   "check": "Call to action is visible",
+   "category": "Conversion Readiness",
+   "kind": "reused",
+   "ref": "CONV-002",
+   "note": "test/cta-regression.mjs"
+  },
+  {
+   "source": "marketingskills",
+   "check": "One main call to action, not many",
+   "category": "Conversion Readiness",
+   "kind": "reused",
+   "ref": "CONV-004",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Forms ask for few fields",
+   "category": "Conversion Readiness",
+   "kind": "reused",
+   "ref": "CONV-006",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Free trial or start path is visible",
+   "category": "Conversion Readiness",
+   "kind": "reused",
+   "ref": "CONV-014",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Pricing is clear",
+   "category": "Conversion Readiness",
+   "kind": "advisory",
+   "ref": "CONV-007",
+   "note": "judgement"
+  },
+  {
+   "source": "marketingskills",
+   "check": "Objections are answered near the action",
+   "category": "Conversion Readiness",
+   "kind": "advisory",
+   "ref": "CONV-009",
+   "note": "judgement"
+  },
+  {
+   "source": "marketingskills",
+   "check": "Contact route exists and opens",
+   "category": "Trust & Credibility",
+   "kind": "reused",
+   "ref": "TRUST-001",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Privacy policy exists and opens",
+   "category": "Trust & Credibility",
+   "kind": "reused",
+   "ref": "TRUST-002",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Terms exist and open",
+   "category": "Trust & Credibility",
+   "kind": "reused",
+   "ref": "TRUST-003",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Testimonials are real, not placeholders",
+   "category": "Trust & Credibility",
+   "kind": "improved",
+   "ref": "TRUST-005",
+   "note": "trust/unfinished-proof"
+  },
+  {
+   "source": "marketingskills",
+   "check": "Reviews and support are reachable",
+   "category": "Trust & Credibility",
+   "kind": "reused",
+   "ref": "TRUST-012",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Customer logos, founders, team",
+   "category": "Trust & Credibility",
+   "kind": "blocked",
+   "ref": "TRUST-006",
+   "note": "needs owner input to confirm they are real"
+  },
+  {
+   "source": "marketingskills",
+   "check": "Opening says what the product is and who it is for",
+   "category": "Product Clarity",
+   "kind": "reused",
+   "ref": "PC-001",
+   "note": ""
+  },
+  {
+   "source": "joao-ux",
+   "check": "Jargon is avoided",
+   "category": "Product Clarity",
+   "kind": "reused",
+   "ref": "PC-009",
+   "note": "buzzword list extended"
+  },
+  {
+   "source": "marketingskills",
+   "check": "Headline and subheadline quality",
+   "category": "Product Clarity",
+   "kind": "reused",
+   "ref": "PC-005",
+   "note": ""
+  },
+  {
+   "source": "vercel",
+   "check": "Largest Contentful Paint",
+   "category": "Performance",
+   "kind": "reused",
+   "ref": "PERF-001",
+   "note": ""
+  },
+  {
+   "source": "vercel",
+   "check": "Layout shift",
+   "category": "Performance",
+   "kind": "reused",
+   "ref": "PERF-002",
+   "note": ""
+  },
+  {
+   "source": "vercel",
+   "check": "Image, font, JS, CSS, blocking and third-party cost",
+   "category": "Performance",
+   "kind": "reused",
+   "ref": "PERF-004",
+   "note": "PERF-004 to PERF-009"
+  },
+  {
+   "source": "aeo-check",
+   "check": "Page has a clear title",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-001",
+   "note": ""
+  },
+  {
+   "source": "superseo",
+   "check": "Page has a meta description",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-002",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Page declares its language",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-003",
+   "note": ""
+  },
+  {
+   "source": "superseo",
+   "check": "Page has one canonical address",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-004",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Page has structured data",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-005",
+   "note": ""
+  },
+  {
+   "source": "aeo-check",
+   "check": "Crawlers are not blocked",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-006",
+   "note": ""
+  },
+  {
+   "source": "superseo",
+   "check": "Page is not marked noindex",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-007",
+   "note": ""
+  },
+  {
+   "source": "marketingskills",
+   "check": "Site offers an llms.txt",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-008",
+   "note": "advisory"
+  },
+  {
+   "source": "superseo",
+   "check": "Page has one main heading",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-009",
+   "note": ""
+  },
+  {
+   "source": "aeo-check",
+   "check": "Page has enough readable text",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-010",
+   "note": ""
+  },
+  {
+   "source": "superseo",
+   "check": "Page has social preview data",
+   "category": "AEO (separate track)",
+   "kind": "new",
+   "ref": "AEO-011",
+   "note": ""
+  },
+  {
+   "source": "trailofbits",
+   "check": "Page is served over HTTPS",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-001",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "HSTS header is present",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-002",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "Content-Security-Policy is present",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-003",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "MIME sniffing is disabled",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-004",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "Page cannot be framed by other sites",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-005",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "Referrer policy is set",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-006",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "No mixed content",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-007",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "Third-party scripts use integrity hashes",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-008",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "External new-tab links are protected",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-009",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "Forms do not post over HTTP",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "SEC-010",
+   "note": "passive observation"
+  },
+  {
+   "source": "trailofbits",
+   "check": "Review the project's own source for risky patterns",
+   "category": "Security (separate track)",
+   "kind": "new",
+   "ref": "LOCAL-SOURCE",
+   "note": "scripts/local-source-review.mjs; local code only, no network"
+  }
+ ]
+}

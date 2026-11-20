@@ -4,8 +4,8 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 const plan = process.argv[2]; const base = process.argv[3] || 'http://localhost:3100';
-const creds = fs.readFileSync('.data/test-account.txt', 'utf8'); const email = creds.match(/Email: (\S+)/)[1]; const pw = creds.match(/Password: (\S+)/)[1];
-const slug = 'test-agency'; const results = [];
+const creds = fs.readFileSync(process.env.GATING_FILE || '.data/test-account.txt', 'utf8'); const email = creds.match(/Email: (\S+)/)[1]; const pw = creds.match(/Password: (\S+)/)[1];
+const slug = creds.match(/Slug: (\S+)/)?.[1] ?? 'test-agency'; const results = [];
 const check = (n, ok, x = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  [${plan}] ${n}${x ? '  ' + x : ''}`); };
 const b = await chromium.launch({ channel: 'chrome' }); const ctx = await b.newContext(); const page = await ctx.newPage();
 await page.goto(base + '/login'); await page.fill('input[type=email]', email); await page.fill('input[type=password]', pw);

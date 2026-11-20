@@ -6,7 +6,7 @@ import './globals.css';
 const display = Instrument_Sans({ subsets: ['latin'], style: ['normal', 'italic'], weight: ['400', '500', '600', '700'], variable: '--font-instrument', display: 'swap' });
 const mono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-plex', display: 'swap' });
 
-export const metadata: Metadata = { title: 'Sugam | AI accessibility review for modern websites', description: 'Find, see and fix accessibility issues on sites built with Lovable, Bolt.new, v0, Framer, Webflow and more.' };
+export const metadata: Metadata = { title: 'Sugam | AI review for modern websites', description: 'Find, see and fix clarity, mobile, trust, conversion, accessibility and performance issues on sites built with Lovable, Bolt.new, v0, Framer, Webflow and more.' };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
