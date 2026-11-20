@@ -1,0 +1,27 @@
+// Free tools: the contrast checker maths and messages, the rules file copy, and the guides index.
+import { chromium } from 'playwright';
+const base = process.argv[2] || 'http://localhost:3100'; const results = [];
+const check = (n, ok, x = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x ? '  ' + x : ''}`); };
+const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1280, height: 900 }, permissions: ['clipboard-read', 'clipboard-write'] }); const p = await ctx.newPage();
+await p.goto(base + '/tools/contrast-checker');
+const status = () => p.locator('[role=status]').first().innerText();
+check('default grey on white is 4.54:1 and passes AA for normal text', /4\.54/.test(await status()) && /Normal text, AA[^]*Passes/.test(await status()));
+await p.fill('#cc-fg', '#ff7a1a'); await p.waitForTimeout(100);
+const s1 = await status();
+check('orange on white fails normal text and offers a closest colour that passes', /Fails/.test(s1) && /Closest text colour that passes/.test(s1));
+const hex = s1.match(/#[0-9a-f]{6}/i)?.[0];
+await p.fill('#cc-fg', hex); await p.waitForTimeout(100);
+const ratio = Number((await status()).match(/(\d+\.\d+)\s*: 1/)?.[1]);
+check('the suggested colour really reaches 4.5:1', ratio >= 4.5, `${hex} -> ${ratio}`);
+await p.fill('#cc-fg', 'nope'); await p.waitForTimeout(100);
+check('an invalid colour is explained, not silently ignored', /Enter two hex colours/.test(await status()) && (await p.locator('#cc-fg').getAttribute('aria-invalid')) === 'true');
+await p.goto(base + '/tools/ai-builder-rules');
+await p.getByRole('button', { name: 'Copy rules' }).click(); await p.waitForTimeout(200);
+const clip = await p.evaluate(() => navigator.clipboard.readText());
+check('the rules file copies, starts with its title and says no overlay', clip.startsWith('Accessibility rules for this project') && /Do not add an accessibility overlay/.test(clip));
+check('the rules page ends with a scan call to action that explains why both exist', (await p.locator('main h2').last().innerText()).includes('A scan finds the old ones') && (await p.getByRole('link', { name: /Scan my page free/ }).count()) >= 1);
+await p.goto(base + '/learn');
+check('the guides index lists five guides', (await p.locator('main ul > li a').count()) === 5);
+await p.goto(base + '/learn/fix-low-contrast'); check('a guide opens with its heading and a scan call to action', (await p.locator('h1').innerText()).includes('low-contrast') && (await p.getByRole('link', { name: /Scan my page free/ }).count()) >= 1);
+const r404 = await p.goto(base + '/learn/nope'); check('an unknown guide is a 404', r404.status() === 404);
+await b.close(); const f = results.filter((x) => !x).length; console.log(f ? `\n${f} FAILED` : '\nAll passed'); process.exit(f ? 1 : 0);

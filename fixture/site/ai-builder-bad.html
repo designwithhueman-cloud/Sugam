@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-builder defects: div soup</title>
+<style>
+  body { font: 18px/1.5 system-ui, sans-serif; color: #1a1a1a; background: #fff; margin: 0; padding: 24px; }
+  a, button, input { font: inherit; }
+  :focus-visible { outline: 3px solid #5b2fd0; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div>
+    <h2>Welcome to the app</h2>
+    <h4>Features</h4>
+    <p style="font-size:10px">Tiny legal text that nobody can read comfortably.</p>
+    <p><a href="/docs" target="_blank" rel="noopener">Documentation</a></p>
+    <p><a href="/pricing">click here</a></p>
+    <p><input type="email" placeholder="you@company.com" style="border:1px solid #767676;padding:6px" autofocus></p>
+    <p><button type="button" aria-label="Pricing details - Learn more">Learn more</button></p>
+    <video autoplay muted loop width="160" height="90" src="/loop.mp4"></video>
+    <img src="/hero-headline.svg" alt="Launch your startup in a weekend" width="480" height="120">
+    <p><a href="/start"><img src="/button-get-started.svg" alt="Get started" width="200" height="60"></a></p>
+    <form onsubmit="return false" aria-label="Contact">
+      <p><label>Email <input type="text" name="email" style="border:1px solid #767676;padding:6px"></label></p>
+      <p><label>Full name * <input type="text" name="fullname" autocomplete="name" style="border:1px solid #767676;padding:6px"></label></p>
+      <p><input type="text" aria-label="Company site" autocomplete="url" style="border:1px solid #767676;padding:6px"></p>
+      <p><label>Phone <input type="tel" autocomplete="tel" aria-invalid="true" style="border:1px solid #767676;padding:6px"></label></p>
+      <p>How did you hear about us?</p>
+      <label><input type="radio" name="src" value="a"> A friend</label> <label><input type="radio" name="src" value="b"> An ad</label>
+    </form>
+    <div style="forced-color-adjust:none;background:#eef">Swatch with text</div>
+  </div>
+</div>
+</body>
+</html>

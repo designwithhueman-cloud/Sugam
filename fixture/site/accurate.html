@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accurate page: tricky but accessible</title>
+<style>
+  body { font: 18px/1.5 system-ui, sans-serif; color: #1a1a1a; background: #fff; margin: 0; padding: 24px; }
+  a, button { color: #1a1a1a; font: inherit; }
+  a:focus-visible, button:focus-visible, button.ring { outline: 3px solid #5b2fd0; outline-offset: 2px; }
+  nav { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+</style>
+</head>
+<body>
+<header>
+  <nav aria-label="Main">
+    <a href="/pricing">Pricing</a>
+    <button type="button" aria-expanded="false">About</button>
+    <x-menu></x-menu>
+  </nav>
+</header>
+<main>
+  <h1>Things scanners often get wrong</h1>
+
+  <!-- A click handler on a wrapper around a real link or button: event delegation, not a missing control. -->
+  <div class="row" onclick="void 0"><a href="/docs">Docs</a></div>
+  <div class="row"><span onclick="void 0"><button type="button">Save draft</button></span></div>
+
+  <!-- The same destination twice (trailing slash differs), and a menu button sharing a link's label. -->
+  <div class="row"><a href="/guide">Guide</a> <a href="/guide/">Guide</a></div>
+
+  <!-- A radio group with roving tabindex: only the checked radio is in the Tab order, the rest use arrow keys. -->
+  <div class="row" role="radiogroup" aria-label="Size"><span role="radio" aria-checked="true" tabindex="0" onclick="void 0">Small</span><span role="radio" aria-checked="false" tabindex="-1" onclick="void 0">Medium</span></div>
+
+  <!-- A focus ring that a script adds a frame after focus and removes a frame after blur. -->
+  <div class="row"><button type="button" id="js-ring">Share</button></div>
+
+  <!-- Look-alikes for the WCAG 2.2 extras: visible field borders (3:1+), a sign-in form that allows paste and password managers, and a box that grows with its text. -->
+  <form class="row" action="/login" onsubmit="return false" aria-label="Sign in">
+    <label>Email <input type="email" placeholder="you@company.com" autocomplete="username" style="border:1px solid #767676;padding:6px"></label>
+    <label>Password <input type="password" autocomplete="current-password" style="border:1px solid #767676;padding:6px"></label>
+    <button type="submit">Sign in</button>
+  </form>
+  <div style="width:220px;overflow:hidden;font-size:14px"><p>A short note that grows with its text.</p></div>
+
+  <!-- AI-builder look-alikes: a new-tab link that says so, a spoken name that starts with the visible words, readable text. -->
+  <p style="font-size:14px"><a href="https://example.com/docs" target="_blank" rel="noopener">Read the docs <span style="position:absolute;left:-9999px">(opens in a new tab)</span></a> <button type="button" aria-label="Learn more about pricing">Learn more</button></p>
+
+  <!-- Look-alikes: a diagram with a descriptive alt (not text), a logo, and a well-formed contact form. -->
+  <p><img src="/hero.svg" alt="Dashboard showing weekly signups rising over four weeks" width="400" height="200"> <img src="/logo.svg" alt="Acme logo" width="160" height="40"></p>
+  <form class="row" onsubmit="return false" aria-label="Contact">
+    <label>Full name * <input type="text" name="fullname" autocomplete="name" required style="border:1px solid #767676;padding:6px"></label>
+    <label>Phone <input type="tel" autocomplete="tel" style="border:1px solid #767676;padding:6px"></label>
+    <fieldset><legend>How did you hear about us?</legend><label><input type="radio" name="src" value="a"> A friend</label> <label><input type="radio" name="src" value="b"> An ad</label></fieldset>
+  </form>
+</main>
+<footer><a href="/about">About</a></footer>
+<script>
+  // A web component: focus stays on the host, the ring is drawn inside its shadow root.
+  customElements.define('x-menu', class extends HTMLElement {
+    constructor() { super(); const r = this.attachShadow({ mode: 'open', delegatesFocus: true });
+      r.innerHTML = '<style>button{font:inherit;color:#1a1a1a}button:focus-visible{outline:3px solid #5b2fd0;outline-offset:2px}</style><button type="button">Open menu</button>'; }
+  });
+  const b = document.getElementById('js-ring');
+  b.addEventListener('focus', () => requestAnimationFrame(() => b.classList.add('ring')));
+  b.addEventListener('blur', () => requestAnimationFrame(() => b.classList.remove('ring')));
+</script>
+</body>
+</html>

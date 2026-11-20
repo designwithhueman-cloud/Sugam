@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Launchpad: join the waitlist</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;color:#111;background:#fff}
+  header{padding:16px 24px;border-bottom:1px solid #ddd;font-weight:700}
+  main{max-width:960px;margin:0 auto;padding:32px 24px}
+  h1{font-size:2.2rem;margin:0 0 12px} p{max-width:560px;line-height:1.5}
+  .signup{display:flex;flex-wrap:wrap;gap:12px;width:100%;margin-top:24px}
+  .signup input{flex:1 1 220px;min-width:0;padding:12px;font-size:16px;border:1px solid #666;border-radius:8px}
+  .signup .cta{flex:0 0 auto;padding:12px 20px;background:#5b2fd0;color:#fff;border:0;border-radius:8px;font-size:16px;cursor:pointer}
+  #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);place-items:center} #modal.open{display:grid}
+  .box{background:#fff;padding:24px;border-radius:12px;width:min(420px,90vw)} .box label{display:block;margin:12px 0} .box input{display:block;width:100%;padding:10px;font-size:16px;margin-top:6px;box-sizing:border-box}
+</style></head>
+<body>
+<header>Launchpad</header>
+<main>
+  <h1>Ship your idea this week</h1>
+  <p>Launchpad helps founders go from idea to a live product. Join the waitlist to get early access.</p>
+  <div class="signup"><input aria-label="Your email" placeholder="you@company.com"><button class="cta" type="button" id="join">Join the waitlist</button></div>
+</main>
+<div id="modal" role="dialog" aria-modal="true" aria-label="Join the waitlist"><div class="box"><h2>Join the waitlist</h2><form><label>Email <input id="wl-email" type="email" autocomplete="email"></label><button type="submit">Send</button></form></div></div>
+<script>document.getElementById('join').addEventListener('click',function(){document.getElementById('modal').classList.add('open');document.getElementById('wl-email').focus();});</script>
+</body></html>

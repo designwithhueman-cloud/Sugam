@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 1,
+  "library": "Avara Rule Library",
+  "libraryVersion": "1.0.0-draft",
+  "categories": [
+    {
+      "id": "product_clarity",
+      "label": "Product Clarity",
+      "code": "PC",
+      "weight": 15,
+      "file": "product-clarity.json",
+      "userImpact": "Visitors who cannot tell what the product is or who it is for leave before they act.",
+      "businessImpact": "Some visitors may not understand the offer, which can mean fewer sign-ups. This is a hypothesis; Avara did not measure your visitors."
+    },
+    {
+      "id": "ux_workflow",
+      "label": "UX & Workflow Quality",
+      "code": "UX",
+      "weight": 15,
+      "file": "ux.json",
+      "userImpact": "Visitors get stuck, lose their place or cannot tell what happened.",
+      "businessImpact": "Friction in the main task can lower completion. This is a hypothesis; Avara did not measure completion."
+    },
+    {
+      "id": "mobile",
+      "label": "Mobile Responsiveness",
+      "code": "MOB",
+      "weight": 10,
+      "file": "mobile.json",
+      "userImpact": "People on phones cannot see or use parts of the page.",
+      "businessImpact": "Phone visitors may be unable to complete the main action. This is a hypothesis; Avara did not measure conversions."
+    },
+    {
+      "id": "accessibility",
+      "label": "Accessibility",
+      "code": "A11Y",
+      "weight": 10,
+      "file": "accessibility.json",
+      "userImpact": "People who use assistive technology or a keyboard may be unable to use part of the page.",
+      "businessImpact": "Excluded visitors cannot convert, and there may be legal exposure that Avara does not assess."
+    },
+    {
+      "id": "trust",
+      "label": "Trust & Credibility",
+      "code": "TRUST",
+      "weight": 10,
+      "file": "trust.json",
+      "userImpact": "Visitors who cannot verify who is behind the page hesitate to share details or pay.",
+      "businessImpact": "Missing proof can lower willingness to commit. This is a hypothesis; absence alone is not a defect."
+    },
+    {
+      "id": "design",
+      "label": "Design & Brand Quality",
+      "code": "DESIGN",
+      "weight": 10,
+      "file": "design.json",
+      "userImpact": "Unclear hierarchy or inconsistent styling makes the page harder to read and scan.",
+      "businessImpact": "Weak hierarchy can hide the main action. This is a hypothesis; Avara did not measure attention."
+    },
+    {
+      "id": "conversion",
+      "label": "Conversion Readiness",
+      "code": "CONV",
+      "weight": 15,
+      "file": "conversion.json",
+      "userImpact": "Unclear actions or heavy forms make it harder to take the next step.",
+      "businessImpact": "Friction at the point of conversion can lower conversions. This is a hypothesis; Avara did not measure conversions."
+    },
+    {
+      "id": "performance",
+      "label": "Performance",
+      "code": "PERF",
+      "weight": 15,
+      "file": "performance.json",
+      "userImpact": "Slow or shifting pages frustrate visitors, especially on phones.",
+      "businessImpact": "Slow loading can cost visitors before they see the page. This is a hypothesis; lab results are not field data."
+    },
+    {
+      "id": "differentiation",
+      "label": "Differentiation & Design Maturity",
+      "code": "DIFF",
+      "weight": 0,
+      "file": "diff.json",
+      "userImpact": "Visitors cannot tell this page from others that look the same.",
+      "businessImpact": "A page that looks like a template makes the product feel interchangeable. This is a hypothesis; Avara did not measure it."
+    }
+  ],
+  "sources": {
+    "HOME": {
+      "key": "HOME",
+      "name": "NN/g, Homepage Design principles",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/homepage-design-principles/"
+    },
+    "NN1": {
+      "key": "NN1",
+      "name": "Nielsen usability heuristic 1",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "NN2": {
+      "key": "NN2",
+      "name": "Nielsen usability heuristic 2",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "NN3": {
+      "key": "NN3",
+      "name": "Nielsen usability heuristic 3",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "NN4": {
+      "key": "NN4",
+      "name": "Nielsen usability heuristic 4",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "NN5": {
+      "key": "NN5",
+      "name": "Nielsen usability heuristic 5",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "NN6": {
+      "key": "NN6",
+      "name": "Nielsen usability heuristic 6",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "NN7": {
+      "key": "NN7",
+      "name": "Nielsen usability heuristic 7",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "NN8": {
+      "key": "NN8",
+      "name": "Nielsen usability heuristic 8",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "NN9": {
+      "key": "NN9",
+      "name": "Nielsen usability heuristic 9",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "NN10": {
+      "key": "NN10",
+      "name": "Nielsen usability heuristic 10",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/ten-usability-heuristics/"
+    },
+    "READ": {
+      "key": "READ",
+      "name": "NN/g, How users read on the web",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/how-users-read-on-the-web/"
+    },
+    "W": {
+      "key": "W",
+      "name": "W3C WCAG 2.2",
+      "sourceType": "standard",
+      "url": "https://www.w3.org/TR/WCAG22/"
+    },
+    "APG": {
+      "key": "APG",
+      "name": "W3C ARIA Authoring Practices Guide",
+      "sourceType": "standard",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"
+    },
+    "ST": {
+      "key": "ST",
+      "name": "Stanford Web Credibility Guidelines",
+      "sourceType": "research",
+      "url": "https://credibility.stanford.edu/guidelines/"
+    },
+    "BAYF": {
+      "key": "BAYF",
+      "name": "Baymard, checkout form fields",
+      "sourceType": "research",
+      "url": "https://baymard.com/research-articles/checkout-flow-average-form-fields"
+    },
+    "BAYR": {
+      "key": "BAYR",
+      "name": "Baymard, required/optional field markings",
+      "sourceType": "research",
+      "url": "https://baymard.com/research-articles/required-optional-form-fields"
+    },
+    "CXL": {
+      "key": "CXL",
+      "name": "CXL, web form optimization",
+      "sourceType": "research",
+      "url": "https://cxl.com/blog/web-form-optimization/"
+    },
+    "REF": {
+      "key": "REF",
+      "name": "Refactoring UI, labels are a last resort",
+      "sourceType": "research",
+      "url": "https://refactoringui.com/previews/labels-are-a-last-resort"
+    },
+    "VITALS": {
+      "key": "VITALS",
+      "name": "web.dev, Web Vitals",
+      "sourceType": "vendor_guidance",
+      "url": "https://web.dev/articles/vitals"
+    },
+    "CHROME": {
+      "key": "CHROME",
+      "name": "Chrome, Performance Insights",
+      "sourceType": "vendor_guidance",
+      "url": "https://developer.chrome.com/docs/performance/insights"
+    },
+    "OWNER": {
+      "key": "OWNER",
+      "name": "Owner-specific requirement or product hypothesis",
+      "sourceType": "owner_hypothesis",
+      "url": null
+    },
+    "DESIGN": {
+      "key": "DESIGN",
+      "name": "Scoped brand / design-system reference",
+      "sourceType": "design_system",
+      "url": null
+    },
+    "DIFF": {
+      "key": "DIFF",
+      "name": "Avara editorial pattern definitions (with the references named in each rule)",
+      "sourceType": "avara",
+      "url": null
+    }
+  },
+  "exercisedDetectors": [
+    "color-contrast",
+    "image-alt",
+    "label",
+    "button-name",
+    "label-content-name",
+    "label-content-name-mismatch",
+    "sugam/heading-structure",
+    "sugam/non-text-contrast",
+    "sugam/image-of-text",
+    "sugam/voice-name-not-first",
+    "sugam/vague-link-text",
+    "sugam/text-spacing",
+    "sugam/small-text",
+    "sugam/positive-tabindex",
+    "sugam/placeholder-only-label",
+    "sugam/non-semantic-clickable",
+    "sugam/no-main-landmark",
+    "sugam/new-tab-warning",
+    "sugam/form-required-not-marked",
+    "sugam/form-label-not-visible",
+    "sugam/form-input-type",
+    "sugam/form-group-name",
+    "sugam/form-error-not-linked",
+    "sugam/form-autocomplete-missing",
+    "sugam/forced-colors-optout",
+    "sugam/focus-not-visible",
+    "sugam/focus-context-change",
+    "sugam/duplicate-cta-label",
+    "sugam/dragging-alternative",
+    "sugam/autoplay-no-pause",
+    "sugam/autofocus",
+    "sugam/auth-paste-blocked",
+    "sugam/auth-captcha",
+    "sugam/auth-autocomplete-off",
+    "sugam/reflow-320",
+    "sugam/media-transcript",
+    "sugam/looks-clickable",
+    "sugam/keyboard-trap",
+    "sugam/aria-tablist",
+    "mobile/primary-action-unusable",
+    "workflow/action-cannot-be-activated",
+    "accessibility/reflow-function-loss",
+    "mobile/sticky-ui-interference",
+    "ux/primary-task-visible",
+    "mobile/content-scaling",
+    "mobile/layout-integrity",
+    "mobile/orientation",
+    "mobile/typography",
+    "mobile/form-usability",
+    "mobile/image-responsiveness",
+    "trust/privacy-link",
+    "trust/terms-link",
+    "trust/contact-route",
+    "trust/review-route",
+    "trust/support-route",
+    "conv/trial-visibility",
+    "conv/cta-consistency",
+    "conv/field-count",
+    "ux/scannability",
+    "design/typography-hierarchy",
+    "design/cta-emphasis",
+    "design/component-consistency",
+    "perf/image-optimization",
+    "perf/font-optimization",
+    "perf/javascript-efficiency",
+    "perf/css-efficiency",
+    "perf/render-blocking",
+    "perf/third-party",
+    "pc/hero-statement",
+    "pc/audience-cue",
+    "pc/feature-first",
+    "pc/unsupported-superlatives",
+    "pc/headline-form",
+    "pc/subheadline",
+    "pc/problem-signal",
+    "pc/outcome-language",
+    "pc/buzzwords",
+    "conv/cta-saturation",
+    "diff/template-sequence",
+    "diff/default-styling",
+    "diff/brand-assets",
+    "diff/layout-archetypes",
+    "diff/shape-and-icon-language",
+    "diff/feature-grid-saturation",
+    "pc/first-screen",
+    "pc/offer-before-action",
+    "pc/cta-context",
+    "design/visual-hierarchy",
+    "design/spacing-rhythm",
+    "ux/error-recovery"
+  ]
+}

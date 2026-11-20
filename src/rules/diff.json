@@ -1,0 +1,566 @@
+{
+  "schemaVersion": 1,
+  "category": "Differentiation & Design Maturity",
+  "rules": [
+    {
+      "ruleId": "DIFF-001",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Template Similarity Detection",
+      "description": "The order of the page's sections matches the common AI-SaaS landing template: Hero, Feature grid, Logo cloud, Testimonials, Pricing, FAQ, Call-to-action band. Objective check: each section is classified from the page structure and the page's order is compared with the template order (longest common subsequence). 5 or more of the 7 in order fails; 4 needs a person.",
+      "source": "Avara editorial pattern (AI SaaS landing template); reference: NN/g Homepage Design Principles",
+      "sourceType": "avara",
+      "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "medium",
+      "weight": 0,
+      "mode": "M",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "detector",
+        "detectors": [
+          "diff/template-sequence"
+        ]
+      },
+      "evaluationPrompt": "Template Similarity Detection: The order of the page's sections matches the common AI-SaaS landing template: Hero, Feature grid, Logo cloud, Testimonials, Pricing, FAQ, Call-to-action band. Objective check: each section is classified from the page structure and the page's order is compared with the template order (longest common subsequence). 5 or more of the 7 in order fails; 4 needs a person. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "Your landing page follows the section order {{observation}} Change the order or replace at least two of these sections with content only you can show (a real product walkthrough, a customer's numbers, a comparison). Sections found: {{evidence}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "Visitors who have seen the same layout elsewhere read the page as generic before they read the words. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "A page that looks like any other template makes the product feel interchangeable, which weakens the reason to choose it over alternatives. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "classified section list in page order",
+        "the template order used",
+        "matched sections"
+      ],
+      "parameters": {
+        "templateSequence": [
+          "hero",
+          "feature-grid",
+          "logo-cloud",
+          "testimonials",
+          "pricing",
+          "faq",
+          "cta-band"
+        ],
+        "failMatched": 5,
+        "reviewMatched": 4,
+        "minSections": 4,
+        "kindHints": {
+          "pricing": "pric|plans?\\b",
+          "faq": "faq|questions",
+          "testimonials": "testimonial|customers say|loved by|what .* say|stories",
+          "logoCloud": "trusted by|used by|partners|as seen|customers",
+          "cta": "get started|ready to|start (now|today|free)|join|try"
+        }
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "partial",
+      "valueTier": 2
+    },
+    {
+      "ruleId": "DIFF-002",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Visual Distinctiveness",
+      "description": "The visual style departs from the default look. Objective check: count four default-style signals: a default sans font as the main typeface, a violet or indigo primary colour (hue 235 to 290), gradient backgrounds or gradient text, and rounded corners of 12px or more on cards. 3 or 4 signals needs a person.",
+      "source": "Refactoring UI; Material Design colour guidance",
+      "sourceType": "avara",
+      "sourceUrl": "https://www.refactoringui.com/previews/building-your-color-palette",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "medium",
+      "weight": 0,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "detector",
+        "detectors": [
+          "diff/default-styling"
+        ]
+      },
+      "evaluationPrompt": "Visual Distinctiveness: The visual style departs from the default look. Objective check: count four default-style signals: a default sans font as the main typeface, a violet or indigo primary colour (hue 235 to 290), gradient backgrounds or gradient text, and rounded corners of 12px or more on cards. 3 or 4 signals needs a person. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "The page uses {{observation}} together, which is the default look of many generated sites. Pick one choice that is yours (a typeface, a colour that is not violet, a distinctive shape or illustration style) and apply it consistently. Evidence: {{evidence}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "Visitors cannot tell this product from others by sight, so nothing about the page is remembered. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "Default styling makes the brand forgettable and price the main difference. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "main font and share of text",
+        "primary colour and hue",
+        "gradient count",
+        "card corner radii"
+      ],
+      "parameters": {
+        "defaultFonts": [
+          "inter",
+          "geist",
+          "roboto",
+          "system-ui",
+          "-apple-system",
+          "segoe ui",
+          "helvetica",
+          "helvetica neue",
+          "arial",
+          "sf pro text",
+          "dm sans",
+          "poppins"
+        ],
+        "hueMin": 235,
+        "hueMax": 290,
+        "minSignals": 3,
+        "minRadius": 12
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "partial",
+      "valueTier": 2
+    },
+    {
+      "ruleId": "DIFF-003",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Brand Memorability",
+      "description": "The page carries identifiable brand assets. Objective check: count four gaps: no logo mark (image or SVG) in the header, no favicon, no imagery beyond small icons, and a generic page title (Home, Welcome, Untitled). 3 or more needs a person.",
+      "source": "NN/g Aesthetic-Usability Effect",
+      "sourceType": "avara",
+      "sourceUrl": "https://www.nngroup.com/articles/aesthetic-usability-effect/",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "low",
+      "weight": 0,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "detector",
+        "detectors": [
+          "diff/brand-assets"
+        ]
+      },
+      "evaluationPrompt": "Brand Memorability: The page carries identifiable brand assets. Objective check: count four gaps: no logo mark (image or SVG) in the header, no favicon, no imagery beyond small icons, and a generic page title (Home, Welcome, Untitled). 3 or more needs a person. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "The page lacks {{observation}}. Add at least two assets that are recognisably yours: a logo mark, a favicon, a signature image or illustration, and a title that names the product and what it does. Evidence: {{evidence}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "With no recognisable assets there is little for a visitor to remember or recognise on return. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "Low recall makes repeat visits and word of mouth harder. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "logo element found or not",
+        "favicon present or not",
+        "count of large images",
+        "page title"
+      ],
+      "parameters": {
+        "minGaps": 3,
+        "genericTitles": [
+          "home",
+          "welcome",
+          "untitled",
+          "index",
+          "document",
+          "landing page"
+        ]
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "partial",
+      "valueTier": 3
+    },
+    {
+      "ruleId": "DIFF-004",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Dashboard Sameness",
+      "description": "A public app or dashboard view follows the stock dashboard layout. Objective check: look for a left sidebar of 5 or more links, a row of 3 or more small stat cards (number, label, change), and a chart card. All three present fails; two needs a person; a page with no app UI is not applicable.",
+      "source": "Material Design; Apple Human Interface Guidelines",
+      "sourceType": "avara",
+      "sourceUrl": "https://m3.material.io/",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "medium",
+      "weight": 0,
+      "mode": "M",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "detector",
+        "detectors": [
+          "diff/dashboard-pattern"
+        ]
+      },
+      "evaluationPrompt": "Dashboard Sameness: A public app or dashboard view follows the stock dashboard layout. Objective check: look for a left sidebar of 5 or more links, a row of 3 or more small stat cards (number, label, change), and a chart card. All three present fails; two needs a person; a page with no app UI is not applicable. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "The dashboard uses {{observation}}, the stock analytics layout. Organise the first screen around the one decision your user makes there, and show that decision's data first. Evidence: {{evidence}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "Users get no cue about what matters most, so they scan everything equally. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "A dashboard that looks like every other gives no visible reason to prefer this product's insight. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "sidebar selector and width",
+        "stat card count and selector",
+        "chart count",
+        "table count"
+      ],
+      "parameters": {
+        "minStatCards": 3,
+        "minSidebarLinks": 5
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "partial",
+      "valueTier": 2
+    },
+    {
+      "ruleId": "DIFF-005",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Layout Originality",
+      "description": "Sections use more than the three stock layouts. Objective check: classify each section as centred stack, 3-column grid or 2-column split and count the distinct layouts. With 5 or more sections and at most 2 distinct layouts it needs a person.",
+      "source": "Material Design layout; Refactoring UI",
+      "sourceType": "avara",
+      "sourceUrl": "https://m3.material.io/",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "low",
+      "weight": 0,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "detector",
+        "detectors": [
+          "diff/layout-archetypes"
+        ]
+      },
+      "evaluationPrompt": "Layout Originality: Sections use more than the three stock layouts. Objective check: classify each section as centred stack, 3-column grid or 2-column split and count the distinct layouts. With 5 or more sections and at most 2 distinct layouts it needs a person. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "Nearly every section uses {{observation}}. Change the layout of at least two sections to fit their content (a wide comparison, a timeline, an annotated screenshot). Evidence: {{evidence}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "Identical layouts make sections blur together, so visitors skim past them. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "Uniform pages look templated and make the product feel generic. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "layout class of each section",
+        "distinct layouts"
+      ],
+      "parameters": {
+        "minSections": 5,
+        "maxDistinct": 2
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "partial",
+      "valueTier": 3
+    },
+    {
+      "ruleId": "DIFF-006",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Visual System Originality",
+      "description": "The shape and icon language is chosen, not default. Objective check: three signals: every card shares one radius of 12px or more, most cards carry the same soft shadow, and icons come from a stock outline set (24px viewBox, 2px stroke) or are emoji. 2 or 3 signals needs a person.",
+      "source": "Refactoring UI; Apple Human Interface Guidelines",
+      "sourceType": "avara",
+      "sourceUrl": "https://www.refactoringui.com/",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "low",
+      "weight": 0,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "detector",
+        "detectors": [
+          "diff/shape-and-icon-language"
+        ]
+      },
+      "evaluationPrompt": "Visual System Originality: The shape and icon language is chosen, not default. Objective check: three signals: every card shares one radius of 12px or more, most cards carry the same soft shadow, and icons come from a stock outline set (24px viewBox, 2px stroke) or are emoji. 2 or 3 signals needs a person. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "The page uses {{observation}}, the default shape and icon language. Choose one shape rule of your own (square corners, heavy borders, a distinct illustration set) and use it throughout. Evidence: {{evidence}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "A default visual language gives visitors no cue that this product has a point of view. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "Visual sameness lowers recall and perceived craft. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "card radii",
+        "share of cards with a shadow",
+        "icon count and how many match a stock set",
+        "emoji icons"
+      ],
+      "parameters": {
+        "minSignals": 2,
+        "minRadius": 12,
+        "shadowShare": 0.8,
+        "minIcons": 3
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "partial",
+      "valueTier": 3
+    },
+    {
+      "ruleId": "DIFF-007",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Information Hierarchy Differentiation",
+      "description": "Sections do not all share one structure. Objective check: fingerprint each section by alignment, supporting text, call to action, media and card group; if 80% or more of 5 or more sections share one fingerprint, the page has a flat, repeating rhythm and needs a person.",
+      "source": "NN/g Visual Hierarchy",
+      "sourceType": "avara",
+      "sourceUrl": "https://www.nngroup.com/articles/visual-hierarchy-ux-definition/",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "medium",
+      "weight": 0,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "detector",
+        "detectors": [
+          "diff/section-rhythm"
+        ]
+      },
+      "evaluationPrompt": "Information Hierarchy Differentiation: Sections do not all share one structure. Objective check: fingerprint each section by alignment, supporting text, call to action, media and card group; if 80% or more of 5 or more sections share one fingerprint, the page has a flat, repeating rhythm and needs a person. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "{{observation}} Vary the emphasis: make the one section that matters most larger or different in kind, and shorten the rest. Evidence: {{evidence}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "When every section is presented the same way, nothing signals what to read first. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "A flat hierarchy hides the strongest argument for the product. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "fingerprint of each section",
+        "share using the most common fingerprint"
+      ],
+      "parameters": {
+        "minSections": 5,
+        "sharePct": 80
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "partial",
+      "valueTier": 2
+    },
+    {
+      "ruleId": "DIFF-008",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Trust Through Design",
+      "description": "Proof is built so a visitor can check it. Objective check: flag the generic trust band: a logo row where none of the logos link anywhere, and testimonial cards with quote marks or stars but no link to a source or case study. Both present needs a person.",
+      "source": "NN/g Trustworthiness in Web Design; Baymard perceived security",
+      "sourceType": "avara",
+      "sourceUrl": "https://www.nngroup.com/articles/trustworthy-design/",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "medium",
+      "weight": 0,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "detector",
+        "detectors": [
+          "diff/trust-pattern"
+        ]
+      },
+      "evaluationPrompt": "Trust Through Design: Proof is built so a visitor can check it. Objective check: flag the generic trust band: a logo row where none of the logos link anywhere, and testimonial cards with quote marks or stars but no link to a source or case study. Both present needs a person. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "The trust section is {{observation}}. Make at least one proof checkable: link logos to case studies, name the person and company on each quote, or show a number with its source. Evidence: {{evidence}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "Logos and quotes that cannot be checked read as decoration, so they add little confidence. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "Unverifiable proof gives up the main chance to reduce purchase risk. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "logo count and how many link",
+        "testimonial cards and how many link",
+        "stars or avatars present"
+      ],
+      "parameters": {
+        "minLogos": 4,
+        "minQuotes": 2
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "partial",
+      "valueTier": 2
+    },
+    {
+      "ruleId": "DIFF-009",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Feature Grid Saturation",
+      "description": "The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 3 or more such grids fails; 2 needs a person; one passes.",
+      "source": "NN/g Ten Usability Heuristics (aesthetic and minimalist design)",
+      "sourceType": "avara",
+      "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "medium",
+      "weight": 0,
+      "mode": "M",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "detector",
+        "detectors": [
+          "diff/feature-grid-saturation"
+        ]
+      },
+      "evaluationPrompt": "Feature Grid Saturation: The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 3 or more such grids fails; 2 needs a person; one passes. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "The page has {{observation}}. Keep the grid for the features that matter most and show the rest differently: one annotated screenshot, a short list, or a worked example. Evidence: {{evidence}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "Repeated icon cards are scanned, not read, and make features blur into one another. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "Feature grids that look the same as competitors' do not show why this product is better. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "each grid: selector, card count, card titles"
+      ],
+      "parameters": {
+        "minCards": 3,
+        "reviewGrids": 2,
+        "failGrids": 3
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "partial",
+      "valueTier": 2
+    },
+    {
+      "ruleId": "DIFF-010",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Visual Commodity Risk",
+      "description": "Summary of how many independent sameness signals were flagged. It adds no deduction, no score and no finding of its own. Patterns are recorded in Pattern Intelligence once enough pages exist.",
+      "source": "Avara rollup of DIFF-001 to DIFF-009",
+      "sourceType": "avara",
+      "sourceUrl": "https://www.nngroup.com/articles/aesthetic-usability-effect/",
+      "sourceKey": "DIFF",
+      "sourceSection": null,
+      "severity": "medium",
+      "weight": 0,
+      "mode": "R",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "rollup",
+        "rollsUp": [
+          "DIFF-001",
+          "DIFF-002",
+          "DIFF-003",
+          "DIFF-004",
+          "DIFF-005",
+          "DIFF-006",
+          "DIFF-007",
+          "DIFF-008",
+          "DIFF-009"
+        ]
+      },
+      "evaluationPrompt": "Visual Commodity Risk: Summary of how many independent sameness signals were flagged. It adds no deduction, no score and no finding of its own. Patterns are recorded in Pattern Intelligence once enough pages exist. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "{{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "userImpact": "See the findings it summarises. This is a hypothesis from reading the page, not measured behaviour.",
+      "businessImpact": "See the findings it summarises. This is a hypothesis from reading the page, not measured behaviour.",
+      "requiredEvidence": [
+        "child results"
+      ],
+      "parameters": {
+        "minFlags": 4,
+        "patterns": [
+          {
+            "key": "generic-hero",
+            "label": "Generic Hero",
+            "detectors": [
+              "pc/hero-statement",
+              "pc/buzzwords",
+              "pc/audience-cue"
+            ],
+            "minFlags": 2
+          },
+          {
+            "key": "generic-dashboard",
+            "label": "Generic Dashboard",
+            "detectors": [
+              "diff/dashboard-pattern"
+            ],
+            "minFlags": 1
+          },
+          {
+            "key": "feature-grid-overload",
+            "label": "Feature Grid Overload",
+            "detectors": [
+              "diff/feature-grid-saturation"
+            ],
+            "minFlags": 1
+          },
+          {
+            "key": "weak-trust-pattern",
+            "label": "Weak Trust Pattern",
+            "detectors": [
+              "diff/trust-pattern"
+            ],
+            "minFlags": 1
+          },
+          {
+            "key": "cta-saturation",
+            "label": "CTA Saturation",
+            "detectors": [
+              "conv/cta-saturation"
+            ],
+            "minFlags": 1
+          },
+          {
+            "key": "ai-saas-template",
+            "label": "AI SaaS Template",
+            "detectors": [
+              "diff/template-sequence"
+            ],
+            "minFlags": 1
+          }
+        ],
+        "thresholds": {
+          "patternIdentified": {
+            "minScans": 5,
+            "minRate": 0.3
+          },
+          "highConfidence": {
+            "minScans": 20,
+            "minRate": 0.5
+          }
+        }
+      },
+      "sourceStatus": "passage-unverified",
+      "related": [],
+      "lenses": [],
+      "enabled": true,
+      "status": "catalogued",
+      "valueTier": 3
+    }
+  ]
+}

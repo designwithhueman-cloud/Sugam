@@ -1,0 +1,1 @@
+var t=Date.now();while(Date.now()-t<900){}window.__tp=1;

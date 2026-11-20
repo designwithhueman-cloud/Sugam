@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Launchpad | Ship your SaaS faster</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; color: #1d1b2c; background: #fff; }
+  .topbar { position: fixed; top: 0; left: 0; right: 0; height: 72px; background: #12102a; display: flex; align-items: center; gap: 22px; padding: 0 24px; z-index: 50; }
+  .topbar a { color: #fff; text-decoration: none; font-weight: 600; }
+  .topbar a:focus { outline: none; }                       /* DEFECT: focus indicator removed */
+  .logo { font-size: 20px; margin-right: auto; }
+  .icon-btn { background: none; border: 2px solid #fff; border-radius: 8px; width: 40px; height: 40px; color: #fff; }
+  main { padding-top: 96px; }
+  .hero { padding: 64px 24px; text-align: center; background: linear-gradient(135deg, #a78bfa, #f0abfc); }
+  .badge { display: inline-block; padding: 6px 14px; border-radius: 999px; background: #fff; animation: pulse 1.6s ease-in-out infinite; }  /* DEFECT: no reduced-motion */
+  @keyframes pulse { 50% { transform: scale(1.08); } }
+  .muted { color: #a3a3b5; }                                /* DEFECT: low contrast */
+  .wide-banner { width: 600px; margin: 24px auto; padding: 16px; background: #fde68a; }  /* DEFECT: breaks 320px reflow */
+  .cards, .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; padding: 32px 24px; }
+  .card, .plan { border: 1px solid #ddd; border-radius: 14px; padding: 20px; cursor: pointer; }
+  .plan button { background: #5b21b6; color: #fff; border: 0; border-radius: 10px; padding: 12px 18px; font-size: 16px; }
+  .tabs { padding: 24px; }
+  .tabs [role=tab] { padding: 10px 16px; border: 1px solid #ccc; background: #f6f6fb; }
+  .cookie { position: fixed; left: 0; right: 0; bottom: 0; height: 140px; background: #12102a; color: #fff; padding: 20px 24px; z-index: 60; }
+  .cookie button { background: #fff; color: #12102a; border: 0; padding: 10px 16px; border-radius: 8px; }
+  footer { padding: 40px 24px 200px; }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="logo" href="/">Launchpad</a>
+    <a href="/features">Features</a>
+    <a href="/pricing">Pricing</a>
+    <a href="/docs">Docs</a>
+    <button class="icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="#fff" stroke-width="2"/></svg></button>
+  </header>
+  <main>
+    <section class="hero">
+      <span class="badge">New: AI onboarding</span>
+      <h1>Ship your SaaS faster</h1>
+      <p class="muted">Launch in a weekend with auth, billing and analytics built in.</p>
+      <img src="/hero.svg" width="420" height="200">
+      <p><a href="/pricing" aria-label="Pricing details">Learn more</a></p>
+    </section>
+    <div class="wide-banner">Limited offer: 40% off annual plans this week only.</div>
+    <section class="cards" aria-label="Features">
+      <div class="card" onclick="location.href='/features#auth'"><h3>Auth</h3><p>Email, Google and magic links.</p></div>
+      <div class="card" onclick="location.href='/features#billing'"><h3>Billing</h3><p>Stripe subscriptions out of the box.</p></div>
+      <div class="card" onclick="location.href='/features#analytics'"><h3>Analytics</h3><p>Privacy-friendly product metrics.</p></div>
+    </section>
+    <section class="tabs">
+      <div role="tablist">
+        <button role="tab" aria-selected="true" aria-controls="panel-monthly">Monthly</button>
+        <button role="tab" aria-controls="panel-yearly">Yearly</button>
+      </div>
+      <div id="panel-monthly" role="tabpanel">Monthly prices shown.</div>
+    </section>
+    <section class="pricing" aria-label="Pricing">
+      <div class="plan"><h3>Starter</h3><p>$9/mo</p><button>Get started</button></div>
+      <div class="plan"><h3>Pro</h3><p>$29/mo</p><button>Get started</button></div>
+      <div class="plan"><h3>Team</h3><p>$79/mo</p><button>Get started</button></div>
+    </section>
+    <section style="padding:24px">
+      <h2>Get product updates</h2>
+      <input type="email" placeholder="you@company.com">
+      <button>Subscribe</button>
+    </section>
+    <section class="media" aria-label="Listen and watch">
+      <h2>Listen to our podcast</h2>
+      <audio controls src="/episode-1.mp3"></audio>
+      <h2>Watch the product tour</h2>
+      <video controls width="320" height="180" src="/tour.mp4"></video>
+      <!-- srcdoc wins over src, so the test never loads YouTube; the scanner still sees the YouTube src -->
+      <iframe title="Customer story video" width="320" height="180" src="https://www.youtube-nocookie.com/embed/demo" srcdoc="<p style='font:14px sans-serif'>Video player</p>"></iframe>
+    </section>
+  </main>
+  <footer><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="/status">Status</a></footer>
+  <div class="cookie">We use cookies to improve your experience. <button>Accept</button> <button>Settings</button></div>
+</body>
+</html>

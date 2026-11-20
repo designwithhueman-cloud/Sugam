@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extra defects: WCAG 2.2 checks axe does not run</title>
+<style>
+  body { font: 18px/1.5 system-ui, sans-serif; color: #1a1a1a; background: #fff; margin: 0; padding: 24px; }
+  a, button, input { font: inherit; }
+  :focus-visible { outline: 3px solid #5b2fd0; outline-offset: 2px; }
+  .faint { border: 1px solid #dddddd; padding: 6px; }
+  .clip { width: 220px; height: 18px; overflow: hidden; font: 14px/1 sans-serif; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Planted defects</h1>
+  <h1>A second main heading</h1>
+  <!-- 1.4.11: a field whose border is about 1.4:1 on white -->
+  <p><label>Search <input type="text" class="faint"></label></p>
+  <!-- 1.4.12: fits at line-height 1, is cut off once text spacing is applied -->
+  <div class="clip">Pricing details live here</div>
+  <!-- 2.5.7: drag only -->
+  <ul><li draggable="true">Task A</li><li draggable="true">Task B</li></ul>
+  <!-- 2.4.3: forced tab order -->
+  <p><a href="/one" tabindex="3">Skip ahead</a></p>
+  <!-- 3.3.8: paste blocked, password managers asked to stay out, and a CAPTCHA -->
+  <form action="/login" onsubmit="return false" aria-label="Sign in">
+    <p><label>Email <input type="email" autocomplete="off" style="border:1px solid #767676;padding:6px"></label></p>
+    <p><label>Password <input type="password" id="pw" autocomplete="off" style="border:1px solid #767676;padding:6px"></label></p>
+    <div class="g-recaptcha" data-sitekey="demo" style="width:200px;height:40px;border:1px solid #767676"></div>
+    <p><button type="submit">Sign in</button></p>
+  </form>
+</main>
+<script>document.getElementById('pw').addEventListener('paste', (e) => e.preventDefault());</script>
+</body>
+</html>
