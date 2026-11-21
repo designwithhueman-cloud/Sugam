@@ -545,7 +545,8 @@
       "evaluator": {
         "type": "detector",
         "detectors": [
-          "ux/error-recovery"
+          "ux/error-recovery",
+          "ux/generic-error-message"
         ]
       },
       "recommendationTemplate": "Make each form say what is wrong and where, next to the field and in words: mark required fields, use the right input types, and move focus to the first mistake. {{observation}} Evidence: {{evidence}}",
@@ -557,7 +558,14 @@
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "Interpret the measured evidence for \"Error Recovery\". Trigger a safe error and capture identification, correction guidance and retry. Do not guess beyond the measurements supplied.",
       "valueTier": 1,
-      "parameters": {},
+      "parameters": {
+        "genericErrorPhrases": [
+          "invalid",
+          "error",
+          "invalid input",
+          "invalid value"
+        ]
+      },
       "requiredEvidence": [
         "each form with its fields and constraints",
         "where focus went and the message shown"

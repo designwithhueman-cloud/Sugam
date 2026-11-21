@@ -1,5 +1,5 @@
 // Sign-in with a provider: find the account for a verified email, or make one (with its first workspace, like email sign-up).
-// An account made with a password is never signed into from a provider: Sugam does not verify emails at sign-up, so someone could
+// An account made with a password is never signed into from a provider: Avara does not verify emails at sign-up, so someone could
 // have registered another person's address first, and a provider sign-in must not hand that account over.
 import crypto from 'node:crypto';
 import { eq } from 'drizzle-orm';

@@ -3,7 +3,7 @@ import { currentUser } from '@/lib/auth.ts';
 import { AuthForm } from '@/components/forms/AuthForm.tsx';
 import { providerList } from '@/lib/oauth.ts';
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Create account | Sugam' };
+export const metadata = { title: 'Create account | Avara' };
 export default async function Signup({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
   const { next, error } = await searchParams;
   if (await currentUser()) redirect(next && next.startsWith('/') && !next.startsWith('//') ? next : '/app');

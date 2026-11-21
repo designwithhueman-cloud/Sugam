@@ -8,7 +8,7 @@ import { WaitlistForm } from '@/components/landing/WaitlistForm.tsx';
 import { kicker } from '@/components/landing/Sections.tsx';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Plans | Sugam' };
+export const metadata = { title: 'Plans | Avara' };
 
 // Checkout is not connected yet, so this page says so and takes an email instead of pretending
 // to take payment. Workspaces are moved between plans with scripts/set-plan.ts for now.

@@ -1,0 +1,45 @@
+{
+  "version": "demo-1",
+  "validated": false,
+  "purpose": "Demo references for tests only: the pack's synthetic pages measured in Chromium by test/diff-002.mjs. Not production data.",
+  "records": [
+    {
+      "id": "stack",
+      "origin": "fixture/site/diff002/stack.html",
+      "rights": "Original synthetic Avara pack fixture",
+      "viewport": [
+        1280,
+        800
+      ],
+      "features": {
+        "headingX": 0.5,
+        "headingY": 0.1688073394495413,
+        "actionX": 0.499993896484375,
+        "actionY": 0.3,
+        "visualX": 0.5,
+        "visualY": 0.5853211009174312,
+        "visualWidth": 0.8222412109375,
+        "visualHeight": 0.4036697247706422
+      }
+    },
+    {
+      "id": "split",
+      "origin": "fixture/site/diff002/split.html",
+      "rights": "Original synthetic Avara pack fixture",
+      "viewport": [
+        1280,
+        800
+      ],
+      "features": {
+        "headingX": 0.26640625,
+        "headingY": 0.46055045871559636,
+        "actionX": 0.070782470703125,
+        "actionY": 0.591743119266055,
+        "visualX": 0.733587646484375,
+        "visualY": 0.5,
+        "visualWidth": 0.41112060546875,
+        "visualHeight": 0.4036697247706422
+      }
+    }
+  ]
+}

@@ -14,7 +14,7 @@ import { PageHead } from '@/components/dashboard/PageHead.tsx';
 import { ProjectTable, EmptyNote } from '@/components/dashboard/Tables.tsx';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Client projects | Sugam' };
+export const metadata = { title: 'Client projects | Avara' };
 export default async function Projects({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
   const user = await requireUser(`/app/${org}/projects`);

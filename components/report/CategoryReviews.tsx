@@ -1,9 +1,14 @@
 // The rule engine's result: one card per review category with a provisional score, how much of the category was actually decided, and the findings.
 // The distinctions are kept visible: measured vs AI-assisted, decided vs not run vs needs a person, provisional vs final.
 import type { ReviewReport } from '@/lib/report-types.ts';
+import { nonEmpty } from '@/lib/bullets.ts';
 
 const wrap = '[overflow-wrap:anywhere]';
 const RES: Record<string, string> = { observed_pass: 'Passed', observed_failure: 'Failed', needs_human_review: 'Needs a person', inconclusive: 'Inconclusive' };
+
+const LABEL: [string, string][] = [['passed', 'passed'], ['passed_measurable_part', 'passed the measurable part'], ['failed', 'failed'], ['needs_review', 'need a person'], ['inconclusive', 'inconclusive'], ['observed', 'observed (not scored)'], ['not_applicable', 'not applicable'], ['not_run', 'not run'], ['unknown', 'no saved result']];
+/** Counts from the scan's per-rule records; every bucket is shown, so they add up to the category's rule count. */
+export const countLine = (k: Record<string, number>) => LABEL.filter(([key]) => (k[key] ?? 0) > 0 || key === 'passed' || key === 'failed').map(([key, l]) => `${k[key] ?? 0} ${l}`).join(' · ');
 
 export function CategoryReviews({ review }: { review: ReviewReport }) {
   const o = review.overall;
@@ -20,7 +25,7 @@ export function CategoryReviews({ review }: { review: ReviewReport }) {
           <li key={c.category} className="rounded-2xl border border-black/10 p-4" data-testid="review-category">
             <div className="flex items-baseline justify-between gap-3"><h3 className="text-xl font-semibold text-ink">{c.category}</h3><p className="text-2xl font-semibold tabular-nums" data-testid="cat-score">{c.score ?? '–'}</p></div>
             <p className="mt-1 text-sm text-neutral-700">Weight {c.weight}% · {c.status} · {c.coveragePct}% of rule weight decided</p>
-            <p className="mt-1 text-sm text-neutral-700">{c.counts.observed_pass ?? 0} passed · {c.counts.observed_failure ?? 0} failed · {c.counts.needs_human_review ?? 0} need a person · {c.counts.not_run ?? 0} not run · {c.counts.unimplemented ?? 0} not built yet · {c.basis.measured} measured, {c.basis.aiAssisted} AI-assisted</p>
+            <p className="mt-1 text-sm text-neutral-700">{countLine(c.counts)} · {c.basis.measured} measured, {c.basis.aiAssisted} AI-assisted</p>
             {bad.length > 0 && (
               <details className="mt-3 rounded-xl border border-black/15 p-3"><summary className="min-h-11 cursor-pointer text-base font-semibold">{bad.length} finding{bad.length === 1 ? '' : 's'}</summary>
                 <ul className="mt-2 space-y-3">{bad.map((f) => (
@@ -28,7 +33,7 @@ export function CategoryReviews({ review }: { review: ReviewReport }) {
                     <p className={`font-semibold text-ink ${wrap}`}>{f.ruleId} {f.title} · {RES[f.result] ?? f.result} · {f.method === 'ai_assisted' ? 'AI-assisted' : 'measured'} · {f.severity}</p>
                     <p className={`mt-1 ${wrap}`}>{f.observation}</p>
                     {f.recommendation ? <p className={`mt-1 ${wrap}`}><b>Fix:</b> {f.recommendation}</p> : <p className="mt-1 text-neutral-700">The recommendation is part of a paid plan.</p>}
-                    {f.evidence.slice(0, 2).map((e, i) => <pre key={i} className={`mt-1 max-h-24 overflow-y-auto whitespace-pre-wrap font-mono text-xs ${wrap}`}>{e}</pre>)}
+                    {nonEmpty(f.evidence).slice(0, 2).map((e, i) => <pre key={i} className={`mt-1 max-h-24 overflow-y-auto whitespace-pre-wrap font-mono text-xs ${wrap}`}>{e}</pre>)}
                     <p className="mt-1 text-xs text-neutral-700">{f.source} · {f.sourceStatus === 'verified-passage' ? 'passage verified' : f.sourceStatus === 'needs-owner-input' ? 'needs owner input' : 'source passage awaiting verification'}</p>
                   </li>))}</ul></details>)}
           </li>); })}

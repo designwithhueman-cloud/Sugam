@@ -4,4 +4,5 @@ export const SHOW_AGENCIES = false;
 export const SHOW_FAQ = false;
 export const SHOW_WHO = false;
 export const SHOW_PERSON_NOTE = false;   // the "Still needs a person" strip under Who gets stuck
-export const SHOW_TRY = false;           // the mid-page "See what’s blocking your own visitors" scan prompt
+export const SHOW_TRY = false;
+export const SHOW_TOOLS = false;         // the Free tools section (rules file, contrast checker, guides) and its footer link           // the mid-page "See what’s blocking your own visitors" scan prompt

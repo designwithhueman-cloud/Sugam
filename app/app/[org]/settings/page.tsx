@@ -51,7 +51,7 @@ export default async function Settings({ params }: { params: Promise<{ org: stri
           <ActionForm action={addMemberAction} submit="Add member" className="mt-4" resetOnOk refreshOnOk>
             <input type="hidden" name="org" value={org} />
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Email of an existing Sugam user" htmlFor="m-email"><input id="m-email" name="email" type="email" className={inputCls} /></Field>
+              <Field label="Email of an existing Avara user" htmlFor="m-email"><input id="m-email" name="email" type="email" className={inputCls} /></Field>
               <Field label="Role" htmlFor="m-role"><select id="m-role" name="role" className={inputCls}><option value="member">Member: view and run scans</option><option value="admin">Admin: also branding and members</option></select></Field>
             </div>
           </ActionForm>

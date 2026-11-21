@@ -26,7 +26,7 @@ function ColourField({ id, label, value, set }: { id: string; label: string; val
 const Row = ({ name, pass }: { name: string; pass: boolean }) => (
   <li className="flex items-center justify-between gap-4 border-b border-black/10 py-3 last:border-0">
     <span className="text-lg text-ink">{name}</span>
-    <span className={`rounded-full px-3 py-1 text-base font-semibold ${pass ? 'bg-[#d9f56e] text-ink' : 'bg-[#fde0dc] text-[#7a1710]'}`}>{pass ? 'Passes' : 'Fails'}</span>
+    <span className={`rounded-lg px-3 py-1 text-base font-semibold ${pass ? 'bg-[#d9f56e] text-ink' : 'bg-[#fde0dc] text-[#7a1710]'}`}>{pass ? 'Passes' : 'Fails'}</span>
   </li>
 );
 

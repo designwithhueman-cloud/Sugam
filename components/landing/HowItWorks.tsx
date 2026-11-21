@@ -3,22 +3,27 @@
 // steps, Code patch) right where the question "which one is for me?" is asked. Server-rendered shell around a client card.
 import { MapPin, ScanSearch, Wand2 } from 'lucide-react';
 import { HeroResult } from './HeroResult.tsx';
+import { CustomerQuote } from './CustomerQuote.tsx';
+import { TESTIMONIAL } from '@/lib/testimonial.ts';
+
+const hasQuote = () => !!TESTIMONIAL?.approved && !!TESTIMONIAL.highlight && TESTIMONIAL.quote.includes(TESTIMONIAL.highlight);
 
 const OPTIONS = [
-  [ScanSearch, '1. Scan your page', 'Paste a link. We open it on desktop and at phone width, like a visitor would.'],
-  [MapPin, '2. See where it goes wrong', 'Each issue is pinned on your page and ranked, with a one-line reason a non-developer can follow.'],
-  [Wand2, '3. Apply a plain-language fix', 'Copy a prompt for your AI builder, follow steps for your website editor, or hand a code patch to your developer.'],
+  [ScanSearch, '1. Scan your page', 'Paste a link to your page. We open it on desktop and at phone width, the way a first-time visitor would.'],
+  [MapPin, '2. See where it goes wrong', 'Issues are pinned where they happen on your page, worst first, each with a plain reason.'],
+  [Wand2, '3. Apply a plain-language fix', 'Paste the prompt into your AI builder, follow the steps in Webflow or Framer, or paste the code patch.'],
 ] as const;
 
 export function HowItWorks() {
   return (
-    <div className="relative px-5 pb-20 sm:px-10 lg:pb-32">
+    <>
+    <div className={`relative px-5 sm:px-10 ${hasQuote() ? 'pb-12 lg:pb-16' : 'pb-20 lg:pb-32'}`}>
       <span id="repair" aria-hidden className="absolute -top-6" /><span id="retest" aria-hidden className="absolute -top-6" />
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-14">
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-vio-deep">How it works</p>
-        <h2 id="how-h" className="mt-4 text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-ink sm:text-5xl">Scan it. See the pins. <span className="text-vio-deep">Apply the fix.</span></h2>
-        <p className="mt-4 text-xl leading-relaxed text-neutral-800">No engineering background needed. Works for solo builders and for agencies checking client work.</p>
+        <h2 id="how-h" className="mt-4 text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-ink sm:text-5xl">You found the snag. <span className="text-vio-deep">Here’s the fix.</span></h2>
+        <p className="mt-4 text-xl leading-relaxed text-neutral-800">Made for people who build with Lovable, Bolt, v0 or Framer. No code to read, and it works for agencies checking client sites too.</p>
         <ul aria-label="How a scan works" className="mt-8 grid max-w-xl gap-6">
           {OPTIONS.map(([Icon, name, text]) => (
             <li key={name} className="flex items-start gap-5">
@@ -34,5 +39,8 @@ export function HowItWorks() {
       <HeroResult />
       </div>
     </div>
+    {/* The customer's answer to "could I do this myself?", right under the fix, full width */}
+    <div><CustomerQuote /></div>
+    </>
   );
 }

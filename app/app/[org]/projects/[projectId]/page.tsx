@@ -25,7 +25,7 @@ export default async function SiteDashboard({ params }: { params: Promise<{ org:
   const s = await siteStats(p.id);
   const base = `/app/${org}/projects/${p.id}`;
   const levels = [
-    { key: 'auto', label: 'Automated rules', icon: ScanSearch, done: !!s.latest, note: 'axe-core and Sugam checks' },
+    { key: 'auto', label: 'Automated rules', icon: ScanSearch, done: !!s.latest, note: 'axe-core and Avara checks' },
     { key: 'kb', label: 'Keyboard and visual', icon: Keyboard, done: !!s.latest, note: '25-step Tab trace, 320px reflow' },
     { key: 'human', label: 'Human verified', icon: UserCheck, done: !!s.latest && s.undecided === 0, note: s.latest ? `${s.undecided} waiting · ${s.decided} decided` : 'Needs a scan first' },
   ];
@@ -50,7 +50,7 @@ export default async function SiteDashboard({ params }: { params: Promise<{ org:
       ) : (<>
         <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Latest scan">
           {[
-            ['Sugam score', String(s.latest.score ?? '–'), s.change ? `${s.change.delta >= 0 ? '+' : ''}${s.change.delta} since last scan` : 'First scan'],
+            ['Avara score', String(s.latest.score ?? '–'), s.change ? `${s.change.delta >= 0 ? '+' : ''}${s.change.delta} since last scan` : 'First scan'],
             ['Confirmed failures', String(s.buckets!.confirmed), 'Must be fixed'],
             ['Needs human review', String(s.undecided), `${s.decided} already decided`],
             ['Resolved since last scan', s.change ? String(s.change.resolved) : '–', s.change ? `${s.change.introduced} new` : 'Needs two scans'],
@@ -92,7 +92,7 @@ export default async function SiteDashboard({ params }: { params: Promise<{ org:
                 </li>
               ))}
             </ol>
-            <p className="mt-3 text-xs text-slate-700">Automated testing finds a share of barriers. Sugam never claims legal compliance.</p>
+            <p className="mt-3 text-xs text-slate-700">Automated testing finds a share of barriers. Avara never claims legal compliance.</p>
           </Card>
         </div>
 

@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { Resource } from '@/components/landing/Resource.tsx';
 import { GUIDES } from '@/lib/guides.ts';
 
-export const metadata = { title: 'Learn | Sugam', description: 'Short, plain-language guides to accessibility for people building websites with AI tools.' };
+export const metadata = { title: 'Learn | Avara', description: 'Short, plain-language guides to accessibility for people building websites with AI tools.' };
 
 export default function Page() {
   return (

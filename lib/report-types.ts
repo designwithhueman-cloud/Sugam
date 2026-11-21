@@ -25,7 +25,13 @@ export type AvaraReport = {
   goal: string | null; analyzers: Record<string, { status: 'ok' | 'failed' | 'skipped'; message?: string; ms?: number }>; coverage: string[];
   recommendations: AvaraRecommendation[]; findings: AvaraFinding[];
   rescanOf: string | null; outcomes: AvaraOutcome[] | null; latestRescanId: string | null; leadIssueId: string | null;
-  library: { catalogued: number; implemented: number; exercisedOnFixtures: number; executedOnUrl: number; scoreEligible: number; policy: string; coverageProfile: string; overall: number | null; overallWithheld: string | null; headline: string | null; advisoryCount: number; ran: { id: string; title: string }[]; needsPerson: { heuristic: number; session: number; ids: string[] }; unverifiedSources: { key: string; name: string; url: string | null; topics: number }[]; notRun: number };
+  library: { catalogued: number; implemented: number; exercisedOnFixtures: number; executedOnUrl: number; scoreEligible: number; policy: string; coverageProfile: string; overall: number | null; overallWithheld: string | null; headline: string | null; advisoryCount: number; ran: { id: string; title: string }[];
+    needsPerson: { reviewTasks: number; personOnlyTopics: number; sessionKinds: string[]; reviewFindings: number; reviewRepairs: number; confirmedRepairs: number; repairGroups: number; ids: string[] };
+    unverifiedSources: { key: string; name: string; url: string | null; topics: number }[];
+    notRun: { total: number; reasons: Record<string, number>; unknown: number };
+    strict: { label: string; assessed: boolean; score: number | null; missing: number; observationsOnly: boolean }[];
+    coverage: { origin: 'engine' | 'historical' | 'none'; snapshotSize: number; records: number; reconciles: boolean; problems: string[]; buckets: Record<string, number>; implementation: Record<string, number>;
+      byCategory: { category: string; rules: number; ran: number; buckets: Record<string, number>; reasons: Record<string, number> }[]; cannotProve: string[] } };
 };
 export type ReviewFinding = { findingId: string; ruleId: string; title: string; severity: string; passed: boolean; result: string; method: string; confidence: number; observation: string; advisory: boolean; source: string; sourceUrl: string; sourceStatus: string; recommendation: string; businessImpact: string; userImpact: string; evidence: string[] };
 export type ReviewReport = {

@@ -66,7 +66,8 @@ export const MEASURE_ACTION = `function (sel, text) {
   const docW = document.documentElement.scrollWidth;
   const xHidden = ['hidden', 'clip'].includes(getComputedStyle(document.documentElement).overflowX) || ['hidden', 'clip'].includes(getComputedStyle(document.body).overflowX);
   // Scroll the PAGE only. scrollIntoView would also scroll overflow:hidden containers, which a visitor cannot do, and would hide the very problem.
-  scrollTo(window.scrollX, Math.max(0, r0.top + scrollY - innerHeight / 2 + r0.height / 2));
+  // behavior 'instant': a page with scroll-behavior:smooth would otherwise still be mid-scroll when we measure, and the check would test the wrong part of the page.
+  scrollTo({ left: window.scrollX, top: Math.max(0, r0.top + scrollY - innerHeight / 2 + r0.height / 2), behavior: 'instant' });
   const r = el.getBoundingClientRect();
   // the part of the box a visitor can see: cut it down by every ancestor that clips its overflow, and by the screen itself
   let vis = { l: r.left, t: r.top, r: r.right, b: r.bottom };
@@ -88,7 +89,7 @@ export const MEASURE_ACTION = `function (sel, text) {
   const top = document.elementFromPoint(cx, cy);
   const covered = !!top && top !== el && !el.contains(top) && !top.contains(el);
   let cover = null;
-  if (covered) { let holder = top; let pos = getComputedStyle(top).position; for (let n = top.parentElement; n && pos === 'static'; n = n.parentElement) { pos = getComputedStyle(n).position; holder = n; } cover = { selector: cssPath(holder), position: pos, text: label(top).slice(0, 40), box: (() => { const q = holder.getBoundingClientRect(); return { x: Math.round(q.left), y: Math.round(q.top), width: Math.round(q.width), height: Math.round(q.height) }; })() }; }
+  if (covered) { let holder = top; let pos = getComputedStyle(top).position; for (let n = top.parentElement; n && pos === 'static'; n = n.parentElement) { pos = getComputedStyle(n).position; holder = n; } cover = { selector: cssPath(holder), position: pos, text: label(top).slice(0, 40), dismissible: (() => { const hay = ((holder.id || '') + ' ' + (holder.className || '') + ' ' + (holder.innerText || '').slice(0, 400)).toLowerCase(); return /cookie|consent|gdpr|privacy (choices|preferences)/.test(hay) && [...holder.querySelectorAll('button, a, [role=button], input[type=button], input[type=submit]')].some((c) => /accept|agree|allow|reject|decline|deny|got it|dismiss|close|manage|preferences|save/i.test(label(c))); })(), box: (() => { const q = holder.getBoundingClientRect(); return { x: Math.round(q.left), y: Math.round(q.top), width: Math.round(q.width), height: Math.round(q.height) }; })() }; }
   return {
     found: true, selector: cssPath(el), text: label(el).slice(0, 80), html: el.outerHTML.replace(/\\s+/g, ' ').slice(0, 260), tag: el.localName,
     rendered, pointerEventsNone: pe, disabled: !!el.disabled || el.getAttribute('aria-disabled') === 'true',
@@ -382,4 +383,31 @@ export const SIGNALS_PROBE = `function () {
     fontFamilies: (() => { const m = {}; for (const e of document.querySelectorAll('h1,h2,h3,h4,p,li,a,button,label,span,td')) { if (!e.getClientRects().length) continue; const own = [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.nodeValue.trim()).join(' '); if (own.length < 4) continue; const f = getComputedStyle(e).fontFamily.split(',')[0].replace(/["']/g, '').trim().toLowerCase(); m[f] = (m[f] || 0) + own.length; } return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 8); })(),
     textWords: (document.body.innerText || '').trim().split(/\\s+/).filter(Boolean).length,
   };
+}`;
+
+// DIFF-002 hero layout (Avara detector pack, prototype-1): where the heading, the main action and the lead visual sit inside the first-screen hero,
+// as fractions of the hero box. Geometry only. The main action comes from the scanner's own action probe (arg.action), and is left out when that
+// probe found it covered, hidden or cut off; every element must be visible in the first screen and on top at its centre. Reads only; never clicks.
+export const HERO_LAYOUT = `function (arg) {
+  const vw = innerWidth, vh = innerHeight;
+  const label = (e) => (e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.classList.length ? '.' + [...e.classList].slice(0, 2).join('.') : '')).slice(0, 80);
+  const visible = (el) => { if (!el || !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.right > 0 && r.left < vw && r.bottom > 0 && r.top < vh; };
+  const onTop = (el) => { const r = el.getBoundingClientRect(); const x = Math.min(Math.max(r.left + r.width / 2, 1), vw - 1), y = Math.min(Math.max(r.top + r.height / 2, 1), vh - 1); const t = document.elementFromPoint(x, y); return !!t && (t === el || el.contains(t)); };
+  const h1 = [...document.querySelectorAll('h1')].find((e) => visible(e) && onTop(e));
+  if (!h1) return { skip: 'No visible main heading in the first screen, so no hero was identified.' };
+  let hero = null;
+  for (let p = h1.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) { const r = p.getBoundingClientRect(); if (r.height > vh * 1.2 || r.top > vh * 0.5) break; if (p.querySelectorAll('h1').length > 1) break; hero = p; }
+  if (!hero || !visible(hero)) return { skip: 'Hero outside first viewport or hidden' };
+  const bounds = hero.getBoundingClientRect(); const features = {}; const elements = { hero: label(hero), heading: label(h1) }; const notes = [];
+  const put = (name, el) => { const r = el.getBoundingClientRect(); features[name + 'X'] = (r.left + r.width / 2 - bounds.left) / bounds.width; features[name + 'Y'] = (r.top + r.height / 2 - bounds.top) / bounds.height; if (name === 'visual') { features.visualWidth = r.width / bounds.width; features.visualHeight = r.height / bounds.height; } elements[name] = label(el); };
+  put('heading', h1);
+  let action = null; let actionSource = null;
+  if (arg && arg.action && arg.usable === false) notes.push('The main action was found covered, hidden or cut off by the action probe, so its position is not measured.');
+  else if (arg && arg.action) { try { action = [...document.querySelectorAll(arg.action)].find((e) => hero.contains(e) && visible(e) && onTop(e)) || null; } catch { action = null; } if (action) actionSource = 'main action from the action probe'; else notes.push('The main action is not inside the hero.'); }
+  else notes.push('The action probe found no main action.');
+  if (action) put('action', action);
+  const media = [...hero.querySelectorAll('img, picture, video, canvas, svg, figure, [role=img]')].filter((e) => !e.contains(h1) && !(action && e.contains(action)) && visible(e) && onTop(e) && e.getBoundingClientRect().width >= 96 && e.getBoundingClientRect().height >= 96);
+  const visual = media.sort((a, b) => { const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); return rb.width * rb.height - ra.width * ra.height; })[0];
+  if (visual) put('visual', visual); else notes.push('No lead visual of at least 96 by 96 px is visible in the hero.');
+  return { viewport: [vw, vh], features, elements, actionSource, notes };
 }`;

@@ -6,9 +6,10 @@ import { STANDARDS } from './standards.ts';
 import type { Report, AvaraReport } from './report-types.ts';
 import { planForScan, redactReport } from './entitlements.ts';
 import { hasFeature } from './plans.ts';
-import { BY_ID, CATALOG, LENSES, HEURISTICS, RELATED, SOURCES, canonicalFor, coverage as libCoverage, executedTopics } from './avara/catalog.ts';
+import { BY_ID, CATALOG, CATEGORIES, LENSES, HEURISTICS, RELATED, SOURCES, canonicalFor, coverage as libCoverage } from './avara/catalog.ts';
+import { buildCoverage, loadRecords, EMPTY_LOADED } from './avara/coverage.ts';
+import { collapsedContainer, collapsedNote, fixCaps } from './avara/evidence-check.ts';
 import { loadReview } from '../src/services/findings-service/index.ts';
-import { DEFAULT_PROFILE, scoreGroups, type ScoredGroup } from './avara/scoring.ts';
 
 export const hashToken = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
 
@@ -42,10 +43,15 @@ function recMeta(r: typeof schema.recommendations.$inferSelect, fs: (typeof sche
 }
 async function loadAvara(scanId: string, scan: typeof schema.scans.$inferSelect): Promise<AvaraReport | null> {
   const db = await getDb();
-  const fs = await db.select().from(schema.findings).where(eq(schema.findings.scanId, scanId));
-  const recs = await db.select().from(schema.recommendations).where(eq(schema.recommendations.scanId, scanId)).orderBy(asc(schema.recommendations.rank));
-  if (!fs.length && !recs.length && !scan.analyzers) return null;
-  const ev = fs.length ? await db.select().from(schema.findingEvidence).where(eq(schema.findingEvidence.scanId, scanId)) : [];
+  const stored = await db.select().from(schema.findings).where(eq(schema.findings.scanId, scanId));
+  const storedRecs = await db.select().from(schema.recommendations).where(eq(schema.recommendations.scanId, scanId)).orderBy(asc(schema.recommendations.rank));
+  if (!stored.length && !storedRecs.length && !scan.analyzers) return null;
+  const ev = stored.length ? await db.select().from(schema.findingEvidence).where(eq(schema.findingEvidence.scanId, scanId)) : [];
+  // Each confirmed claim is checked against the evidence saved with it. A "cannot be used" whose measurement only shows a closed menu is shown as
+  // needing review, not as a confirmed blocker. Stored rows are left exactly as saved; this is applied every time the report is read.
+  const unproven = new Map(stored.filter((f) => f.bucket === 'confirmed_failure').flatMap((f) => { const m = ev.find((e) => e.findingId === f.id && e.kind === 'measurement')?.data as Parameters<typeof collapsedContainer>[0]; const box = collapsedContainer(m); return box ? [[f.id, box] as const] : []; }));
+  const fs = stored.map((f) => ({ ...f, consequence: fixCaps(f.consequence), trying: fixCaps(f.trying), ...(unproven.has(f.id) ? { bucket: 'needs_review' as const, goalImpact: 'hinders', confidence: 'low' as const, summary: `${f.summary} Evidence check: ${collapsedNote(unproven.get(f.id)!)}` } : {}) }));
+  const recs = storedRecs.map((r) => (r.findingIds.length && r.findingIds.every((id) => unproven.has(id) || !stored.some((f) => f.id === id && f.bucket === 'confirmed_failure')) && r.findingIds.some((id) => unproven.has(id)) ? { ...r, tier: 'improve_later' as const, sentence: `Not confirmed: the saved evidence shows this control inside a closed menu. ${fixCaps(r.sentence)}` } : { ...r, sentence: fixCaps(r.sentence), title: fixCaps(r.title) }));
   const rv = fs.length ? await db.select().from(schema.ruleVersions) : [];
   const fx = recs.length ? await db.select().from(schema.generatedFixes).where(inArray(schema.generatedFixes.recommendationId, recs.map((r) => r.id))) : [];
   const outs = scan.rescanOf ? await db.select().from(schema.rescanOutcomes).where(eq(schema.rescanOutcomes.scanId, scanId)) : null;
@@ -54,14 +60,21 @@ async function loadAvara(scanId: string, scan: typeof schema.scans.$inferSelect)
   const rule = (f: typeof fs[number]) => rv.find((r) => r.ruleId === f.ruleId && r.version === f.ruleVersion);
   const rank1 = recs[0];
   const leadIssueId = rank1 ? recMeta(rank1, fs).ownerIssueId : null;
-  const executed = executedTopics(scan.analyzers); const cov = libCoverage(executed);
-  const groups: ScoredGroup[] = [...new Map(fs.filter((f) => f.bucket === 'confirmed_failure').map((f) => [f.repairKey, f])).values()].map((f) => ({ groupId: f.repairKey, ownerRuleId: canonicalFor(f.ruleId) ?? f.ruleId, category: ({ ux_workflow: 'ux_workflow', mobile: 'mobile', accessibility: 'accessibility', performance: 'performance' } as const)[f.category], severity: f.severity === 'critical' ? 'critical' : f.severity === 'serious' ? 'major' : 'minor', confirmed: true, scoreEligible: false, advisory: false, blocksMainTask: f.goalImpact === 'blocks' }));
-  const sc = scoreGroups(groups, new Set(executed), DEFAULT_PROFILE);
+  // Every coverage number and the strict score come from one record per catalog rule. "Ran" needs saved execution evidence; nothing is inferred from
+  // which analyzers succeeded. Scans saved before records existed are derived from their stored rule findings, never rewritten.
+  const loaded = (await loadRecords(scanId)) ?? EMPTY_LOADED;
+  const cv = buildCoverage(loaded, fs, recs.length); const sc = cv.strict; const t = cv.summary.totals;
+  const ranRecs = cv.records.filter((r) => r.execution === 'ran' && r.evidence.length);
+  const cov = libCoverage(ranRecs.map((r) => r.ruleId));
   return {
-    library: { ran: executed.map((id) => ({ id, title: BY_ID.get(id)!.title })), notRun: CATALOG.length - executed.length,
-      needsPerson: { heuristic: CATALOG.filter((r) => r.mode === 'H').length, session: CATALOG.filter((r) => r.mode === 'U').length, ids: CATALOG.filter((r) => r.mode === 'H' || r.mode === 'U').map((r) => r.id) },
+    library: { ran: ranRecs.map((r) => ({ id: r.ruleId, title: BY_ID.get(r.ruleId)?.title ?? r.title })),
+      notRun: { total: t.buckets.not_run + t.buckets.not_applicable, reasons: Object.fromEntries(Object.entries(t.reasons).filter(([, n]) => n > 0)), unknown: t.buckets.unknown },
+      needsPerson: { ...cv.human, ids: cv.records.filter((r) => r.implementation === 'person_only' || r.outcome === 'needs_human_review').map((r) => r.ruleId) },
       unverifiedSources: Object.values(SOURCES).map((src) => ({ key: src.key, name: src.name, url: src.url, topics: CATALOG.filter((r) => r.sourceKey === src.key).length })).filter((x) => x.topics > 0),
-      catalogued: cov.catalogued, implemented: cov.implemented, exercisedOnFixtures: cov.exercisedOnFixtures, executedOnUrl: cov.executedOnUrl, scoreEligible: cov.scoreEligible, policy: sc.policy, coverageProfile: sc.coverageProfile, overall: sc.overall, overallWithheld: sc.overallWithheld, headline: sc.headline, advisoryCount: sc.advisory.length },
+      catalogued: cov.catalogued, implemented: cov.implemented, exercisedOnFixtures: cov.exercisedOnFixtures, executedOnUrl: ranRecs.length, scoreEligible: t.scoreEligible, policy: sc.policy, coverageProfile: sc.coverageProfile, overall: sc.overall, overallWithheld: sc.overallWithheld, headline: sc.headline, advisoryCount: sc.advisory.length,
+      strict: sc.categories.map((c) => ({ label: CATEGORIES[c.category].label, assessed: c.assessed, score: c.score, missing: c.missing.length, observationsOnly: CATEGORIES[c.category].weight === 0 })),
+      coverage: { origin: loaded.records.length ? cv.summary.origin : 'none', snapshotSize: cv.summary.snapshotSize, records: cv.records.length, reconciles: cv.summary.reconciles, problems: cv.summary.problems, buckets: t.buckets, implementation: t.implementation,
+        byCategory: cv.summary.byCategory.map(({ category, rules, ran, buckets, reasons }) => ({ category, rules, ran, buckets, reasons })), cannotProve: cv.cannotProve } },
     goal: scan.goal ?? null, analyzers: scan.analyzers ?? {}, coverage: scan.summary?.coverage ?? [],
     findings: fs.map((f) => ({
       id: f.id, ruleId: f.ruleId, ruleVersion: f.ruleVersion, ruleTitle: rule(f)?.title ?? f.ruleId, category: f.category, bucket: f.bucket, severity: f.severity, confidence: f.confidence, canonicalId: canonicalFor(f.ruleId), sourceType: f.sourceType,
@@ -105,6 +118,12 @@ export async function loadReport(scanId: string, opts: { shareToken?: string } =
   };
   const planFull = hasFeature(await planForScan(scanId), 'full_report');
   report.review = await loadReview(scanId, { full: planFull });
+  // The engine saved provisional averages; every reader (page, board, API) gets the strict scores and record-based counts instead, so none can disagree.
+  if (report.review && report.avara) {
+    const lib = report.avara.library; const st = new Map(lib.strict.map((c) => [c.label, c])); const bc = new Map(lib.coverage.byCategory.map((c) => [c.category, c]));
+    report.review.overall = { ...report.review.overall, score: lib.overall, assessedCategories: lib.strict.filter((c) => c.assessed && !c.observationsOnly).length, note: lib.overall == null ? `No overall score under the strict policy: ${lib.overallWithheld ?? 'scoring is not enabled.'}` : `Strict policy ${lib.policy}.` };
+    report.review.categories = report.review.categories.map((c) => { const x = st.get(c.category); return { ...c, score: x?.assessed ? x.score : null, counts: bc.get(c.category)?.buckets ?? {}, note: x?.assessed ? c.note : x?.observationsOnly ? 'Observations only: this category carries no weight.' : `${x?.missing ?? 0} required rules have no saved execution evidence.` }; });
+  }
   // Entitlements are applied here so no caller can hand a locked report to the browser by accident.
   return hasFeature(await planForScan(scanId), 'full_report') ? report : redactReport(report);
 }

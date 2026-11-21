@@ -241,25 +241,31 @@ export const MOTION = `(${String.raw`() => { ${HELPERS}
   for (const sheet of document.styleSheets) {
     try { const txt = [...sheet.cssRules].map((r) => r.cssText).join('\n'); readable++; if (/prefers-reduced-motion/.test(txt)) hasRule = true; } catch { unreadable++; }
   }
-  const running = [];
+  const running = []; let still = 0, unsampled = 0;
+  const MOVES = ['transform', 'translate', 'scale', 'rotate'];
   const anims = document.getAnimations ? document.getAnimations() : [];
   for (const a of anims) {
     if (running.length >= 20) break;
     if (a.playState !== 'running' || !a.effect || !a.effect.target) continue;
     const t = a.effect.getComputedTiming();
-    const long = t.iterations === Infinity || (Number(t.endTime) || 0) > 5000;
-    if (!long) continue;
     const el = a.effect.target instanceof Element ? a.effect.target : null;
     if (!el || !visible(el)) continue;
-    running.push({ selector: selectorOf(el), html: htmlOf(el, 300), detail: (a.animationName ? 'CSS animation "' + a.animationName + '"' : a.transitionProperty ? 'CSS transition' : 'Web animation') + (t.iterations === Infinity ? ', repeats forever' : ', runs ' + Math.round(t.endTime / 1000) + 's') });
+    // Movement only: a property counts when at least two keyframes give it different values. A fade or colour change is not movement.
+    let frames = []; try { frames = a.effect.getKeyframes ? a.effect.getKeyframes() : []; } catch {}
+    const props = Object.keys(Object.assign({}, ...frames)).filter((k) => !['offset', 'easing', 'composite', 'computedOffset'].includes(k));
+    const changed = props.filter((k) => new Set(frames.map((f) => f[k]).filter((v) => v !== undefined)).size > 1);
+    const moving = changed.filter((k) => MOVES.includes(k));
+    if (!frames.length) { unsampled++; continue; }
+    if (!moving.length) { still++; continue; }
+    running.push({ selector: selectorOf(el), html: htmlOf(el, 300), changed: moving, detail: (a.animationName ? 'CSS animation "' + a.animationName + '"' : a.transitionProperty ? 'CSS transition' : 'Web animation') + ' changes ' + moving.join(', ') + (t.iterations === Infinity ? ', repeats forever' : ', runs ' + Math.round((Number(t.endTime) || 0) / 1000) + 's') });
   }
-  return { hasReducedMotionRule: hasRule, readableSheets: readable, unreadableSheets: unreadable, running }; }`})`;
+  return { hasReducedMotionRule: hasRule, readableSheets: readable, unreadableSheets: unreadable, running, still, unsampled }; }`})`;
 
 // Extra WCAG checks that axe-core does not run: non-text contrast (1.4.11), text spacing (1.4.12),
 // dragging with no alternative (2.5.7), accessible authentication (3.3.8) and positive tabindex (2.4.3).
 // Everything it changes (the text-spacing style, the test paste event) is undone or has no effect on the page.
 export const EXTRA = `(${String.raw`(opts) => { ${HELPERS}
-  const out = { nonTextContrast: [], textSpacing: [], dragging: [], authentication: { passwordFields: 0, pasteBlocked: [], autocompleteOff: [], captcha: [] }, positiveTabindex: [], smallText: [], autofocus: [], newTab: [], headings: [], vagueLinks: [], placeholderOnly: [], noMain: [], autoplayVideo: [], voiceNameNotFirst: [], forcedColorsOptOut: [], imageOfText: [], autocompleteMissing: [], requiredNotMarked: [], radioGroups: [], invalidNoMessage: [], labelNotVisible: [], inputTypeMismatch: [] };
+  const out = { nonTextContrast: [], textSpacing: [], dragging: [], authentication: { passwordFields: 0, pasteBlocked: [], autocompleteOff: [], captcha: [] }, positiveTabindex: [], smallText: [], autofocus: [], newTab: [], headings: [], vagueLinks: [], placeholderOnly: [], noMain: [], autoplayVideo: [], voiceNameNotFirst: [], forcedColorsOptOut: [], imageOfText: [], autocompleteMissing: [], requiredNotMarked: [], radioGroups: [], invalidNoMessage: [], invalidMessages: [], labelNotVisible: [], inputTypeMismatch: [] };
   const ref = (el, detail) => ({ selector: selectorOf(el), html: htmlOf(el, 400), detail });
 
   // --- colour helpers: any CSS colour is normalised through a 1x1 canvas ---
@@ -392,7 +398,10 @@ export const EXTRA = `(${String.raw`(opts) => { ${HELPERS}
     for (const a of document.querySelectorAll('a[href],[role=link]')) { if (out.vagueLinks.length >= 12 || !visible(a)) continue; if (VAGUE.has(norm(accName(a)).replace(/[.>»→]+$/g, '').trim())) out.vagueLinks.push(ref(a, 'The link is announced as "' + norm(accName(a)) + '" with no hint where it goes.')); } }
   for (const f of document.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=button]):not([type=image]):not([type=range]):not([type=file]),textarea')) {
     if (out.placeholderOnly.length >= 10 || !visible(f) || !f.getAttribute('placeholder')) continue;
-    if ((f.labels && f.labels.length) || f.getAttribute('aria-label') || f.getAttribute('aria-labelledby') || f.getAttribute('title')) continue;
+    // A label source counts only when it resolves to text: an empty aria-label, a blank <label> or aria-labelledby pointing at nothing names nothing.
+    const named = [...(f.labels || [])].some((l) => norm(l.textContent)) || norm(f.getAttribute('aria-label')) || norm(f.getAttribute('title'))
+      || (f.getAttribute('aria-labelledby') || '').split(/\s+/).filter(Boolean).some((id) => norm((document.getElementById(id) || { textContent: '' }).textContent));
+    if (named) continue;
     out.placeholderOnly.push(ref(f, 'Only the placeholder "' + f.getAttribute('placeholder').slice(0, 40) + '" says what to type; it vanishes once you start typing.'));
   }
 
@@ -466,6 +475,11 @@ export const EXTRA = `(${String.raw`(opts) => { ${HELPERS}
     if (f.getAttribute('aria-invalid') === 'true' && out.invalidNoMessage.length < 8) {
       const ids = ((f.getAttribute('aria-describedby') || '') + ' ' + (f.getAttribute('aria-errormessage') || '')).trim().split(/\s+/).filter(Boolean);
       if (!ids.some((id) => (document.getElementById(id) || { textContent: '' }).textContent.trim())) out.invalidNoMessage.push(ref(f, 'aria-invalid="true" but no aria-describedby / aria-errormessage points to error text.'));
+    }
+    // The text of each linked error, so a derived check can ask whether it says how to recover. Only the page's own message is kept, never the typed value.
+    if (f.getAttribute('aria-invalid') === 'true' && f.getAttribute('aria-errormessage') && out.invalidMessages.length < 8) {
+      const msg = (f.getAttribute('aria-errormessage') || '').split(/\s+/).filter(Boolean).map((id) => ((document.getElementById(id) || { textContent: '' }).textContent || '').replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ');
+      if (msg) out.invalidMessages.push({ ...ref(f, msg.slice(0, 120)), message: msg.slice(0, 120) });
     }
     // 2.4.6 / 3.3.2: the only name is hidden (aria-label or title); nothing on screen says what the field is.
     if (!(f.labels && f.labels.length) && !f.getAttribute('aria-labelledby') && !f.getAttribute('placeholder') && (f.getAttribute('aria-label') || f.getAttribute('title')) && out.labelNotVisible.length < 10)

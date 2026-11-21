@@ -13,7 +13,7 @@ export function Resource({ kicker, title, lede, children, wide, cta }: { kicker:
         <div className="mt-16 rounded-[2rem] bg-[#e6f9b6] p-8">
           <h2 className="text-2xl font-semibold tracking-tight text-ink">{cta?.title ?? 'Check your own page'}</h2>
           <p className="mt-2 text-lg leading-relaxed text-ink">{cta?.text ?? 'Scan a public page and get the findings with a fix for each one.'}</p>
-          <Link href="/website-accessibility-checker" className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full bg-ink px-6 text-lg font-semibold text-white hover:bg-neutral-800">Scan my page free<ArrowRight aria-hidden className="size-5" /></Link>
+          <Link href="/website-accessibility-checker" className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-xl bg-ink px-6 text-lg font-semibold text-white hover:bg-neutral-800">Scan my page free<ArrowRight aria-hidden className="size-5" /></Link>
         </div>
       </div>
     </main>

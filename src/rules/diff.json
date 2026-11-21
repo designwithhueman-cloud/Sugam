@@ -117,7 +117,22 @@
         "hueMin": 235,
         "hueMax": 290,
         "minSignals": 3,
-        "minRadius": 12
+        "minRadius": 12,
+        "heroLayout": {
+          "version": "prototype-1",
+          "status": "diagnostic",
+          "publish": false,
+          "weight": 0,
+          "note": "Avara DIFF-002 detector pack: geometric comparison of the first-screen hero (heading, main action, lead visual) with a versioned, permissioned reference set at the same viewport. Diagnostic only: stored per scan, never shown as an observation or scored until a person approves a release policy from held-out real-site validation. DIFF-001 owns section order.",
+          "positionTolerance": 0.08,
+          "positionToleranceStatus": "experimental coordinate tolerance",
+          "minimumGroups": 3,
+          "groups": {
+            "heading position": ["headingX", "headingY"],
+            "action position": ["actionX", "actionY"],
+            "visual composition": ["visualX", "visualY", "visualWidth", "visualHeight"]
+          }
+        }
       },
       "sourceStatus": "passage-unverified",
       "related": [],

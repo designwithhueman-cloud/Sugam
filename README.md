@@ -29,8 +29,12 @@ Scanner without the web app: `node scanner/cli.ts <url> [standard] [outDir]` (ra
 |---|---|
 | `DATABASE_URL` | PostgreSQL server (migrations in `drizzle/` run on start) |
 | `REDIS_URL` | Queue scans with BullMQ; run `npm run worker` as a separate process (needs `DATABASE_URL` too) |
-| `SUGAM_AI=on` | Enable the Claude API layer (billed per scan). Credentials come from `ANTHROPIC_API_KEY` or an `ant auth login` profile |
-| `SUGAM_AI_MODEL` | Default `claude-opus-5-5` |
+| `SUGAM_AI=on` | Enable the AI fix writer (`analysis/claude.ts`). Uses the provider chosen by `AVARA_AI_PROVIDER`: Claude by default (billed per scan; credentials from `ANTHROPIC_API_KEY` or an `ant auth login` profile), or Gemini with `GEMINI_API_KEY`. If the model gives no usable result, the deterministic fixes are shown |
+| `SUGAM_AI_MODEL` | Claude model for the fix writer. Default `claude-opus-5-5` (Gemini uses `AVARA_GEMINI_MODEL`) |
+| `AVARA_AI=on` | Enable AI review of the rules that need judgement (clarity, trust, calls to action and the other `llm` rules in `src/rules`). Off by default. Separate from `SUGAM_AI`, which turns on the fix writer |
+| `AVARA_AI_PROVIDER` | `claude` (default) or `gemini`, for both the rule review and the fix writer. Any other value turns both off rather than falling back to a paid provider |
+| `ANTHROPIC_API_KEY`, `AVARA_AI_MODEL` | Claude provider (billed per call). Model default `claude-sonnet-5-5` |
+| `GEMINI_API_KEY`, `AVARA_GEMINI_MODEL` | Gemini provider (Google AI Studio key, Developer API). Model default `gemini-2.5-flash`. **On the free tier Google may use submitted content to improve its products: use it only for scans of public demo pages.** A refusal, malformed output, a rate limit (429) or a Google server error marks that call's rules inconclusive, never passed or failed, and leaves the deterministic fixes in place |
 | `SCAN_CONCURRENCY` | Scans run at once (default 2) |
 | `SCAN_RATE_LIMIT` | Scans per 10 minutes per visitor. Default 5 for anonymous visitors and 20 for signed-in users; setting it overrides both |
 | `TRUST_PROXY` | Set to `0` to ignore `x-forwarded-for` when rate limiting. Otherwise the last entry (added by your proxy) is used |
@@ -53,7 +57,7 @@ Scanner without the web app: `node scanner/cli.ts <url> [standard] [outDir]` (ra
    - All browser traffic goes through a local **egress proxy** (`scanner/egress-proxy.ts`) that resolves and checks every destination, including redirect hops, and connects to the checked IP, so a site cannot steer the scanner at internal services or cloud metadata.
 3. **Analysis** (`analysis/analyze.ts`): merges instances across viewports, groups repeats by markup shape into one component issue, assigns Critical/Serious/Moderate/Minor, and sorts everything into **Confirmed Failures**, **Needs Human Verification** and **Verified Passes**. Findings outside the selected standard (for example WCAG 2.1 criteria under AODA) are excluded and counted.
 4. **Fixes** (`analysis/fixes.ts`): for each issue an AI-builder prompt (Lovable, Bolt.new, v0, Cursor), Framer and Webflow steps, and a native-HTML-first before/after patch. "Before" is always the verbatim extracted HTML; `[bracketed]` placeholders mark wording only the owner can supply. Contrast fixes compute a real compliant colour from axe's measurements.
-5. **AI layer** (`analysis/claude.ts`, optional): sends the grouped findings, verbatim HTML, keyboard trace and viewport screenshots to Claude with the `web-accessibility-audit` skill (`skills/`) as instructions, using structured output. Claude may refine explanations, severity and fixes; it cannot add issues, change buckets, or replace the extracted HTML.
+5. **AI layer** (`analysis/claude.ts`, optional): sends the grouped findings, verbatim HTML, keyboard trace and viewport screenshots to Claude (or Gemini, with `AVARA_AI_PROVIDER=gemini`) with the `web-accessibility-audit` skill (`skills/`) as instructions, using structured output. Claude may refine explanations, severity and fixes; it cannot add issues, change buckets, or replace the extracted HTML.
 
 ## Categories and pillars
 

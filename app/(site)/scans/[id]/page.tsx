@@ -38,10 +38,7 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
     <>
       <ReviewPage report={report} access={access} />
       {access === 'paid' && (
-        <section aria-labelledby="full-h" className="border-t border-black/10 px-5 pb-10 pt-10 sm:px-10">
-          <div className="mx-auto max-w-5xl"><h2 id="full-h" className="text-3xl font-semibold tracking-tight text-ink">Every finding, pinned on the screenshot</h2></div>
-          <div className="[&>div]:!h-auto [&>div]:!min-h-0 lg:[&>div]:!h-[calc(100vh-4rem)] lg:[&>div]:!min-h-[640px]"><ReportView report={report} initialIssueId={issue} /></div>
-        </section>
+        <div className="px-5 pb-16 sm:px-10"><div className="mx-auto max-w-7xl"><ReportView report={report} initialIssueId={issue} /></div></div>
       )}
     </>
   );

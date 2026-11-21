@@ -38,11 +38,11 @@ export function ProblemVisual() {
             <span className="grid content-center gap-3">
               <span className="h-3.5 w-4/5 rounded-full bg-[#111]" />
               <span className="h-3 w-full rounded-full bg-[#d9d9d4]" /><span className="h-3 w-5/6 rounded-full bg-[#dededa]" />
-              <span className="mt-2 h-10 w-32 rounded-full bg-[#111]" />
+              <span className="mt-2 h-10 w-32 rounded-xl bg-[#111]" />
             </span>
           </div>
         </div>
-        <span aria-hidden className="hs-pop absolute left-5 top-0 inline-flex items-center gap-1.5 rounded-full bg-[#d9f56e] px-3.5 py-1.5 text-sm font-semibold text-ink shadow-sm" style={at(0.3)}><Check className="size-4" strokeWidth={3} />Looks fine</span>
+        <span aria-hidden className="hs-pop absolute left-5 top-0 inline-flex items-center gap-1.5 rounded-lg bg-[#d9f56e] px-3.5 py-1.5 text-sm font-semibold text-ink shadow-sm" style={at(0.3)}><Check className="size-4" strokeWidth={3} />Looks fine</span>
         <ul aria-label="Why it still fails" className="mt-5 grid gap-3 md:mt-0 md:block">
           {CALLOUTS.map((c) => (
             <li key={c.text} className={`hs-pop flex max-w-[17rem] items-start gap-2.5 rounded-2xl border border-black/10 bg-white p-3.5 text-base font-medium leading-snug text-ink shadow-[0_10px_24px_-14px_rgba(0,0,0,0.4)] md:absolute ${c.pos}`} style={at(c.t)}>

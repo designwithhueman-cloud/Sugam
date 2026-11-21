@@ -1,5 +1,7 @@
 # Detector coverage report
 
+> Superseded: this hand-written snapshot (77 rules) is out of date. The current, generated totals are in [coverage/coverage-matrix.md](coverage/coverage-matrix.md), which counts rules naming a detector (81) separately from detector ids listed as fixture-proven (98 of 135 named ids). "Detector-backed" below means the rule names a detector, not that it ran on every scan.
+
 Generated from `src/detectors/detector-specs.json` and the rule files. "Detector-backed" means the rule names at least one detector that runs on every scan. "Exercised" means it was seen passing and flagging on test pages. "Not run" means no detector exists yet; those rules need a model, the owner, or a person.
 
 **Detector-backed rules: 51 before, 77 now (+26). Rules in the library: 135 (125 canonical + 10 Differentiation). No detector was removed.**

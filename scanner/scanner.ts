@@ -16,7 +16,7 @@ import { BOXES, PAGE_METRICS, HEURISTICS, EXTRA, FOCUS_SNAPSHOT, MOTION } from '
 import { STANDARDS, type StandardId } from '../lib/standards.ts';
 import { checkUrl, BlockedUrlError } from '../lib/net/guard.ts';
 import { probeActions, runWorkflow, type ActionProbe } from './avara.ts';
-import { PAGE_CONTEXT, MOBILE_PROBE, TEXT_RESIZE, STRUCTURE_CONTEXT, VALIDATION_PROBE, FRAGMENT_PROBE, SIGNALS_PROBE } from './avara-inpage.ts';
+import { PAGE_CONTEXT, MOBILE_PROBE, TEXT_RESIZE, STRUCTURE_CONTEXT, VALIDATION_PROBE, FRAGMENT_PROBE, SIGNALS_PROBE, HERO_LAYOUT } from './avara-inpage.ts';
 import { runLighthouse, type PerfResult } from './perf.ts';
 
 export type ViewportId = 'desktop' | 'mobile';
@@ -48,11 +48,11 @@ export type Extra = {
   nonTextContrast: NodeRef[]; textSpacing: NodeRef[]; dragging: NodeRef[]; positiveTabindex: NodeRef[];
   smallText: NodeRef[]; autofocus: NodeRef[]; newTab: NodeRef[]; vagueLinks: NodeRef[]; placeholderOnly: NodeRef[]; noMain: NodeRef[];
   autoplayVideo: NodeRef[]; voiceNameNotFirst: NodeRef[]; forcedColorsOptOut: NodeRef[];
-  imageOfText: NodeRef[]; autocompleteMissing: NodeRef[]; requiredNotMarked: NodeRef[]; radioGroups: NodeRef[]; invalidNoMessage: NodeRef[]; labelNotVisible: NodeRef[]; inputTypeMismatch: NodeRef[];
+  imageOfText: NodeRef[]; autocompleteMissing: NodeRef[]; requiredNotMarked: NodeRef[]; radioGroups: NodeRef[]; invalidNoMessage: NodeRef[]; invalidMessages?: (NodeRef & { message: string })[]; labelNotVisible: NodeRef[]; inputTypeMismatch: NodeRef[];
   headings: (NodeRef & { kind: 'no-h1' | 'many-h1' | 'skipped' | 'empty' })[];
   authentication: { passwordFields: number; pasteBlocked: NodeRef[]; autocompleteOff: NodeRef[]; captcha: NodeRef[] };
 };
-export type Motion = { hasReducedMotionRule: boolean; readableSheets: number; unreadableSheets: number; running: NodeRef[] };
+export type Motion = { hasReducedMotionRule: boolean; readableSheets: number; unreadableSheets: number; running: (NodeRef & { changed?: string[] })[]; still?: number; unsampled?: number };
 export type ViewportResult = {
   name: ViewportId; width: number; height: number; pageWidth: number; pageHeight: number;
   screenshot: Buffer; viewportShot: Buffer; truncated: boolean;
@@ -161,6 +161,8 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     if (vp.name === 'desktop') {
       try { pageContext = (await page.evaluate(`(${PAGE_CONTEXT})()`)) as Record<string, unknown>; } catch { pageContext = null; }
       if (pageContext) { try { (pageContext as Record<string, unknown>).structure = await page.evaluate(`(${STRUCTURE_CONTEXT})()`); } catch { /* structure is optional */ } }
+      // DIFF-002 (diagnostic): the hero's geometry, using the action probe's main action and dropping it when the probe found it covered or hidden.
+      if (pageContext) { try { const c = avara?.candidates[0]; const bad = c?.classification?.level === 'unusable' || !!c?.classification?.causes.some((x) => ['hidden', 'clipped', 'covered', 'offscreen'].includes(x.kind)); (pageContext as Record<string, unknown>).heroLayout = await page.evaluate(`(${HERO_LAYOUT})(${JSON.stringify({ action: c?.candidate.selector ?? null, usable: c ? !bad : null })})`); } catch (e) { (pageContext as Record<string, unknown>).heroLayout = { skip: `The hero capture failed: ${(e as Error).message.split('\n')[0].slice(0, 120)}` }; } }
       // Do the legal, contact, support and review links the page offers actually open? Each address passes the same public-address check as the scan itself.
       if (pageContext) {
         const pc = pageContext as { legalLinks?: Record<string, { href: string | null }[]>; linkTargets?: Record<string, { href: string | null }[]> };

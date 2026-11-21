@@ -12,6 +12,7 @@ import { analyzeAvara, type AvaraAnalysis } from '../analysis/avara/build.ts';
 import { avaraRows, insertAvara, outcomeRow } from './avara/persist.ts';
 import { verifyProbes, type Probe } from '../scanner/avara-verify.ts';
 import { runReview } from '../src/services/scan-service/index.ts';
+import { heroDiagnostic } from '../src/services/scan-service/hero-layout.ts';
 import { saveReview } from '../src/context/findings/index.ts';
 import { recordKnowledge } from '../src/context/knowledge/index.ts';
 import { detectPatterns } from '../src/context/knowledge/patterns.ts';
@@ -35,6 +36,8 @@ export async function runScanJob(scanId: string): Promise<void> {
     // The rule engine reviews the page against the JSON rule library. A failure here is recorded and never costs the rest of the report.
     const rv = process.env.AVARA_FAIL_ANALYZER === 'review' ? { review: null, error: 'forced failure' } : await runReview(out, a, av);
     if (!rv.review) analyzers.review = { status: 'failed', message: `The rule review did not complete: ${rv.error ?? 'unknown error'}` }; else analyzers.review = { status: 'ok' };
+    // DIFF-002 hero-layout comparison: diagnostic evidence kept beside the scan (never a finding, never scored), read through /api/scans/{id}/diagnostics.
+    try { await putObject(`scans/${scanId}/diagnostics/diff-002.json`, JSON.stringify(heroDiagnostic(out))); } catch (e) { console.error('DIFF-002 diagnostic not stored', scanId, e); }
 
     // Files first (they live outside the database), then every row in ONE transaction, in a few
     // batched inserts. A failure part-way rolls back, so a scan never keeps half its findings,

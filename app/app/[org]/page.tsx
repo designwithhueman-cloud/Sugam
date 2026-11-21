@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils.ts';
 import { PageHead } from '@/components/dashboard/PageHead.tsx';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Overview | Sugam' };
+export const metadata = { title: 'Overview | Avara' };
 const QUICK = 5;
 const SEV: Record<Attention['severity'], string> = { critical: 'Critical', serious: 'Serious', moderate: 'Moderate', minor: 'Minor' };
 

@@ -148,7 +148,7 @@ export function ReportsTable({ data, projectBase, projectId, decisions, locked =
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
           <table className="w-full min-w-[640px] border-collapse text-left text-sm">
             <caption className="sr-only">Scanned pages</caption>
-            <thead className="border-b border-slate-200 bg-slate-50"><tr><th scope="col" className="px-3 py-3">Page</th><th scope="col" className="px-3 py-3">Environment</th><th scope="col" className="px-3 py-3">Sugam score</th><th scope="col" className="px-3 py-3">Confirmed issues</th><th scope="col" className="px-3 py-3">Needs review</th><th scope="col" className="px-3 py-3"><span className="sr-only">Open</span></th></tr></thead>
+            <thead className="border-b border-slate-200 bg-slate-50"><tr><th scope="col" className="px-3 py-3">Page</th><th scope="col" className="px-3 py-3">Environment</th><th scope="col" className="px-3 py-3">Avara score</th><th scope="col" className="px-3 py-3">Confirmed issues</th><th scope="col" className="px-3 py-3">Needs review</th><th scope="col" className="px-3 py-3"><span className="sr-only">Open</span></th></tr></thead>
             <tbody>{data.map((d) => (
               <tr key={d.env} className="border-b border-slate-100">
                 <td className="max-w-sm px-3 py-3"><span className="block font-semibold text-slate-900">{d.report.pageTitle}</span><span className="break-all text-slate-600">{d.report.finalUrl || d.report.url}</span></td>
@@ -196,7 +196,7 @@ function Row({ locked, planLocked, issue, group, status, decision, projectId, op
           {!planLocked && (<section className="mt-3 rounded-2xl border border-slate-200 bg-white p-4" aria-labelledby={`dec-${issue.id}`}>
             <h4 id={`dec-${issue.id}`} className="font-semibold">Human verification</h4>
             {decision ? <p className="mt-1 text-sm text-slate-700">{decision.decision === 'confirmed' ? 'Confirmed as a real issue' : 'Marked not an issue'} by {decision.by || 'a former member'} on {new Date(decision.at).toLocaleDateString()}{decision.note ? `: "${decision.note}"` : '.'} This decision applies to later scans of the same markup.</p>
-              : <p className="mt-1 text-sm text-slate-600">{issue.bucket === 'needs_review' ? 'Sugam could not decide this automatically. Check it on the page, then record what you found.' : 'If this is a false positive, record why. The decision carries over to later scans of the same markup.'}</p>}
+              : <p className="mt-1 text-sm text-slate-600">{issue.bucket === 'needs_review' ? 'Avara could not decide this automatically. Check it on the page, then record what you found.' : 'If this is a false positive, record why. The decision carries over to later scans of the same markup.'}</p>}
             <ActionForm action={decideIssueAction} submit="Save decision" className="mt-3" refreshOnOk>
               <input type="hidden" name="projectId" value={projectId} /><input type="hidden" name="issueId" value={issue.id} />
               <fieldset className="flex flex-wrap gap-4 text-sm"><legend className="sr-only">Decision</legend>

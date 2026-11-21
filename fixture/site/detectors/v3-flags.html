@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Northwind: request a launch review</title><meta name="description" content="Northwind reviews your launch page."><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>body{font-family:system-ui,sans-serif;margin:0;color:#111;background:#fff;font-size:16px}main{max-width:900px;margin:0 auto;padding:20px}
+p{line-height:1.5;max-width:640px}input{font-size:16px;padding:8px;border:1px solid #555}.err{color:#a00}
+@keyframes nudge{from{transform:translateX(0)}to{transform:translateX(6px)}}#badge{display:inline-block;padding:4px 8px;border:1px solid #333;animation:nudge 3s infinite}</style></head><body>
+<main>
+<h1>Request a launch review</h1>
+<p>Tell us where to send the review. <span id="badge">New</span></p>
+<form action="/nowhere" method="post" onsubmit="return false">
+<p><input id="email" type="email" name="email" autocomplete="email" placeholder="Email" aria-label="" aria-invalid="true" aria-errormessage="email-err"></p>
+<p id="email-err" class="err" role="alert">Invalid input.</p>
+</form>
+<div role="tablist" aria-label="Plans"><button role="tab" aria-selected="true" aria-controls="panel-monthly" id="t1">Monthly</button></div>
+</main></body></html>

@@ -14,7 +14,7 @@ import { Initials, Panel, btnOutline } from '@/components/dashboard/bits.tsx';
 import { QuickScanTable, EmptyNote } from '@/components/dashboard/Tables.tsx';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Workspaces | Sugam' };
+export const metadata = { title: 'Workspaces | Avara' };
 const QUICK = 5;
 
 // With one workspace there is nothing to choose, so this page goes straight to its overview. It stays reachable for

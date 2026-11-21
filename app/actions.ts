@@ -138,7 +138,7 @@ export async function addMemberAction(_: FormState, f: FormData): Promise<FormSt
   const role = f.get('role') === 'admin' ? 'admin' : 'member';
   const db = await getDb();
   const [target] = await db.select().from(schema.users).where(eq(schema.users.email, email));
-  if (!target) return { error: 'No Sugam account uses that email. Ask them to sign up first, then add them.' };
+  if (!target) return { error: 'No Avara account uses that email. Ask them to sign up first, then add them.' };
   const existing = await db.select().from(schema.memberships).where(and(eq(schema.memberships.organizationId, a.org.id), eq(schema.memberships.userId, target.id)));
   if (existing.length) return { error: 'That person is already a member.' };
   await db.insert(schema.memberships).values({ organizationId: a.org.id, userId: target.id, role });
