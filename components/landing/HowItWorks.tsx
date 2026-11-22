@@ -9,9 +9,9 @@ import { TESTIMONIAL } from '@/lib/testimonial.ts';
 const hasQuote = () => !!TESTIMONIAL?.approved && !!TESTIMONIAL.highlight && TESTIMONIAL.quote.includes(TESTIMONIAL.highlight);
 
 const OPTIONS = [
-  [ScanSearch, '1. Scan your page', 'Paste a link to your page. We open it on desktop and at phone width, the way a first-time visitor would.'],
-  [MapPin, '2. See where it goes wrong', 'Issues are pinned where they happen on your page, worst first, each with a plain reason.'],
-  [Wand2, '3. Apply a plain-language fix', 'Paste the prompt into your AI builder, follow the steps in Webflow or Framer, or paste the code patch.'],
+  [ScanSearch, '1. Scan your page', 'Paste a link. We open it on desktop and on a phone, the way a first-time visitor would.'],
+  [MapPin, '2. See your score and what goes wrong', 'Your page gets a score out of 100. Issues are listed worst first, each with a plain reason.'],
+  [Wand2, '3. Apply a plain-language fix', 'Paste the prompt into your AI builder, follow the editor steps, or use the code patch.'],
 ] as const;
 
 export function HowItWorks() {
@@ -23,8 +23,8 @@ export function HowItWorks() {
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-vio-deep">How it works</p>
         <h2 id="how-h" className="mt-4 text-balance text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-ink sm:text-5xl">You found the snag. <span className="text-vio-deep">Here’s the fix.</span></h2>
-        <p className="mt-4 text-xl leading-relaxed text-neutral-800">Made for people who build with Lovable, Bolt, v0 or Framer. No code to read, and it works for agencies checking client sites too.</p>
-        <ul aria-label="How a scan works" className="mt-8 grid max-w-xl gap-6">
+        <p className="mt-4 text-xl leading-relaxed text-neutral-800">Built for <strong className="font-semibold text-ink">AI builders, no-code and low-code tools</strong>. Paste the prompt or follow the editor steps. No code to read. Developers can use the code patch, and agencies can check client sites.</p>
+        <ul aria-label="How a scan works" className="mt-8 grid gap-6">
           {OPTIONS.map(([Icon, name, text]) => (
             <li key={name} className="flex items-start gap-5">
               <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-full bg-[#d9f56e] text-ink"><Icon className="size-6" /></span>

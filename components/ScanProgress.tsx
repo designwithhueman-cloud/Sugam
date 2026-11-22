@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { CopyButton } from '@/components/CopyButton.tsx';
+import { splitFix, promptOnly } from '@/lib/fix-text.ts';
 
 type Early = { title: string; summary: string; evidence: string[]; plainChange: string; prompts: Record<string, string>; shotUrl: string | null; viewport: { width: number } };
 const BUILDERS: [string, string][] = [['lovable', 'Lovable'], ['bolt', 'Bolt'], ['v0', 'v0'], ['cursor', 'Cursor']];
@@ -105,7 +106,7 @@ function EarlyBlocker({ b }: { b: Early }) {
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <label className="text-base font-semibold text-ink" htmlFor="early-tool">Builder</label>
         <select id="early-tool" value={tool} onChange={(e) => setTool(e.target.value)} className="min-h-11 rounded-xl border border-black/20 bg-white px-3 text-base">{tools.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
-        <CopyButton text={b.prompts[tool] ?? ''} label="Copy fix" />
+        <CopyButton text={promptOnly(b.prompts[tool])} label="Copy fix" />
       </div>
       <p className="mt-4 text-sm text-neutral-700">The full report is still being built. It confirms this finding and lists everything else.</p>
     </section>

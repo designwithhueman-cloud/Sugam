@@ -1,13 +1,14 @@
 // "What else could get in their way?": the four areas every scan checks, as four cards built the same way. Each card has
 // a picture of one concrete problem Avara finds (decorative, aria-hidden), the question as its heading, the categories it
-// covers as tags, and one plain sentence on why visitors leave or get stuck. No tabs and no motion, so there is nothing to
-// operate or pause. Server-rendered.
+// covers as tags, and one plain sentence on why visitors leave or get stuck. The cards fade up and the issue tags pop in once,
+// with the page's shared motion (components/landing/Reveal.tsx); reduced motion shows them still. Nothing to operate or pause.
+import { Reveal } from './Reveal.tsx';
 import { SHOW_PERSON_NOTE } from './flags.ts';
 import { Menu, UserCheck, Volume2, X } from 'lucide-react';
 
 // A red issue tag, the same in every picture
 const Flag = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-lg bg-[#b3261e] px-2.5 py-1 text-[0.8rem] font-semibold leading-none text-white shadow-sm ${className}`}>
+  <span className={`hs-pop [animation-delay:450ms] inline-flex items-center gap-1 whitespace-nowrap rounded-lg bg-[#b3261e] px-2.5 py-1 text-[0.8rem] font-semibold leading-none text-white shadow-sm ${className}`}>
     <X aria-hidden className="size-3" strokeWidth={3} />{children}
   </span>
 );
@@ -73,19 +74,19 @@ function Ready() {
 }
 
 const CARDS = [
-  { q: 'Is the offer clear?', tags: ['Product clarity', 'Trust'], text: 'A first-time visitor can’t tell what you do or why to trust you, so they leave.', Scene: Offer, tint: 'bg-[#efe9ff]' },
-  { q: 'Can visitors take action?', tags: ['UX', 'Conversion'], text: 'The main button is hard to find or competes with others, so visitors give up.', Scene: Action, tint: 'bg-[#fbe9df]' },
+  { q: 'Is the offer clear?', tags: ['Product clarity', 'Trust'], text: 'A first-time visitor can’t tell what you do or why to trust you, so they leave.', Scene: Offer, tint: 'bg-[#eef8cf]' },
+  { q: 'Can visitors take action?', tags: ['UX', 'Conversion'], text: 'The main button is hard to find or competes with others, so visitors give up.', Scene: Action, tint: 'bg-[#efe9ff]' },
   { q: 'Can everyone use it?', tags: ['Mobile', 'Accessibility'], text: 'Faint text, unnamed buttons or no keyboard access shut people out before they start.', Scene: Everyone, tint: 'bg-[#eef8cf]' },
-  { q: 'Does the page feel ready?', tags: ['Performance', 'Design'], text: 'A slow, jumpy or unfinished-looking page makes visitors doubt you and leave.', Scene: Ready, tint: 'bg-[#efe9ff]' },
+  { q: 'Does the page feel ready?', tags: ['Performance', 'Design', 'Differentiation'], text: 'A slow, jumpy, unfinished or generic-looking page makes visitors doubt you and leave.', Scene: Ready, tint: 'bg-[#efe9ff]' },
 ] as const;
 
 export const SCENES = { Offer, Action, Everyone, Ready };
 export function Pillars() {
   return (
-    <div>
+    <Reveal>
       <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {CARDS.map((c) => (
-          <li key={c.q} className="flex flex-col rounded-[2rem] border border-black/10 bg-white p-3">
+        {CARDS.map((c, i) => (
+          <li key={c.q} className="hs-in flex flex-col rounded-[2rem] border border-black/10 bg-white p-3" style={{ animationDelay: `${i * 90}ms` }}>
             <div aria-hidden className={`grid h-44 place-items-center overflow-hidden rounded-[1.5rem] px-4 pb-3 ${c.tint}`}><c.Scene /></div>
             <div className="flex flex-1 flex-col px-3 pb-3 pt-5">
               <h3 className="text-[1.6rem] font-bold leading-tight tracking-tight text-ink sm:min-h-[2.5em]">{c.q}</h3>
@@ -101,6 +102,6 @@ export function Pillars() {
         <UserCheck aria-hidden className="mt-0.5 size-7 shrink-0 text-vio-deep" />
         <span><b>Still needs a person:</b> whether your claims are true, whether the flow makes sense for a real task, whether alt text and captions are right, and text over photos.</span>
       </p>)}
-    </div>
+    </Reveal>
   );
 }

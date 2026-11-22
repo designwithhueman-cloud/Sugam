@@ -1,9 +1,10 @@
 // Server-rendered sections: how it works, audiences, pricing, footer. Spacing is generous on
 // purpose: large gaps between sections and between the elements inside them.
 import Link from 'next/link';
-import { Check, CircleCheck, ArrowRight, Building2, Crown, Info, ListChecks, RefreshCw, Rocket, Wrench, Zap, Sparkles } from 'lucide-react';
+import { Check, Minus, ArrowRight, Building2, Info, Rocket, Zap, Sparkles } from 'lucide-react';
 import { PLANS, PLAN_ROWS } from '@/lib/plans.ts';
 import { Wordmark } from './Header.tsx';
+import { Reveal } from './Reveal.tsx';
 import { NAV, type NavLinks } from './nav.ts';
 import { SHOW_FAQ, SHOW_TOOLS } from './flags.ts';
 
@@ -12,57 +13,34 @@ export const h2 = 'text-4xl font-semibold leading-[1.05] tracking-[-0.025em] tex
 
 const CTA = { free: ['Scan my page free', '/website-accessibility-checker', ''], site: ['Join Creator waitlist', '/upgrade?plan=site', ''], agency: ['Join Agency waitlist', '/upgrade?plan=agency', ''] } as const;
 
+/** Pricing: three short cards of equal height. Each says who it is for, the price, the same three comparison rows (so plans compare
+ *  line by line), and one button. Paid plans are on a waitlist until checkout opens. */
 export function Plans() {
   return (
-    <div>
-      <ul className="grid gap-6 lg:grid-cols-3 lg:gap-8">
-        {PLANS.map((p) => {
-          const free = p.id === 'free';
-          return (
-            <li key={p.id} className={`flex flex-col rounded-[2rem] border p-8 ${free ? 'border-[#cfe98a] bg-[#f3fbd9]' : 'border-black/10 bg-white'}`}>
-              <p className={`mb-4 inline-flex self-start rounded-lg px-3 py-1 text-sm font-semibold ${free ? 'bg-[#d9f56e] text-ink' : 'bg-[#f1f0ec] text-ink'}`}>{free ? 'Available now' : 'Coming soon'}</p>
-              <h3 className="flex items-center gap-3 text-2xl font-semibold tracking-tight text-ink"><span aria-hidden className={`grid size-11 shrink-0 place-items-center rounded-full ${free ? 'bg-[#d9f56e]' : p.id === 'site' ? 'bg-[#d9f56e]' : 'bg-ink text-[#d9f56e]'}`}>{free ? <Zap className="size-5" /> : p.id === 'site' ? <Rocket className="size-5" /> : <Building2 className="size-5" />}</span>{p.name}</h3>
-              <p className="mt-5"><span className="text-5xl font-semibold tracking-tight text-ink">{p.price}</span> <span className="text-lg text-neutral-700">{p.period}</span></p>
-              <p className="mt-3 text-lg font-medium text-ink">{p.summary}</p>
-
-              {free ? (
-                /* Free: the route from the first fix to the next one, as a short ladder */
-                <div className="mt-6 flex-1">
-                  <p className="text-xl font-semibold text-ink">Fix one issue at a time.</p>
-                  <ol aria-label="How the free plan works" className="mt-5">
-                    {[[ListChecks, 'Start with the top issue on your page.', 'bg-white'], [Wrench, 'Apply the fix and scan again.', 'bg-[#e6dcff]'], [CircleCheck, 'Once it\u2019s resolved, get the next fix.', 'bg-[#d9f56e]']].map(([I, t, bg], k, all) => {
-                      const Icon = I as typeof Wrench;
-                      return (
-                        <li key={t as string} className={`relative pl-16 ${k < all.length - 1 ? 'min-h-[4.75rem]' : ''}`}>
-                          <span aria-hidden className={`absolute left-0 top-0 grid size-11 place-items-center rounded-full text-ink ring-1 ring-black/10 ${bg as string}`}><Icon className="size-5" /></span>
-                          {k < all.length - 1 && <span aria-hidden className="absolute bottom-0 left-[1.35rem] top-12 w-px border-l-2 border-dashed border-[#9fcf3a]" />}
-                          <span className="block pt-2 text-lg font-medium leading-snug text-ink">{t as string}</span>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </div>
-              ) : (
-                <>
-                  <p className="mt-6 inline-flex items-center gap-2 self-start rounded-lg bg-[#d9f56e] px-3.5 py-1.5 text-base font-semibold text-ink"><Crown aria-hidden className="size-4" />Paid plan</p>
-                  <ul className="mt-4 flex-1 space-y-3.5">{(p.id === 'site' ? ['Planned: whole-site scanning. Scan your public pages together.', 'Planned: see where issues appear across your public pages in one report.', 'After your next release, rescan the page to see what changed.'] : p.features).map((f) => <li key={f} className="flex gap-3 text-lg leading-snug text-neutral-800"><Check aria-hidden className="mt-1 size-5 shrink-0 text-[#2d6a00]" />{f}</li>)}</ul>
-                </>
-              )}
-              <dl className="mt-6 divide-y divide-black/10 rounded-2xl bg-white/80 ring-1 ring-black/10" data-testid={`plan-rows-${p.id}`}>
-                {PLAN_ROWS.map((row) => { const v = row.values[p.id]; const no = v === 'Not included'; const [head, ...rest] = v.split(' · '); return (
-                  <div key={row.label} className="px-4 py-3" data-testid={`plan-row-${row.label === 'AI-assisted checks' ? 'ai' : row.label === 'Automated checks' ? 'auto' : 'scores'}`}>
-                    <dt className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#432099]">{row.label === 'AI-assisted checks' && <Sparkles aria-hidden className="size-4" />}{row.label}</dt>
-                    <dd className={`mt-1 text-lg leading-snug ${no ? 'text-neutral-600' : 'font-medium text-ink'}`}>{head}{rest.length ? <span className="block text-base font-normal text-neutral-700">{rest.join(' · ')}</span> : null}</dd>
-                  </div>); })}
-              </dl>
-              <Link href={CTA[p.id][1]} aria-describedby={CTA[p.id][2] ? `cta-note-${p.id}` : undefined} className={`mt-8 inline-flex min-h-14 items-center justify-center gap-2 rounded-xl px-6 text-lg font-semibold ${p.id === 'free' ? 'border border-ink text-ink hover:bg-black/5' : 'bg-ink text-white hover:bg-neutral-800'}`}>{CTA[p.id][0]}{p.id !== 'free' && <span className="sr-only"> for {p.name}</span>}<ArrowRight aria-hidden className="size-5" /></Link>
-              {CTA[p.id][2] ? <p id={`cta-note-${p.id}`} className="mt-3 text-base leading-snug text-neutral-700">{CTA[p.id][2]}</p> : null}
-            </li>
-          );
-        })}
-      </ul>
-      <p className="mt-8 flex items-start gap-2.5 text-lg leading-relaxed text-neutral-800"><RefreshCw aria-hidden className="mt-1.5 size-4 shrink-0 text-vio-deep" /><span><b className="text-ink">Why Creator is monthly:</b> {PLANS.find((x) => x.id === 'site')?.ongoing}</span></p>
-    </div>
+    <Reveal><ul className="grid gap-5 lg:grid-cols-3 lg:gap-6">
+      {PLANS.map((p, i) => {
+        const free = p.id === 'free'; const pick = p.id === 'site';
+        return (
+          <li key={p.id} style={{ animationDelay: `${i * 90}ms` }} className={`hs-in flex flex-col rounded-[1.75rem] border p-6 sm:p-7 ${free ? 'border-[#cfe98a] bg-[#f3fbd9]' : pick ? 'border-[#5b2fd0] bg-white shadow-[0_24px_50px_-40px_rgba(67,32,153,.6)]' : 'border-black/10 bg-white'}`} data-testid={`plan-${p.id}`}>
+            <span className={`self-start rounded-full px-2.5 py-0.5 text-sm font-semibold ${free ? 'bg-[#d9f56e] text-ink' : 'bg-[#efe9ff] text-[#432099]'}`}>{free ? 'Available now' : 'Waitlist'}</span>
+            <h3 className="mt-3 flex items-center gap-2.5 text-xl font-semibold tracking-tight text-ink"><span aria-hidden className={`grid size-9 shrink-0 place-items-center rounded-full ${p.id === 'agency' ? 'bg-ink text-[#d9f56e]' : 'bg-[#d9f56e] text-ink'}`}>{free ? <Zap className="size-4" /> : p.id === 'site' ? <Rocket className="size-4" /> : <Building2 className="size-4" />}</span>{p.name}</h3>
+            <p className="mt-4"><span className="text-4xl font-semibold tracking-tight text-ink">{p.price}</span> <span className="text-base text-neutral-700">{p.period}</span></p>
+            <p className="mt-2 text-lg leading-snug text-ink">{p.tagline}</p>
+            <dl className="mt-5 flex-1 space-y-3 border-t border-black/10 pt-5" data-testid={`plan-rows-${p.id}`}>
+              {PLAN_ROWS.map((row) => { const v = row.values[p.id]; const no = v === 'Not included'; const [head, ...rest] = v.split(' · '); return (
+                <div key={row.label} className="flex gap-3" data-testid={`plan-row-${row.label === 'AI-assisted checks' ? 'ai' : row.label === 'Automated checks' ? 'auto' : 'scores'}`}>
+                  {no ? <Minus aria-hidden className="mt-1 size-5 shrink-0 text-neutral-400" /> : <Check aria-hidden className="mt-1 size-5 shrink-0 text-[#3b7a00]" />}
+                  <div className="min-w-0">
+                    <dt className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-[0.1em] text-[#432099]">{row.label === 'AI-assisted checks' && <Sparkles aria-hidden className="size-3.5" />}{row.label}</dt>
+                    <dd className={`text-base leading-snug ${no ? 'text-neutral-600' : 'text-ink'}`}>{head}{rest.length ? <span className="text-neutral-700"> · {rest.join(' · ')}</span> : null}</dd>
+                  </div>
+                </div>); })}
+            </dl>
+            <Link href={CTA[p.id][1]} className={`mt-6 inline-flex min-h-14 items-center justify-center gap-2 rounded-xl px-6 text-lg font-semibold ${free ? 'border border-ink text-ink hover:bg-black/5' : 'bg-ink text-white hover:bg-neutral-800'}`}>{CTA[p.id][0]}{!free && <span className="sr-only"> for {p.name}</span>}<ArrowRight aria-hidden className="size-5" /></Link>
+          </li>
+        );
+      })}
+    </ul></Reveal>
   );
 }
 

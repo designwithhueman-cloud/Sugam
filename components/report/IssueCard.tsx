@@ -13,6 +13,7 @@ import { SEV_COLOR } from './PinViewer.tsx';
 
 import { impactLabels, IMPACT_NOTE } from '@/lib/impact.ts';
 import { nonEmpty } from '@/lib/bullets.ts';
+import { splitFix, promptOnly } from '@/lib/fix-text.ts';
 const ROLE: Record<string, string> = { design: 'Design fix', no_code: 'No-code fix', dev: 'Code fix' };
 const BUILDERS = [['lovable', 'Lovable'], ['bolt', 'Bolt.new'], ['v0', 'v0'], ['cursor', 'Cursor']] as const;
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
@@ -116,9 +117,10 @@ export const IssueCard = React.forwardRef<HTMLElement, Props>(function IssueCard
                   <TabsContent value="prompt">
                     <div className="mb-2 flex flex-wrap items-center gap-1" role="group" aria-label="AI builder">
                       {BUILDERS.map(([k, label]) => <Button key={k} size="sm" variant={builder === k ? 'default' : 'outline'} className="rounded-lg" aria-pressed={builder === k} onClick={() => setBuilder(k)}>{label}</Button>)}
-                      <span className="ml-auto"><CopyButton text={f.aiPrompt[builder]} label={`${builder} prompt`} /></span>
+                      <span className="ml-auto"><CopyButton text={promptOnly(f.aiPrompt[builder])} label={`${builder} prompt`} /></span>
                     </div>
-                    <Code label={`Prompt for ${builder}`}>{f.aiPrompt[builder]}</Code>
+                    <Code label={`Prompt for ${builder}`}>{promptOnly(f.aiPrompt[builder])}</Code>
+                    {splitFix(f.aiPrompt[builder]).verify && <p className="mt-3 text-base text-neutral-800 [overflow-wrap:anywhere]" data-testid="how-to-check"><span className="font-semibold text-ink">How to check it: </span>{splitFix(f.aiPrompt[builder]).verify}</p>}
                   </TabsContent>
                   <TabsContent value="nocode">
                     <div className="grid gap-3">

@@ -19,15 +19,15 @@ export const PLAN_ROWS: { label: string; values: Record<PlanId, string> }[] = [
   { label: 'AI-assisted checks', values: { free: 'Not included', site: 'Included · Reviews messaging clarity, UX, design, trust and conversion', agency: 'Included for every client project · Same AI-assisted checks as Creator' } },
   { label: 'Scores and fixes', values: { free: 'Overall and category scores, issue counts and one complete fix', site: 'Same scores, plus all available fixes and evidence', agency: 'All available fixes and evidence, plus shareable client reports' } },
 ];
-export const PLANS: { id: PlanId; name: string; price: string; period: string; summary: string; features: string[]; ongoing?: string }[] = [
-  { id: 'free', name: 'Free instant check', price: '$0', period: 'no account needed',
+export const PLANS: { id: PlanId; name: string; price: string; period: string; summary: string; tagline: string; features: string[]; ongoing?: string }[] = [
+  { id: 'free', name: 'Free instant check', price: '$0', period: 'no account needed', tagline: 'Check one page and fix the biggest problem first.',
     summary: 'Check one page. See what could get in a visitor\u2019s way and get your first fix.',
     features: ['One page per scan, desktop and mobile', 'Every built-in check, no AI', 'Page score and a score for each category', 'Counts by category and severity', 'Your first fix: the exact element and the complete fix'] },
-  { id: 'site', name: 'Creator / Startup', price: '$19', period: 'per site, per month',
-    summary: 'Planned: whole-site scanning. Today Avara checks one public page per scan; join the waiting list to hear when more opens.',
+  { id: 'site', name: 'Creator / Startup', price: '$19', period: 'per site, per month', tagline: 'For your own site: every finding and fix, after every release.',
+    summary: 'Every finding and fix for your site, with AI-assisted checks. Today Avara checks one public page per scan. Whole-site scanning is planned.',
     features: ['Exact elements pinned on desktop and mobile screenshots', 'Full reports with all three fix formats', 'Staging and live scans with before/after', 'Mark false positives “not an issue”, with notes that carry over to later scans', 'CSV and SARIF exports'],
     ongoing: 'Rescan after every release, see new issues as soon as they appear, and keep your team\'s review decisions.' },
-  { id: 'agency', name: 'Agency Pro', price: '$149', period: 'per month, up to 15 sites',
+  { id: 'agency', name: 'Agency Pro', price: '$149', period: 'per month, up to 15 sites', tagline: 'For client work: every site, with reports you can share.',
     summary: 'Show each client what you found, what changed and what still needs work.',
     features: ['Everything in Creator / Startup', 'Client and site workspaces, with team roles', 'Read-only client links with your name and colour (logo coming soon)', 'Shared review decisions across scans'] },
 ];

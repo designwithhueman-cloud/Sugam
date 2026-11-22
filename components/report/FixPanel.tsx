@@ -4,6 +4,7 @@ import * as React from 'react';
 import { CopyButton } from '@/components/CopyButton.tsx';
 import type { AvaraFix } from '@/lib/report-types.ts';
 import { bulletLines } from '@/lib/bullets.ts';
+import { splitFix, promptOnly } from '@/lib/fix-text.ts';
 
 const NAMES: Record<string, string> = { lovable: 'Lovable', bolt: 'Bolt', v0: 'v0', cursor: 'Cursor', framer: 'Framer', webflow: 'Webflow', code: 'Plain code' };
 const ORDER = ['lovable', 'bolt', 'v0', 'cursor', 'framer', 'webflow', 'code'];
@@ -33,7 +34,7 @@ export function FixPanel({ fixes, id }: { fixes: AvaraFix[]; id: string }) {
   } else if (f.kind === 'steps') {
     const steps = bulletLines(f.content); label = 'steps'; intro = `Follow these steps in ${NAMES[tool]}`; how = steps[steps.length - 1] ?? '';
     body = <ol className="list-decimal space-y-1.5 rounded-xl bg-white p-4 pl-9 text-base">{steps.map((l, i) => <li key={i} className={wrap}>{l}</li>)}</ol>;
-  } else { text = bare(f.content); how = /Verify:\s*([\s\S]+?)(?:\n|$)/.exec(text)?.[1] ?? ''; body = <pre tabIndex={0} role="region" aria-label={`Change for ${NAMES[tool]}`} data-testid="fix-text" className={`max-h-80 overflow-y-auto whitespace-pre-wrap rounded-xl bg-white p-3 font-mono text-sm leading-relaxed sm:p-4 sm:text-[15px] ${wrap}`}>{text}</pre>; }
+  } else { const sp = splitFix(bare(f.content)); text = sp.prompt; how = sp.verify; body = <pre tabIndex={0} role="region" aria-label={`Change for ${NAMES[tool]}`} data-testid="fix-text" className={`max-h-80 overflow-y-auto whitespace-pre-wrap rounded-xl bg-white p-3 font-mono text-sm leading-relaxed sm:p-4 sm:text-[15px] ${wrap}`}>{text}</pre>; }
   return (
     <div className="space-y-4 rounded-2xl bg-[#f3fbd9] p-4 sm:p-5" data-testid={`fix-${id}`}>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">

@@ -6,6 +6,7 @@ import { CopyButton } from '@/components/CopyButton.tsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx';
 import type { AvaraFix } from '@/lib/report-types.ts';
 import { bulletLines } from '@/lib/bullets.ts';
+import { splitFix, promptOnly } from '@/lib/fix-text.ts';
 
 const NAMES: Record<string, string> = { lovable: 'Lovable', bolt: 'Bolt', v0: 'v0', cursor: 'Cursor', framer: 'Framer', webflow: 'Webflow', code: 'Code' };
 const bare = (p: string) => (p.includes('\n\n') ? p.slice(p.indexOf('\n\n') + 2) : p);
@@ -22,7 +23,7 @@ export function AvaraFixTabs({ fixes, id }: { fixes: AvaraFix[]; id: string }) {
       </TabsList>
       {order.map((t) => {
         const f = fixes.find((x) => x.tool === t)!;
-        let text = f.content; let body: React.ReactNode;
+        let text = f.content; let verify = ''; let body: React.ReactNode;
         if (f.kind === 'patch') {
           let code: { before: string; after: string; note?: string } = { before: '', after: '' };
           try { code = JSON.parse(f.content); } catch { /* shown as plain text */ }
@@ -31,12 +32,13 @@ export function AvaraFixTabs({ fixes, id }: { fixes: AvaraFix[]; id: string }) {
             <div><p className="text-sm font-semibold text-neutral-700">After</p><pre tabIndex={0} role="region" aria-label="Code after" className={`mt-1 max-h-60 overflow-y-auto whitespace-pre-wrap rounded-2xl bg-white p-3 font-mono text-sm ${wrap}`}>{code.after}</pre></div>{code.note && <p className="text-sm text-neutral-700">{code.note}</p>}</div>;
         } else if (f.kind === 'steps') {
           body = <ol className="list-decimal space-y-1.5 rounded-2xl bg-white p-4 pl-9 text-base">{bulletLines(f.content).map((l, i) => <li key={i} className={wrap}>{l}</li>)}</ol>;
-        } else { text = bare(f.content); body = <pre tabIndex={0} role="region" aria-label={`Prompt for ${NAMES[t]}`} data-testid={`prompt-${t}`} className={`max-h-[22rem] overflow-y-auto whitespace-pre-wrap rounded-2xl bg-white p-3 font-mono text-sm leading-relaxed sm:p-4 sm:text-[15px] ${wrap}`}>{text}</pre>; }
+        } else { const sp = splitFix(bare(f.content)); text = sp.prompt; verify = sp.verify; body = <pre tabIndex={0} role="region" aria-label={`Prompt for ${NAMES[t]}`} data-testid={`prompt-${t}`} className={`max-h-[22rem] overflow-y-auto whitespace-pre-wrap rounded-2xl bg-white p-3 font-mono text-sm leading-relaxed sm:p-4 sm:text-[15px] ${wrap}`}>{text}</pre>; }
         return (
           <TabsContent key={t} value={t} className="mt-3">
             <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-base font-semibold text-ink">{f.kind === 'prompt' ? `Paste this into ${NAMES[t]}` : f.kind === 'steps' ? `Follow these steps in ${NAMES[t]}` : 'Apply this change in your code'}</p>
               <CopyButton text={text} label={f.kind === 'prompt' ? 'prompt' : f.kind === 'steps' ? 'steps' : 'patch'} className="min-h-12 rounded-full border-0 bg-ink px-5 text-white hover:bg-neutral-800" /></div>
             <div className="mt-3">{body}</div>
+            {verify && <p className="mt-3 text-base text-neutral-800 [overflow-wrap:anywhere]" data-testid="how-to-check"><span className="font-semibold text-ink">How to check it: </span>{verify}</p>}
           </TabsContent>
         );
       })}

@@ -17,6 +17,7 @@ import { ReviewBoard, LEVELS, type BoardItem } from './ReviewBoard.tsx';
 import { RescanButton } from './RescanButton.tsx';
 import { Finding } from './AvaraPanel.tsx';
 import { nonEmpty } from '@/lib/bullets.ts';
+import { splitFix, promptOnly } from '@/lib/fix-text.ts';
 
 const wrap = '[overflow-wrap:anywhere]';
 const TIER = { fix_immediately: 'Fix now', fix_before_launch: 'Fix before launch', improve_later: 'Improve later' } as const;
@@ -50,7 +51,7 @@ function FixBody({ item }: { item: Item }) {
   return (
     <div className="space-y-4">
       {item.fixes?.length && !item.locked ? <FixPanel fixes={item.fixes} id={item.id} />
-        : item.fixText && !item.locked ? <div className="space-y-3 rounded-2xl bg-[#f3fbd9] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><p className="text-lg font-semibold text-ink">{item.kind === 'review' ? 'What to look at' : 'The change'}</p><CopyButton text={item.fixText} label="change" className="min-h-12 rounded-full border-0 bg-ink px-5 text-white hover:bg-neutral-800" /></div><p className={`text-base text-ink ${wrap}`}>{item.fixText}</p></div>
+        : item.fixText && !item.locked ? <div className="space-y-3 rounded-2xl bg-[#f3fbd9] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><p className="text-lg font-semibold text-ink">{item.kind === 'review' ? 'What to look at' : 'The change'}</p><CopyButton text={promptOnly(item.fixText)} label="change" className="min-h-12 rounded-full border-0 bg-ink px-5 text-white hover:bg-neutral-800" /></div><p className={`whitespace-pre-wrap text-base text-ink ${wrap}`}>{promptOnly(item.fixText)}</p>{splitFix(item.fixText).verify && <p className={`text-base text-neutral-800 ${wrap}`}><span className="font-semibold text-ink">How to check it: </span>{splitFix(item.fixText).verify}</p>}</div>
         : <p className="rounded-xl bg-[#f6f5f1] p-3 text-base text-neutral-800">{LOCK}</p>}
       <Technical item={item} />
     </div>

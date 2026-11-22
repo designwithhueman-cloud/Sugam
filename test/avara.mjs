@@ -50,8 +50,8 @@ try {
     const prompt = await fixBox.getByTestId('fix-text').innerText();
     await fixBox.getByRole('button', { name: /Copy prompt/ }).click(); await p.waitForTimeout(200);
     const clip = await p.evaluate(() => navigator.clipboard.readText());
-    check('Copy prompt copies the exact prompt, which is concise and names the element, the smallest change and how to verify', clip.trim() === prompt.trim() && prompt.length < 1200 && /Element:/.test(prompt) && /Change:/.test(prompt) && /Verify:/.test(prompt), `${prompt.length} chars`);
-    check('"How to check it" is shown beside the fix', /How to check it/.test(await fixBox.innerText()));
+    check('Copy prompt copies the exact prompt: the element and the smallest change, with no Verify line (that is for the person, shown beside it)', clip.trim() === prompt.trim() && prompt.length < 1200 && /Element:/.test(prompt) && /Change:/.test(prompt) && !/Verify:/.test(clip), `${prompt.length} chars`);
+    check('"How to check it" is shown beside the fix, with the rescan check that left the prompt', /How to check it[\s\S]*Rescan/.test(await fixBox.innerText()));
     fs.mkdirSync(out, { recursive: true });
     fs.writeFileSync(out + 'avara-generated-fix.txt', prompt + '\n');
     check('the fix does not touch brand tokens or ask for a redesign', /keep|preserve|do not change|unchanged/i.test(prompt));

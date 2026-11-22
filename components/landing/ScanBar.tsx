@@ -4,7 +4,7 @@
 // Same scan flow as every other form: POST /api/scans, then the progress page.
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, FileText, Gift, SlidersHorizontal, UserX } from 'lucide-react';
+import { ArrowRight, FileText, Gauge, Gift, SlidersHorizontal, UserX } from 'lucide-react';
 import { STANDARD_OPTIONS as OPTIONS, isStandard } from '@/lib/standards.ts';
 
 
@@ -36,8 +36,8 @@ export function ScanBar({ idPrefix, sampleHref = '#repair', sampleLabel = 'See a
       </div>
       <p id={`${idPrefix}-err`} role="alert"  className={`mt-5 rounded-xl bg-[#fde7e1] px-4 py-2 text-base font-semibold text-[#7a1f0b] ${start ? '' : 'text-center'}`} hidden={!err}>{err}</p>
       {start
-        ? !terms ? null : <ul id={`${idPrefix}-hint`} className="mt-5 flex flex-wrap gap-x-5 gap-y-2.5 text-lg text-ink">
-          {[[FileText, 'One page free'], [Gift, 'First fix included'], [UserX, 'No account needed']].map(([I, t]) => { const Icon = I as typeof Gift; return <li key={t as string} className="inline-flex items-center gap-2"><span aria-hidden className="grid size-8 place-items-center rounded-full bg-[#e6f9b6] text-ink"><Icon className="size-4" /></span>{t as string}</li>; })}
+        ? !terms ? null : <ul id={`${idPrefix}-hint`} className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 whitespace-nowrap text-[0.8125rem] font-semibold text-ink sm:flex sm:flex-nowrap sm:items-center sm:gap-x-4 sm:text-sm lg:flex-wrap lg:gap-y-1.5 xl:flex-nowrap">
+          {[[FileText, 'One page free'], [Gauge, 'Score out of 100'], [Gift, 'First fix included'], [UserX, 'No account needed']].map(([I, t]) => { const Icon = I as typeof Gift; return <li key={t as string} className="inline-flex shrink-0 items-center gap-1.5"><Icon aria-hidden className="size-3.5 shrink-0 text-vio-deep" />{t as string}</li>; })}
         </ul>
         : <div id={`${idPrefix}-hint`} className="mx-auto mt-6 max-w-2xl space-y-1 text-center text-lg leading-snug text-neutral-700">
             <p>One public page per scan, checked at desktop and 320px mobile widths. Pages behind a sign-in can’t be scanned. Screenshots of the page are saved with the results.</p>

@@ -28,17 +28,17 @@ function Logo({ p }: { p: Platform }) {
 export function Platforms() {
   const [paused, setPaused] = React.useState(false);
   return (
-    <div className="on-dark min-w-0 border-t border-white/10 bg-[#1e1e1e] px-5 py-14 text-white sm:px-10 lg:py-20">
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+    <div className="on-dark min-w-0 border-t border-white/10 bg-[#1e1e1e] px-5 py-10 text-white sm:px-10 lg:py-12">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div>
           <h2 id="platforms-h" className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Fix it where you build</h2>
-          <p className="mt-1 text-lg text-neutral-300">Avara doesn’t connect to these tools. Copy the fix across, publish, then rescan to check it’s fixed.</p>
+          <p className="mt-2 max-w-[40rem] text-lg text-neutral-300">Avara doesn’t connect to these tools. <strong className="font-semibold text-white">Copy the fix, publish, then rescan</strong> to check it. You only get a code patch when it is safe to paste.</p>
         </div>
         <button type="button" onClick={() => setPaused(!paused)} aria-pressed={paused} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/50 px-4 text-base font-medium text-white hover:bg-white/10 motion-reduce:hidden">
           {paused ? <Play aria-hidden className="size-4" /> : <Pause aria-hidden className="size-4" />}{paused ? 'Play scrolling' : 'Pause scrolling'}
         </button>
       </div>
-      <div className="logo-marquee relative mt-6 overflow-hidden py-2 [mask-image:linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)] motion-reduce:[mask-image:none]">
+      <div className="logo-marquee relative mt-5 overflow-hidden py-1 [mask-image:linear-gradient(to_right,transparent,#000_6%,#000_94%,transparent)] motion-reduce:[mask-image:none]">
         <div className="logo-track flex w-max motion-reduce:w-full motion-reduce:justify-center" style={paused ? { animationPlayState: 'paused' } : undefined}>
           <ul aria-labelledby="platforms-h" className="flex shrink-0 items-start motion-reduce:min-w-0 motion-reduce:shrink motion-reduce:flex-wrap motion-reduce:justify-center motion-reduce:gap-y-6">
             {PLATFORMS.map((p) => <Logo key={p.name} p={p} />)}

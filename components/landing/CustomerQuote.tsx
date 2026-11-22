@@ -25,7 +25,7 @@ export function CustomerQuote({ t = TESTIMONIAL }: { t?: Testimonial | null }) {
   if (!t || !hasQuote(t)) return null;
   const i = t.quote.indexOf(t.highlight), before = t.quote.slice(0, i), after = t.quote.slice(i + t.highlight.length);
   return (
-    <figure ref={box} id="quote" className={`on-dark mb-20 bg-[#1e1e1e] px-5 py-14 text-center text-white sm:px-10 lg:mb-32 lg:py-20 ${wait ? 'hs-wait' : ''}`}>
+    <figure ref={box} id="quote" className={`on-dark mb-20 bg-[#1e1e1e] px-5 py-10 text-center text-white sm:px-10 lg:mb-32 lg:py-12 ${wait ? 'hs-wait' : ''}`}>
       <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#d9f56e]">A customer with the same problem</p>
       <blockquote className="mx-auto mt-5 max-w-[88rem] text-balance text-xl font-medium italic leading-[1.6] tracking-[-0.015em] sm:text-2xl sm:leading-[1.6] lg:text-[clamp(1.15rem,1.75vw,1.75rem)] lg:leading-[1.65]">{before}<mark className="hs-mark rounded-md bg-transparent px-1.5 py-0.5 font-semibold text-ink">{t.highlight}</mark>{after}</blockquote>
       <figcaption className="mt-6"><p className="text-lg"><span className="qn font-semibold">{t.name}</span><span className="qr text-neutral-300">, {t.role}, {t.company}</span></p></figcaption>
