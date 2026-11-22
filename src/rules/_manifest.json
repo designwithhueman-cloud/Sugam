@@ -236,7 +236,6 @@
     "image-alt",
     "label",
     "button-name",
-    "label-content-name",
     "label-content-name-mismatch",
     "sugam/heading-structure",
     "sugam/non-text-contrast",
@@ -325,7 +324,11 @@
     "design/visual-hierarchy",
     "design/spacing-rhythm",
     "ux/error-recovery",
+    "ux/generic-error-message",
     "a11y/reading-order",
-    "design/font-families"
+    "design/font-families",
+    "sugam/reduced-motion",
+    "aria-valid-attr-value",
+    "diff/hero-match"
   ]
 }

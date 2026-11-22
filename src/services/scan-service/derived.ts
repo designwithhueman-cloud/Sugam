@@ -5,6 +5,8 @@ import type { ScanOutput, ViewportResult } from '../../../scanner/scanner.ts';
 import type { PerfAudit } from '../../../scanner/perf.ts';
 import type { DetectorHit, DetectorReport } from '../../engines/rule-engine/RuleTypes.ts';
 import { ruleLoader } from '../../engines/rule-engine/RuleLoader.ts';
+import { heroMatchReport } from '../vision/hero-detector.ts';
+import type { HeroMatch } from '../vision/hero-layout.ts';
 
 const short = (s: string, n = 220) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 const ran = (hits: DetectorHit[] = []): DetectorReport => ({ ran: true, hits });
@@ -231,13 +233,13 @@ export function derivedReports(out: ScanOutput): Record<string, DetectorReport> 
     'pc/hero-statement': heroStatement(vc), 'pc/audience-cue': audienceCue(vc), 'pc/feature-first': featureFirst(vc), 'pc/unsupported-superlatives': superlatives(vc), 'pc/headline-form': headlineForm(vc), 'pc/subheadline': subheadline(vc),
     'pc/problem-signal': problemSignal(vc), 'pc/outcome-language': outcomeLanguage(vc), 'pc/buzzwords': buzzwords(vc), 'pc/first-screen': firstScreen(vc), 'pc/offer-before-action': offerBeforeAction(vc), 'pc/cta-context': ctaContext(vc),
     'pc/claim-consistency': claimConsistency(vc), 'conv/cta-saturation': ctaSaturation(vc),
-    'diff/template-sequence': templateSequence(vc), 'diff/default-styling': defaultStyling(vc), 'diff/brand-assets': brandAssets(vc), 'diff/dashboard-pattern': dashboardPattern(vc), 'diff/layout-archetypes': layoutArchetypes(vc),
+    'diff/template-sequence': templateSequence(vc), 'diff/default-styling': defaultStyling(vc), 'diff/hero-match': heroMatchReport((vc as { heroMatch?: HeroMatch } | undefined)?.heroMatch), 'diff/brand-assets': brandAssets(vc), 'diff/dashboard-pattern': dashboardPattern(vc), 'diff/layout-archetypes': layoutArchetypes(vc),
     'diff/shape-and-icon-language': shapeIconLanguage(vc), 'diff/section-rhythm': sectionRhythm(vc), 'diff/trust-pattern': trustPattern(vc), 'diff/feature-grid-saturation': featureGridSaturation(vc),
     'ux/primary-task-visible': primaryTaskVisible(out), 'conv/cta-visible': ctaVisible(out), 'mobile/content-scaling': contentScaling(out), 'mobile/layout-integrity': layoutIntegrity(out), 'mobile/orientation': orientation(out),
     'mobile/typography': mobileTypography(out), 'mobile/form-usability': mobileForm(out), 'mobile/image-responsiveness': imageResponsiveness(out),
     'trust/privacy-link': privacy(pc), 'trust/terms-link': terms(pc), 'trust/contact-route': contact(pc), 'trust/review-route': reviewRoute(pc), 'trust/support-route': supportRoute(pc),
     'conv/trial-visibility': trial(pc), 'conv/cta-consistency': ctaConsistency(pc), 'conv/field-count': fieldCount(pc),
-    'ux/scannability': scannability(pc), 'design/visual-hierarchy': visualHierarchy(out, vc), 'design/spacing-rhythm': spacingRhythm(vc), 'ux/error-recovery': errorRecovery(out), 'nav/fragment-target': fragmentTarget(out), 'a11y/reading-order': readingOrder(out), 'design/font-families': fontFamilies(out), 'conv/generic-primary-action': genericPrimaryAction(out), 'trust/unfinished-proof': unfinishedProof(vc), 'design/typography-hierarchy': typographyHierarchy(pc), 'design/cta-emphasis': ctaEmphasis(out, pc), 'design/component-consistency': componentConsistency(pc),
+    'ux/scannability': scannability(pc), 'design/visual-hierarchy': visualHierarchy(out, vc), 'design/spacing-rhythm': spacingRhythm(vc), 'ux/error-recovery': errorRecovery(out), 'ux/generic-error-message': genericErrorMessage(out), 'nav/fragment-target': fragmentTarget(out), 'a11y/reading-order': readingOrder(out), 'design/font-families': fontFamilies(out), 'conv/generic-primary-action': genericPrimaryAction(out), 'trust/unfinished-proof': unfinishedProof(vc), 'design/typography-hierarchy': typographyHierarchy(pc), 'design/cta-emphasis': ctaEmphasis(out, pc), 'design/component-consistency': componentConsistency(pc),
     'perf/image-optimization': perfImages(out), 'perf/font-optimization': perfFonts(out), 'perf/javascript-efficiency': perfJs(out), 'perf/css-efficiency': perfCss(out), 'perf/render-blocking': perfBlocking(out), 'perf/third-party': perfThirdParty(out),
   };
 }
@@ -499,6 +501,17 @@ function errorRecovery(out: ScanOutput): DetectorReport {
   return ran(hits);
 }
 
+
+// ---- Detector pack v3 (H9 lens): a field shown as invalid whose linked error only says "invalid". Advisory: help may sit elsewhere on the page.
+// Reads only the error text already on the page in the captured state (aria-invalid + aria-errormessage). Never types, submits or stores a value.
+function genericErrorMessage(out: ScanOutput): DetectorReport {
+  const x = vp(out, 'desktop')?.heuristics?.extra; if (!x || !x.invalidMessages) return off('The form field check did not run.');
+  if (!x.invalidMessages.length) return na('No visible error to inspect: no field was shown as invalid with a linked error message when the page was captured. Avara never submits a form to produce one.');
+  const terms = param<string[]>('UX-017', 'genericErrorPhrases', []);
+  const generic = x.invalidMessages.filter((m) => terms.includes(m.message.toLowerCase().trim().replace(/[.!]+$/, '')));
+  if (!generic.length) { const n = x.invalidMessages.length; return { ...ran([]), passNote: `${n} visible linked error message${n === 1 ? ' was' : 's were'} inspected and ${n === 1 ? 'is' : 'are'} more than a generic “invalid” or “error”.` }; }
+  return ran(generic.length ? [review('An error message does not say how to fix the field', `${generic.length} field${generic.length === 1 ? ' is' : 's are'} marked invalid with a message that only says it is wrong. Explain how to correct the value, using the format or limit for that field.`, generic.map((m) => `${m.selector}  error “${m.message}”`))] : []);
+}
 
 // ---- Detector pack: three advisory reads. Each says what was observed and asks a person; none can fail a page. ----
 // A same-page link whose target is missing from the DOM captured after load. Script routing or a deferred panel can mount it later.

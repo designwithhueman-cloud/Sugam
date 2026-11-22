@@ -4090,32 +4090,41 @@
       "title": "Visual Distinctiveness",
       "category": "Differentiation & Design Maturity",
       "canBeEvaluatedAutomatically": "partial",
-      "detectorType": "DOM",
-      "components": [],
+      "detectorType": "Hybrid",
+      "components": [
+        "Screenshot Analysis",
+        "DOM"
+      ],
       "requiredData": [
+        "the desktop first-screen screenshot (1280x800) and its layout (hero probe)",
+        "the reference set: screenshots, layouts, DINOv2 embeddings, calibration",
         "computed fonts, button colours, gradients, card radii"
       ],
       "evidence": [
+        "nearest reference, its origin and licence, with both screenshots side by side",
+        "image similarity against the validated threshold",
+        "shared and differing layout features",
         "main font and share of text",
         "primary colour and hue",
         "gradient count",
         "card corner radii"
       ],
       "outcomes": {
-        "pass": "Fewer than 3 of 4 default-style signals.",
+        "pass": "No reference clears the validated threshold (the nearest is kept as a diagnostic), and fewer than 3 of 4 default-style signals.",
         "fail": "(never a failure)",
-        "couldNotVerify": "3 or 4 signals: needs a person."
+        "couldNotVerify": "A match above the threshold, or 3 or 4 style signals: needs a person. Missing screenshot, layout, references or local model: not run, with the reason."
       },
       "implementation": {
         "status": "partial",
         "detectors": [
+          "diff/hero-match",
           "diff/default-styling"
         ],
         "exercisedOnFixtures": true,
         "engineEvaluator": "detector",
         "suggestedEvaluator": "detector"
       },
-      "confidenceCeiling": "medium to high: high for the measured part only",
+      "confidenceCeiling": "medium: image similarity is calibrated on synthetic rebrands only; a person confirms",
       "buildPriority": "P2"
     },
     {

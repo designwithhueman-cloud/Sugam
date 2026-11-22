@@ -66,7 +66,8 @@ export const MEASURE_ACTION = `function (sel, text) {
   const docW = document.documentElement.scrollWidth;
   const xHidden = ['hidden', 'clip'].includes(getComputedStyle(document.documentElement).overflowX) || ['hidden', 'clip'].includes(getComputedStyle(document.body).overflowX);
   // Scroll the PAGE only. scrollIntoView would also scroll overflow:hidden containers, which a visitor cannot do, and would hide the very problem.
-  scrollTo(window.scrollX, Math.max(0, r0.top + scrollY - innerHeight / 2 + r0.height / 2));
+  // behavior 'instant': a page with scroll-behavior:smooth would otherwise still be mid-scroll when we measure, and the check would test the wrong part of the page.
+  scrollTo({ left: window.scrollX, top: Math.max(0, r0.top + scrollY - innerHeight / 2 + r0.height / 2), behavior: 'instant' });
   const r = el.getBoundingClientRect();
   // the part of the box a visitor can see: cut it down by every ancestor that clips its overflow, and by the screen itself
   let vis = { l: r.left, t: r.top, r: r.right, b: r.bottom };
@@ -88,7 +89,7 @@ export const MEASURE_ACTION = `function (sel, text) {
   const top = document.elementFromPoint(cx, cy);
   const covered = !!top && top !== el && !el.contains(top) && !top.contains(el);
   let cover = null;
-  if (covered) { let holder = top; let pos = getComputedStyle(top).position; for (let n = top.parentElement; n && pos === 'static'; n = n.parentElement) { pos = getComputedStyle(n).position; holder = n; } cover = { selector: cssPath(holder), position: pos, text: label(top).slice(0, 40), box: (() => { const q = holder.getBoundingClientRect(); return { x: Math.round(q.left), y: Math.round(q.top), width: Math.round(q.width), height: Math.round(q.height) }; })() }; }
+  if (covered) { let holder = top; let pos = getComputedStyle(top).position; for (let n = top.parentElement; n && pos === 'static'; n = n.parentElement) { pos = getComputedStyle(n).position; holder = n; } cover = { selector: cssPath(holder), position: pos, text: label(top).slice(0, 40), dismissible: (() => { const hay = ((holder.id || '') + ' ' + (holder.className || '') + ' ' + (holder.innerText || '').slice(0, 400)).toLowerCase(); return /cookie|consent|gdpr|privacy (choices|preferences)/.test(hay) && [...holder.querySelectorAll('button, a, [role=button], input[type=button], input[type=submit]')].some((c) => /accept|agree|allow|reject|decline|deny|got it|dismiss|close|manage|preferences|save/i.test(label(c))); })(), box: (() => { const q = holder.getBoundingClientRect(); return { x: Math.round(q.left), y: Math.round(q.top), width: Math.round(q.width), height: Math.round(q.height) }; })() }; }
   return {
     found: true, selector: cssPath(el), text: label(el).slice(0, 80), html: el.outerHTML.replace(/\\s+/g, ' ').slice(0, 260), tag: el.localName,
     rendered, pointerEventsNone: pe, disabled: !!el.disabled || el.getAttribute('aria-disabled') === 'true',

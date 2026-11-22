@@ -29,7 +29,7 @@ export abstract class CategoryEvaluator {
     for (const r of rules) {
       const spec = specOf(r);
       if (spec.type === 'rollup') continue;                                        // resolved later, with zero weight
-      if (spec.type === 'human') { outcomes.push(this.out(r, 'not_run', 'human', 'Needs a person or an assistive-technology session; no model or scan can decide it.', [], 0)); continue; }
+      if (spec.type === 'human') { outcomes.push({ ...this.out(r, 'not_run', 'human', 'Needs a person or an assistive-technology session; no model or scan can decide it.', [], 0), skip: 'needs_person' as const }); continue; }
       const det = spec.detectors ?? [];
       if (spec.type === 'detector') { outcomes.push(this.byDetectors(r, det, ctx)); continue; }
       // llm rule: detectors that already found something answer it; otherwise the model is asked.
@@ -40,7 +40,7 @@ export abstract class CategoryEvaluator {
       forAi.push(r);
     }
     if (forAi.length) {
-      if (!llm) { aiNote = 'No AI model is configured (set AVARA_AI=on and ANTHROPIC_API_KEY), so rules that need judgement did not run.'; for (const r of forAi) outcomes.push(this.out(r, 'not_run', 'none', aiNote, [], 0)); }
+      if (!llm) { aiNote = 'No AI model is configured (set AVARA_AI=on and ANTHROPIC_API_KEY), so rules that need judgement did not run.'; for (const r of forAi) outcomes.push({ ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: 'ai_unavailable' }); }
       else {
         const context = this.slice(ctx); const haystack = flat(context);
         for (let i = 0; i < forAi.length; i += BATCH) {
@@ -52,7 +52,7 @@ export abstract class CategoryEvaluator {
               if (!v) { outcomes.push(this.out(r, 'inconclusive', 'ai_assisted', 'The model returned no verdict for this rule.', [], 0.3)); continue; }
               judged++; outcomes.push(this.fromVerdict(r, v, haystack));
             }
-          } catch (e) { aiNote = `The model call failed (${(e as Error).message.split('\n')[0].slice(0, 100)}).`; for (const r of chunk) outcomes.push(this.out(r, 'not_run', 'none', aiNote, [], 0)); }
+          } catch (e) { aiNote = `The model call failed (${(e as Error).message.split('\n')[0].slice(0, 100)}).`; for (const r of chunk) outcomes.push({ ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: 'ai_unavailable' }); }
         }
       }
     }
@@ -64,16 +64,27 @@ export abstract class CategoryEvaluator {
     return { ruleId: r.ruleId, result, method, observation, evidence, confidence, reason };
   }
   protected byDetectors(r: Rule, ids: string[], ctx: WebsiteContext): RuleOutcome {
-    if (!ids.length) return this.out(r, 'unimplemented', 'none', 'No detector or evaluator exists for this rule yet.', [], 0);
-    const ran = ids.map((id) => ctx.detectors[id]).filter((x) => x?.ran);
-    const reps = ran.filter((x) => !x.notApplicable);
-    if (!reps.length && ran.length) return this.out(r, 'not_applicable', 'measured', ran[0].notApplicable ?? 'The rule does not apply to this page.', [], 0.7);
-    if (!reps.length) return this.out(r, 'not_run', 'none', `The measurement for this rule did not run (${ids.slice(0, 3).join(', ')}).`, [], 0);
-    const hits = reps.flatMap((x) => x.hits);
+    if (!ids.length) return { ...this.out(r, 'unimplemented', 'none', 'No detector or evaluator exists for this rule yet.', [], 0), skip: 'missing_detector' };
+    const ran = ids.filter((id) => ctx.detectors[id]?.ran);
+    const reps = ran.filter((id) => !ctx.detectors[id].notApplicable);
+    const tag = (o: RuleOutcome): RuleOutcome => ({ ...o, detectorsRan: ran });
+    // Every reason is kept: with several checks, the first one's reason alone can hide what another check could not inspect (UX-017's "No visible error").
+    if (!reps.length && ran.length) return tag({ ...this.out(r, 'not_applicable', 'measured', [...new Set(ran.map((id) => ctx.detectors[id].notApplicable).filter(Boolean))].join(' ') || 'The rule does not apply to this page.', [], 0.7), skip: 'not_applicable' });
+    if (!reps.length) {
+      // Why nothing ran: no report at all means the scanner has no such detector; a report that did not run is missing input, unless its analyzer failed.
+      const known = ids.map((id) => ctx.detectors[id]).filter(Boolean);
+      const skip = !known.length ? 'missing_detector' : known.some((x) => x.analyzerError) ? 'analyzer_error' : 'missing_input';
+      return { ...this.out(r, 'not_run', 'none', `The measurement for this rule did not run (${ids.slice(0, 3).join(', ')})${known[0]?.note ? `: ${known[0].note}` : ''}.`, [], 0), skip };
+    }
+    const hits = reps.flatMap((id) => ctx.detectors[id].hits);
     const fails = hits.filter((h) => h.bucket === 'confirmed_failure'); const review = hits.filter((h) => h.bucket === 'needs_review');
-    if (fails.length) return this.out(r, 'observed_failure', 'measured', fails[0].summary + (fails.length > 1 ? ` (and ${fails.length - 1} more)` : ''), fails.flatMap((h) => h.evidence).slice(0, 6), 0.9);
-    if (review.length) return this.out(r, 'needs_human_review', 'measured', review[0].summary, review.flatMap((h) => h.evidence).slice(0, 4), 0.5);
-    return this.out(r, 'observed_pass', 'measured', 'The measurable part of this rule ran and found nothing. This does not prove the whole topic passes.', [], 0.7);
+    // A confirmed failure leads, but review items from the same rule stay visible beside it instead of being dropped.
+    if (fails.length) return tag(this.out(r, 'observed_failure', 'measured', fails[0].summary + (fails.length > 1 ? ` (and ${fails.length - 1} more)` : '') + (review.length ? ` Also needs review: ${review[0].summary}` : ''),
+      [...fails.flatMap((h) => h.evidence).slice(0, review.length ? 4 : 6), ...review.slice(0, 2).map((h) => `Also needs review: ${h.summary}`)], 0.9));
+    if (review.length) return tag(this.out(r, 'needs_human_review', 'measured', review[0].summary, review.flatMap((h) => h.evidence).slice(0, 4), 0.5));
+    // Say what a clean run checked and what it could not inspect, so "the message is clear" and "there was nothing to look at" never read the same.
+    const said = [...reps.map((id) => ctx.detectors[id].passNote).filter(Boolean), ...ran.filter((id) => ctx.detectors[id].notApplicable).map((id) => `Not inspected: ${ctx.detectors[id].notApplicable}`), ...ids.filter((id) => ctx.detectors[id] && !ctx.detectors[id].ran && ctx.detectors[id].note).map((id) => `Not run: ${ctx.detectors[id].note}`)];
+    return tag(this.out(r, 'observed_pass', 'measured', said.length ? `${said.join(' ')} This does not prove the whole topic passes.` : 'The measurable part of this rule ran and found nothing. This does not prove the whole topic passes.', [], 0.7));
   }
   private fromVerdict(r: Rule, v: import('./RuleTypes.ts').LlmVerdict, haystack: string): RuleOutcome {
     const conf = Math.max(0, Math.min(0.7, Number(v.confidence) || 0.5));   // an AI-assisted judgement never claims more than medium confidence

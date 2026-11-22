@@ -16,6 +16,7 @@ import { saveReview } from '../src/context/findings/index.ts';
 import { recordKnowledge } from '../src/context/knowledge/index.ts';
 import { detectPatterns } from '../src/context/knowledge/patterns.ts';
 import { ruleLoader } from '../src/engines/rule-engine/RuleLoader.ts';
+import { attachHeroMatch } from '../src/services/vision/hero-match.ts';
 
 export async function runScanJob(scanId: string): Promise<void> {
   const db = await getDb();
@@ -25,6 +26,8 @@ export async function runScanJob(scanId: string): Promise<void> {
   await db.update(schema.scans).set({ status: 'running', startedAt: new Date(), progress: { step: 'Starting browser', percent: 5 } }).where(eq(schema.scans.id, scanId));
   try {
     const out = await scanUrl(scan.url, scan.standard, (s, p) => { void progress(s, p); }, { goal: scan.goal ?? null, perfRuns: scan.rescanOf ? 3 : 1 });
+    // DIFF-002: compare the first screen with the reference templates here, in the worker, so no report request ever runs the image model.
+    await progress('Comparing the first screen with reference templates', 82); await attachHeroMatch(out);
     await db.update(schema.scans).set({ status: 'analyzing', progress: { step: 'Grouping findings and writing fixes', percent: 85 } }).where(eq(schema.scans.id, scanId));
     const a = analyze(out);
     const ai = await enrich(out, a.issues);

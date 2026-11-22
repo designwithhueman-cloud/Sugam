@@ -9,7 +9,7 @@ import { PageHead } from '@/components/dashboard/PageHead.tsx';
 import { EmptyNote } from '@/components/dashboard/Tables.tsx';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Shared reports | Sugam' };
+export const metadata = { title: 'Shared reports | Avara' };
 const th = 'px-3 pb-2.5 pt-1 text-left text-[13px] font-medium text-pine-600';
 const STATE = { Active: 'bg-[#dcf3e7] text-[#174a32]', Expired: 'bg-pine-100 text-pine-700', Revoked: 'bg-pine-100 text-pine-700' };
 export default async function Shared({ params }: { params: Promise<{ org: string }> }) {

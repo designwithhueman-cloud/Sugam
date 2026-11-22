@@ -69,7 +69,7 @@
       "version": "1.0.0-draft",
       "category": "Differentiation & Design Maturity",
       "title": "Visual Distinctiveness",
-      "description": "The visual style departs from the default look. Objective check: count four default-style signals: a default sans font as the main typeface, a violet or indigo primary colour (hue 235 to 290), gradient backgrounds or gradient text, and rounded corners of 12px or more on cards. 3 or 4 signals needs a person.",
+      "description": "The visual style departs from the default look. Objective checks: (1) the first screen (1280x800) is compared with a versioned reference set of licensed templates and labelled project fixtures (data/hero-references) using DINOv2 image embeddings computed locally in the scan worker; the nearest reference is explained by layout features measured the same way on both (layout, headline alignment, size and position, buttons, main image, label above the headline, background, top bar). A match is surfaced only when it clears the threshold validated on labelled pairs (calibration.json); otherwise it stays diagnostic. (2) count four default-style signals: a default sans font as the main typeface, a violet or indigo primary colour (hue 235 to 290), gradient backgrounds or gradient text, and rounded corners of 12px or more on cards; 3 or 4 needs a person. Section order is DIFF-001's. Never a claim of copying, originality or which tool made the page.",
       "source": "Refactoring UI; Material Design colour guidance",
       "sourceType": "avara",
       "sourceUrl": "https://www.refactoringui.com/previews/building-your-color-palette",
@@ -85,15 +85,19 @@
       "evaluator": {
         "type": "detector",
         "detectors": [
+          "diff/hero-match",
           "diff/default-styling"
         ]
       },
-      "evaluationPrompt": "Visual Distinctiveness: The visual style departs from the default look. Objective check: count four default-style signals: a default sans font as the main typeface, a violet or indigo primary colour (hue 235 to 290), gradient backgrounds or gradient text, and rounded corners of 12px or more on cards. 3 or 4 signals needs a person. Deterministic evidence first; a person confirms. A model does not decide this rule.",
-      "recommendationTemplate": "The page uses {{observation}} together, which is the default look of many generated sites. Pick one choice that is yours (a typeface, a colour that is not violet, a distinctive shape or illustration style) and apply it consistently. Evidence: {{evidence}}",
+      "evaluationPrompt": "Visual Distinctiveness: The visual style departs from the default look. Objective checks: (1) the first screen (1280x800) is compared with a versioned reference set of licensed templates and labelled project fixtures (data/hero-references) using DINOv2 image embeddings computed locally in the scan worker; the nearest reference is explained by layout features measured the same way on both (layout, headline alignment, size and position, buttons, main image, label above the headline, background, top bar). A match is surfaced only when it clears the threshold validated on labelled pairs (calibration.json); otherwise it stays diagnostic. (2) count four default-style signals: a default sans font as the main typeface, a violet or indigo primary colour (hue 235 to 290), gradient backgrounds or gradient text, and rounded corners of 12px or more on cards; 3 or 4 needs a person. Section order is DIFF-001's. Never a claim of copying, originality or which tool made the page. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "recommendationTemplate": "{{observation}} To stand apart, change one thing a visitor sees first so it is yours: show the real product or the person behind it in the first screen, move or drop what the reference has in the same place, or pick a typeface and colour that are not the defaults, then apply them consistently. Evidence: {{evidence}}",
       "recommendationTemplateStatus": "authored",
       "userImpact": "Visitors cannot tell this product from others by sight, so nothing about the page is remembered. This is a hypothesis from reading the page, not measured behaviour.",
       "businessImpact": "Default styling makes the brand forgettable and price the main difference. This is a hypothesis from reading the page, not measured behaviour.",
       "requiredEvidence": [
+        "the nearest reference's name, origin and licence",
+        "image similarity and the validated threshold",
+        "the layout features both first screens share, and where they differ",
         "main font and share of text",
         "primary colour and hue",
         "gradient count",
@@ -117,7 +121,8 @@
         "hueMin": 235,
         "hueMax": 290,
         "minSignals": 3,
-        "minRadius": 12
+        "minRadius": 12,
+        "heroReferenceSet": "data/hero-references"
       },
       "sourceStatus": "passage-unverified",
       "related": [],

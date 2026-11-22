@@ -1,15 +1,17 @@
 'use client';
-// Hero card: the whole product in one short story, played once. Scan (a URL and a progress bar), Review (one finding),
-// Fix (the same fix in three forms, chosen with tabs that each carry an icon: AI builder prompt, Editor steps, Code patch), Resolved. The animation
+// How it works card: the whole product in one short story, played once, using the same booking example as the hero demo.
+// Scan (a URL and a progress bar), Review (the banner covering Book a call),
+// Fix (the same fix in three forms, chosen with tabs that each carry an icon: AI builder prompt, Editor steps, Code patch), Resolved (the same phone after the rescan, with the button in reach). The animation
 // is CSS only, finishes in about 4.5 seconds and never repeats; the base styles are the finished state, so with reduced
 // motion, or before styles load, every part is shown at once. The fix text comes from example-fix.ts, shared with
 // "How it works". Tabs are Radix tabs: arrow keys move between them. Copy buttons are real buttons. The story waits at its
 // first frame until the card scrolls into view, then plays once.
 import * as React from 'react';
-import { Check, Code2, Menu, MousePointerClick, Wand2 } from 'lucide-react';
+import { Check, Code2, MousePointerClick, Smartphone, Wand2 } from 'lucide-react';
 import { CopyButton } from '@/components/CopyButton.tsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx';
-import { EXAMPLE_EDITORS, EXAMPLE_PATCH, EXAMPLE_PROMPT } from './example-fix.ts';
+import { EXAMPLE_EDITORS, EXAMPLE_PATCH, EXAMPLE_PATCH_LINES, EXAMPLE_PROMPT } from './example-fix.ts';
+import { BookingPhone } from './BookingPhone.tsx';
 
 const STEPS = [['Scan', 0.2], ['Review', 1.4], ['Fix', 2.4], ['Resolved', 3.9]] as const;
 const TABS = [['prompt', 'AI builder prompt', Wand2], ['steps', 'Editor steps', MousePointerClick], ['patch', 'Code patch', Code2]] as const;
@@ -18,7 +20,7 @@ const at = (s: number) => ({ animationDelay: `${s}s` });
 const STEPS_TEXT = EXAMPLE_EDITORS.map(([tool, steps]) => `${tool}\n${steps.map((x, i) => `${i + 1}. ${x}`).join('\n')}`).join('\n\n');
 const COPY: Record<Tab, [string, string]> = { prompt: [EXAMPLE_PROMPT, 'prompt'], steps: [STEPS_TEXT, 'steps'], patch: [EXAMPLE_PATCH, 'patch'] };
 
-const trigger = 'flex min-h-12 flex-col justify-center gap-1 rounded-full px-2 py-1.5 text-center text-sm font-medium leading-tight text-ink hover:bg-white/70 sm:flex-row sm:gap-2 sm:px-3 sm:text-base data-[state=active]:bg-[#d9f56e] data-[state=active]:font-semibold data-[state=active]:text-ink data-[state=active]:shadow-none';
+const trigger = 'flex min-h-12 flex-col justify-center gap-1 rounded-lg px-2 py-1.5 text-center text-sm font-medium leading-tight text-ink hover:bg-white/70 sm:flex-row sm:gap-2 sm:px-3 sm:text-base data-[state=active]:bg-[#d9f56e] data-[state=active]:font-semibold data-[state=active]:text-ink data-[state=active]:shadow-none';
 
 export function HeroResult() {
   const [tab, setTab] = React.useState<Tab>('prompt');
@@ -58,17 +60,17 @@ export function HeroResult() {
         </div>
 
         <div className="hs-in mt-5 flex items-start gap-4" style={at(1.4)}>
-          <span aria-hidden className="hs-ring grid size-12 shrink-0 place-items-center rounded-xl border-2 border-vio bg-white text-ink ring-4 ring-vio/20" style={at(1.6)}><Menu className="size-6" /></span>
+          <span aria-hidden className="hs-ring grid size-12 shrink-0 place-items-center rounded-xl border-2 border-vio bg-white text-ink ring-4 ring-vio/20" style={at(1.6)}><Smartphone className="size-6" /></span>
           <div>
-            <h3 id="hero-ex-h" className="text-xl font-semibold leading-snug text-ink">This button has no accessible name</h3>
-            <p className="mt-1 text-base leading-snug text-neutral-700">A screen reader announces only “button”. (WCAG 4.1.2)</p>
+            <h3 id="hero-ex-h" className="text-xl font-semibold leading-snug text-ink">The bookings banner covers ‘Book a call’ on a phone</h3>
+            <p className="mt-1 text-base leading-snug text-neutral-700">Visitors who scroll down tap the banner instead of the button.</p>
           </div>
         </div>
 
         </div>
         <div className="hs-in mt-5" style={at(2.4)}>
           <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-            <TabsList aria-label="Choose how to fix it" className="grid w-full grid-cols-3 gap-1 rounded-full bg-[#f1f0ec] p-1">
+            <TabsList aria-label="Choose how to fix it" className="grid w-full grid-cols-3 gap-1 rounded-xl bg-[#f1f0ec] p-1">
               {TABS.map(([k, name, Icon]) => <TabsTrigger key={k} value={k} className={trigger}><Icon aria-hidden className="size-4 shrink-0 sm:size-[1.1rem]" />{name}</TabsTrigger>)}
             </TabsList>
             <div className="min-h-[13.5rem]">
@@ -89,10 +91,9 @@ export function HeroResult() {
                 <p className="text-base font-semibold text-neutral-700">Apply this change in your code</p>
                 <pre tabIndex={0} role="region" aria-label="Code patch" className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-2xl bg-[#1e1e1e] p-4 font-mono text-[14px] leading-relaxed text-white [overflow-wrap:anywhere]">
                   <code>
-                    <span className="block text-[#ffb4a0]"><span aria-hidden className="select-none">- </span><span className="sr-only">Removed: </span>{'<button class="icon-btn" onClick={toggle}>'}</span>
-                    <span className="block text-[#c4f06a]"><span aria-hidden className="select-none">+ </span><span className="sr-only">Added: </span>{`<button class="icon-btn" onClick={toggle} aria-label={open ? 'Close menu' : 'Open menu'}>`}</span>
-                    <span className="block text-neutral-300">{'    <MenuIcon aria-hidden="true" />'}</span>
-                    <span className="block text-white">{'  </button>'}</span>
+                    {EXAMPLE_PATCH_LINES.map(([k, t], n) => k === ' '
+                      ? <span key={n} className="block text-neutral-300">{'  '}{t}</span>
+                      : <span key={n} className={`block ${k === '-' ? 'text-[#ffb4a0]' : 'text-[#c4f06a]'}`}><span aria-hidden className="select-none">{k} </span><span className="sr-only">{k === '-' ? 'Removed: ' : 'Added: '}</span>{t}</span>)}
                   </code>
                 </pre>
               </TabsContent>
@@ -101,9 +102,15 @@ export function HeroResult() {
         </div>
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <span className="hs-pop inline-flex items-center gap-2 rounded-full bg-[#2d5a1e] px-4 py-2 text-base font-semibold text-white" style={at(3.9)}><Check aria-hidden className="size-4" strokeWidth={2.6} />Resolved</span>
-          <span className="hs-in" style={at(3.4)}><CopyButton key={tab} text={text} label={label} className="min-h-12 whitespace-nowrap rounded-full border-0 bg-[#d9f56e] px-5 text-ink hover:bg-[#cdee5c] sm:px-6" /></span>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div role="img" aria-label="The same phone after the rescan: the Book a call button is fully visible." className="hs-in shrink-0 text-[7px]" style={at(3.6)}><BookingPhone step="after" /></div>
+            <div>
+              <span className="hs-pop inline-flex items-center gap-2 rounded-lg bg-[#2d5a1e] px-4 py-2 text-base font-semibold text-white" style={at(3.9)}><Check aria-hidden className="size-4" strokeWidth={2.6} />Resolved</span>
+              <p className="hs-in mt-2 max-w-[15rem] text-base leading-snug text-neutral-800" style={at(3.9)}>After the rescan, the button is visible and can be tapped.</p>
+            </div>
+          </div>
+          <span className="hs-in" style={at(3.4)}><CopyButton key={tab} text={text} label={label} className="min-h-12 whitespace-nowrap rounded-xl border-0 bg-[#d9f56e] px-5 text-ink hover:bg-[#cdee5c] sm:px-6" /></span>
         </div>
       </section>
     </div>

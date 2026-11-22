@@ -1,0 +1,1499 @@
+{
+ "version": "2026-11-21.27",
+ "createdAt": "2026-11-21T06:24:11.190Z",
+ "model": "facebookresearch/dinov2@4d83ffd:dinov2_vits14",
+ "viewport": {
+  "width": 1280,
+  "height": 800
+ },
+ "capture": "scanner settle(), blur, scroll to top, JPEG quality 70, hero probe at the same moment",
+ "counts": {
+  "templates": 23,
+  "fixtures": 4,
+  "failed": 0
+ },
+ "failed": [],
+ "references": [
+  {
+   "id": "sb-agency",
+   "name": "Start Bootstrap Agency",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-agency @ b2d5d5c",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-agency.jpg",
+   "sha256": "b8fbfc1b9c91d322f9b338f726a74a32b5a44e1246768ac45c3b75939d4c9bc6",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "headline over a full-bleed image",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 82,
+      "y": 340,
+      "w": 1116,
+      "h": 72
+     },
+     "fontSize": 72,
+     "lines": 1,
+     "words": 5
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "full-bleed behind text",
+     "box": null
+    },
+    "pill": false,
+    "tone": "photo",
+    "nav": {
+     "present": true,
+     "links": 6,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-business-casual",
+   "name": "Start Bootstrap Business Casual",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-business-casual @ b6f9289",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-business-casual.jpg",
+   "sha256": "06bb1e6a578edb37e13ebed2f8e90e467ef4f3394eea4c659dda3834a012970b",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 0,
+      "y": 80,
+      "w": 1280,
+      "h": 114
+     },
+     "fontSize": 40,
+     "lines": 3,
+     "words": 7
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "below the text",
+     "box": {
+      "x": 361,
+      "y": 440,
+      "w": 837,
+      "h": 558
+     }
+    },
+    "pill": false,
+    "tone": "photo",
+    "nav": {
+     "present": true,
+     "links": 0,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-business-frontpage",
+   "name": "Start Bootstrap Business Frontpage",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-business-frontpage @ b330ff6",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-business-frontpage.jpg",
+   "sha256": "b13953b5b1a765865a0c342c30100b7d415df7f3959ce3882a459e7e83cedce2",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 391,
+      "y": 152,
+      "w": 498,
+      "h": 115
+     },
+     "fontSize": 48,
+     "lines": 2,
+     "words": 8
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "dark",
+    "nav": {
+     "present": true,
+     "links": 5,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-clean-blog",
+   "name": "Start Bootstrap Clean Blog",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-clean-blog @ 1ebc4f8",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-clean-blog.jpg",
+   "sha256": "171e861f95408fd672c72d9f1fd18538271828f189e40fa98389dc4ee2aaf160",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "headline over a full-bleed image",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 346,
+      "y": 200,
+      "w": 589,
+      "h": 96
+     },
+     "fontSize": 80,
+     "lines": 1,
+     "words": 2
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "full-bleed behind text",
+     "box": null
+    },
+    "pill": false,
+    "tone": "photo",
+    "nav": {
+     "present": true,
+     "links": 5,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-coming-soon",
+   "name": "Start Bootstrap Coming Soon",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-coming-soon @ 5c42810",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-coming-soon.jpg",
+   "sha256": "d12a41da764c77c2e4ada677939705bb4e080bb8db74c170dd857aa6ea2c7852",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "headline over a full-bleed image",
+    "headline": {
+     "align": "left",
+     "box": {
+      "x": 128,
+      "y": 232,
+      "w": 464,
+      "h": 112
+     },
+     "fontSize": 56,
+     "lines": 2,
+     "words": 5
+    },
+    "ctas": {
+     "count": 4,
+     "row": false,
+     "position": "below headline, left",
+     "boxes": [
+      {
+       "x": 468,
+       "y": 510,
+       "w": 124,
+       "h": 58
+      },
+      {
+       "x": 1160,
+       "y": 272,
+       "w": 64,
+       "h": 64
+      },
+      {
+       "x": 1160,
+       "y": 368,
+       "w": 64,
+       "h": 64
+      }
+     ]
+    },
+    "media": {
+     "position": "full-bleed behind text",
+     "box": {
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 800
+     }
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": false,
+     "links": 0,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-creative",
+   "name": "Start Bootstrap Creative",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-creative @ b1762d8",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-creative.jpg",
+   "sha256": "4af158fb8573d9322b2ac1a295bfeba40f2f02d73fe8d366c59d62ca3710b85e",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "headline over a full-bleed image",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 300,
+      "y": 248,
+      "w": 680,
+      "h": 134
+     },
+     "fontSize": 56,
+     "lines": 2,
+     "words": 7
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "full-bleed behind text",
+     "box": null
+    },
+    "pill": false,
+    "tone": "photo",
+    "nav": {
+     "present": true,
+     "links": 5,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-freelancer",
+   "name": "Start Bootstrap Freelancer",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-freelancer @ 5bc65b4",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-freelancer.jpg",
+   "sha256": "0bf46c30e4be25f902b81bed19d8d484f89925b1c8bbd28260b7ab0c7a8a0d05",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 316,
+      "y": 503,
+      "w": 649,
+      "h": 56
+     },
+     "fontSize": 64,
+     "lines": 1,
+     "words": 2
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 4,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-grayscale",
+   "name": "Start Bootstrap Grayscale",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-grayscale @ d974402",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-grayscale.jpg",
+   "sha256": "2a180737a10409daeb34086ea7fcd115fba8820b9f49b2fd1ff49a11ffbb7b20",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 267,
+      "y": 266,
+      "w": 745,
+      "h": 104
+     },
+     "fontSize": 104,
+     "lines": 1,
+     "words": 1
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "gradient",
+    "nav": {
+     "present": true,
+     "links": 4,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-heroic-features",
+   "name": "Start Bootstrap Heroic Features",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-heroic-features @ a9b7e38",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-heroic-features.jpg",
+   "sha256": "16ac844485235897f2251bcda3a62cf3778fef383933b906de78c9fe05cb70ca",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 214,
+      "y": 200,
+      "w": 852,
+      "h": 58
+     },
+     "fontSize": 48,
+     "lines": 1,
+     "words": 3
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 4,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-landing-page",
+   "name": "Start Bootstrap Landing Page",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-landing-page @ 247a46a",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-landing-page.jpg",
+   "sha256": "0349f150c859472ba739151b068d15e252c61b473ef9b5c690d517ba3c2944cb",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "headline over a full-bleed image",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 367,
+      "y": 258,
+      "w": 546,
+      "h": 173
+     },
+     "fontSize": 48,
+     "lines": 3,
+     "words": 8
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "full-bleed behind text",
+     "box": null
+    },
+    "pill": false,
+    "tone": "photo",
+    "nav": {
+     "present": true,
+     "links": 2,
+     "cta": true
+    }
+   }
+  },
+  {
+   "id": "sb-modern-business",
+   "name": "Start Bootstrap Modern Business",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-modern-business @ 7d29710",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-modern-business.jpg",
+   "sha256": "2f728abecddb9417ca2585448a434b2e3081984d30801c8fbbd04b55e30046b3",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "left-aligned stack",
+    "headline": {
+     "align": "left",
+     "box": {
+      "x": 118,
+      "y": 160,
+      "w": 589,
+      "h": 115
+     },
+     "fontSize": 48,
+     "lines": 2,
+     "words": 7
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "dark",
+    "nav": {
+     "present": true,
+     "links": 8,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-new-age",
+   "name": "Start Bootstrap New Age",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-new-age @ 5f61977",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-new-age.jpg",
+   "sha256": "cea364b28d6d7a69b07cf639dbc012eec2baaf2acc09378bfb084c068b3a4d2d",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "left-aligned stack",
+    "headline": {
+     "align": "left",
+     "box": {
+      "x": 118,
+      "y": 185,
+      "w": 498,
+      "h": 240
+     },
+     "fontSize": 80,
+     "lines": 3,
+     "words": 4
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 3,
+     "cta": true
+    }
+   }
+  },
+  {
+   "id": "sb-one-page-wonder",
+   "name": "Start Bootstrap One Page Wonder",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-one-page-wonder @ 4a2712c",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-one-page-wonder.jpg",
+   "sha256": "79284f444d7227cb1a7f1152868f8165ae3fbf5d4e1e63c942dbf8ffcf51f5e0",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "split: text left, image right",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 118,
+      "y": 215,
+      "w": 1044,
+      "h": 115
+     },
+     "fontSize": 96,
+     "lines": 1,
+     "words": 3
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "right of the text",
+     "box": {
+      "x": 712,
+      "y": 735,
+      "w": 402,
+      "h": 402
+     }
+    },
+    "pill": false,
+    "tone": "gradient",
+    "nav": {
+     "present": true,
+     "links": 3,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-personal",
+   "name": "Start Bootstrap Personal",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-personal @ 6a1ebcc",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-personal.jpg",
+   "sha256": "793ee0e0540d05685efbc83f31c3be5f7d47a69f02aa4c4b0c62f09c35dfae3c",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 118,
+      "y": 210,
+      "w": 1044,
+      "h": 77
+     },
+     "fontSize": 64,
+     "lines": 1,
+     "words": 5
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 5,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-resume",
+   "name": "Start Bootstrap Resume",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-resume @ c6fbe5e",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-resume.jpg",
+   "sha256": "2ef2da12644eb96df39de8b1681dd9e9e7e2587ab7631fb7c656fa83fc7234d3",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "left-aligned stack",
+    "headline": {
+     "align": "right",
+     "box": {
+      "x": 320,
+      "y": 217,
+      "w": 912,
+      "h": 96
+     },
+     "fontSize": 96,
+     "lines": 1,
+     "words": 2
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 7,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-scrolling-nav",
+   "name": "Start Bootstrap Scrolling Nav",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-scrolling-nav @ 45ee8f6",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-scrolling-nav.jpg",
+   "sha256": "6dd5330faadb30c53d7cc4f53719cba3785283789733c8e01bff31637f9257c9",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 94,
+      "y": 152,
+      "w": 1092,
+      "h": 48
+     },
+     "fontSize": 40,
+     "lines": 1,
+     "words": 4
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "gradient",
+    "nav": {
+     "present": true,
+     "links": 4,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-small-business",
+   "name": "Start Bootstrap Small Business",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-small-business @ 9c5ef57",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-small-business.jpg",
+   "sha256": "298b35b13262adf64f3c6aea72095aa63c32e230d52f752bf533e4b0b3418bc2",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "split: image left, text right",
+    "headline": {
+     "align": "right",
+     "box": {
+      "x": 755,
+      "y": 108,
+      "w": 407,
+      "h": 96
+     },
+     "fontSize": 40,
+     "lines": 2,
+     "words": 4
+    },
+    "ctas": {
+     "count": 1,
+     "row": false,
+     "position": "below headline, left",
+     "boxes": [
+      {
+       "x": 755,
+       "y": 324,
+       "w": 127,
+       "h": 38
+      }
+     ]
+    },
+    "media": {
+     "position": "left of the text",
+     "box": {
+      "x": 118,
+      "y": 104,
+      "w": 589,
+      "h": 262
+     }
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 5,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "sb-stylish-portfolio",
+   "name": "Start Bootstrap Stylish Portfolio",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-stylish-portfolio @ a658eb7",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/sb-stylish-portfolio.jpg",
+   "sha256": "a667b7aecb3275e1f513cc030a0384bb46fd898cf07ae2148bb93ac01d956f52",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "headline over a full-bleed image",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 118,
+      "y": 271,
+      "w": 1044,
+      "h": 106
+     },
+     "fontSize": 88,
+     "lines": 1,
+     "words": 2
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "full-bleed behind text",
+     "box": null
+    },
+    "pill": false,
+    "tone": "photo",
+    "nav": {
+     "present": true,
+     "links": 6,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "tt-app-landing-page",
+   "name": "Tailwind Toolbox App Landing Page",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/App-Landing-Page @ a63f1bb",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2019 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/tt-app-landing-page.jpg",
+   "sha256": "8485fc514cee0c383d0077ca55cb7c3418015fead385fe9fb3113fe2d018f054",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "headline over a full-bleed image",
+    "headline": {
+     "align": "left",
+     "box": {
+      "x": 24,
+      "y": 347,
+      "w": 493,
+      "h": 96
+     },
+     "fontSize": 48,
+     "lines": 2,
+     "words": 7
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "full-bleed behind text",
+     "box": {
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 800
+     }
+    },
+    "pill": false,
+    "tone": "photo",
+    "nav": {
+     "present": false,
+     "links": 0,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "tt-landing-page",
+   "name": "Tailwind Toolbox Landing Page",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/Landing-Page @ 545f89e",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2019 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/tt-landing-page.jpg",
+   "sha256": "2015ee056ee2ed28bc1db7ee1267a6719159acdbc27aefd20b193d6b721fc762",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "split: text left, image right",
+    "headline": {
+     "align": "left",
+     "box": {
+      "x": 12,
+      "y": 228,
+      "w": 502,
+      "h": 120
+     },
+     "fontSize": 48,
+     "lines": 2,
+     "words": 6
+    },
+    "ctas": {
+     "count": 1,
+     "row": false,
+     "position": "below headline, left",
+     "boxes": [
+      {
+       "x": 12,
+       "y": 492,
+       "w": 134,
+       "h": 56
+      }
+     ]
+    },
+    "media": {
+     "position": "right of the text",
+     "box": {
+      "x": 514,
+      "y": 120,
+      "w": 603,
+      "h": 520
+     }
+    },
+    "pill": false,
+    "tone": "gradient",
+    "nav": {
+     "present": true,
+     "links": 4,
+     "cta": true
+    }
+   }
+  },
+  {
+   "id": "tt-minimal-blog",
+   "name": "Tailwind Toolbox Minimal Blog",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/Minimal-Blog @ 2c21514",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2019 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/tt-minimal-blog.jpg",
+   "sha256": "c14174d353ed268f35fb3bbcd81c00a7c853257d40435a5a8c508879b1eccdc7",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 280,
+      "y": 100,
+      "w": 720,
+      "h": 72
+     },
+     "fontSize": 36,
+     "lines": 2,
+     "words": 4
+    },
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 4,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "tt-nordic-store",
+   "name": "Tailwind Toolbox Nordic Store",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/Nordic-Store @ b64edb8",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2019 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/tt-nordic-store.jpg",
+   "sha256": "8f9fad0c981a1f5c871f705ac36d7ef28752ea92afa24f3c05b0e2c6403088ec",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "no headline",
+    "headline": null,
+    "ctas": {
+     "count": 0,
+     "row": false,
+     "position": "none",
+     "boxes": []
+    },
+    "media": {
+     "position": "only element",
+     "box": {
+      "x": 0,
+      "y": 72,
+      "w": 1280,
+      "h": 400
+     }
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 5,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "tt-rainblur-landing-page",
+   "name": "Tailwind Toolbox Rainblur Landing Page",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/Rainblur-Landing-Page @ 4599fd5",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2020 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/tt-rainblur-landing-page.jpg",
+   "sha256": "076645f364808d908a08ec3aed8d6f32e88f79074390e1bf2603979ab9c462e1",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "headline over a full-bleed image",
+    "headline": {
+     "align": "left",
+     "box": {
+      "x": 24,
+      "y": 240,
+      "w": 493,
+      "h": 96
+     },
+     "fontSize": 48,
+     "lines": 2,
+     "words": 6
+    },
+    "ctas": {
+     "count": 1,
+     "row": false,
+     "position": "below headline, left",
+     "boxes": [
+      {
+       "x": 56,
+       "y": 598,
+       "w": 94,
+       "h": 40
+      }
+     ]
+    },
+    "media": {
+     "position": "full-bleed behind text",
+     "box": {
+      "x": 24,
+      "y": 24,
+      "w": 1232,
+      "h": 930
+     }
+    },
+    "pill": false,
+    "tone": "photo",
+    "nav": {
+     "present": false,
+     "links": 0,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "fx-ai-saas",
+   "name": "Avara fixture: stock AI-SaaS landing",
+   "kind": "fixture",
+   "origin": "fixture/site/detectors/ai-saas.html (this repository)",
+   "license": "Project fixture, owned by the Avara project",
+   "ownership": "Avara project (test fixture, not a real template)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/fx-ai-saas.jpg",
+   "sha256": "f3b7f98259fc70f1b2e57dbfe827b3e56337aae4c195d4146c882df1ce9d1497",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 260,
+      "y": 180,
+      "w": 760,
+      "h": 118
+     },
+     "fontSize": 48,
+     "lines": 2,
+     "words": 6
+    },
+    "ctas": {
+     "count": 4,
+     "row": true,
+     "position": "below headline, centred",
+     "boxes": [
+      {
+       "x": 333,
+       "y": 396,
+       "w": 136,
+       "h": 46
+      },
+      {
+       "x": 477,
+       "y": 396,
+       "w": 152,
+       "h": 46
+      },
+      {
+       "x": 638,
+       "y": 396,
+       "w": 156,
+       "h": 46
+      }
+     ]
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": false,
+    "tone": "gradient",
+    "nav": {
+     "present": true,
+     "links": 0,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "fx-distinct",
+   "name": "Avara fixture: editorial page",
+   "kind": "fixture",
+   "origin": "fixture/site/detectors/distinct.html (this repository)",
+   "license": "Project fixture, owned by the Avara project",
+   "ownership": "Avara project (test fixture, not a real template)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/fx-distinct.jpg",
+   "sha256": "3e13c93739df63f2f7a91a458a60ad477e4ebdf7d13e056b2c86b0372f46036b",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "split: text left, image right",
+    "headline": {
+     "align": "left",
+     "box": {
+      "x": 150,
+      "y": 142,
+      "w": 513,
+      "h": 92
+     },
+     "fontSize": 42,
+     "lines": 2,
+     "words": 8
+    },
+    "ctas": {
+     "count": 2,
+     "row": true,
+     "position": "below headline, left",
+     "boxes": [
+      {
+       "x": 150,
+       "y": 327,
+       "w": 155,
+       "h": 52
+      },
+      {
+       "x": 315,
+       "y": 325,
+       "w": 150,
+       "h": 56
+      }
+     ]
+    },
+    "media": {
+     "position": "right of the text",
+     "box": {
+      "x": 703,
+      "y": 129,
+      "w": 431,
+      "h": 283
+     }
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 0,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "fx-template-like",
+   "name": "Avara fixture: starter-template landing",
+   "kind": "fixture",
+   "origin": "fixture/site/template/template-like.html (this repository)",
+   "license": "Project fixture, owned by the Avara project",
+   "ownership": "Avara project (test fixture, not a real template)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/fx-template-like.jpg",
+   "sha256": "48985bea7527a198334efa468388af75f629f16cbe24982bb8894c1c1555d9dc",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "centred stack",
+    "headline": {
+     "align": "centre",
+     "box": {
+      "x": 230,
+      "y": 206,
+      "w": 820,
+      "h": 123
+     },
+     "fontSize": 56,
+     "lines": 2,
+     "words": 7
+    },
+    "ctas": {
+     "count": 2,
+     "row": true,
+     "position": "below headline, centred",
+     "boxes": [
+      {
+       "x": 500,
+       "y": 434,
+       "w": 134,
+       "h": 44
+      },
+      {
+       "x": 642,
+       "y": 433,
+       "w": 137,
+       "h": 46
+      }
+     ]
+    },
+    "media": {
+     "position": "none",
+     "box": null
+    },
+    "pill": true,
+    "tone": "gradient",
+    "nav": {
+     "present": true,
+     "links": 3,
+     "cta": false
+    }
+   }
+  },
+  {
+   "id": "fx-distinctive",
+   "name": "Avara fixture: bakery page",
+   "kind": "fixture",
+   "origin": "fixture/site/template/distinctive.html (this repository)",
+   "license": "Project fixture, owned by the Avara project",
+   "ownership": "Avara project (test fixture, not a real template)",
+   "viewport": {
+    "width": 1280,
+    "height": 800
+   },
+   "screenshot": "screenshots/fx-distinctive.jpg",
+   "sha256": "7b0cafabc9af61b21a5e69a99cd128f2e31a3bd26c85e637c1bf3f9191aa561b",
+   "layout": {
+    "viewport": {
+     "width": 1280,
+     "height": 800
+    },
+    "layout": "split: text left, image right",
+    "headline": {
+     "align": "left",
+     "box": {
+      "x": 40,
+      "y": 138,
+      "w": 592,
+      "h": 192
+     },
+     "fontSize": 64,
+     "lines": 3,
+     "words": 6
+    },
+    "ctas": {
+     "count": 1,
+     "row": false,
+     "position": "below headline, left",
+     "boxes": [
+      {
+       "x": 40,
+       "y": 449,
+       "w": 264,
+       "h": 61
+      }
+     ]
+    },
+    "media": {
+     "position": "right of the text",
+     "box": {
+      "x": 680,
+      "y": 134,
+      "w": 560,
+      "h": 380
+     }
+    },
+    "pill": false,
+    "tone": "light",
+    "nav": {
+     "present": true,
+     "links": 1,
+     "cta": false
+    }
+   }
+  }
+ ]
+}

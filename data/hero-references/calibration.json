@@ -1,0 +1,919 @@
+{
+ "version": "2026-11-21.27",
+ "model": "facebookresearch/dinov2@4d83ffd:dinov2_vits14",
+ "method": "Zero false positives on the labelled negatives, then the most positives; validated only at 80% or more of positives with a positive margin.",
+ "retrievalTop1": "27 of 27 rebranded references retrieve their own template first",
+ "threshold": {
+  "minSimilarity": 0.888,
+  "minShared": 7,
+  "validated": true,
+  "note": "24 of 27 rebranded positives pass, 0 of 54 negatives pass, margin 0.452 over the closest negative"
+ },
+ "pairs": [
+  {
+   "query": "sb-agency",
+   "target": "sb-clean-blog",
+   "label": "different templates",
+   "similarity": 0.405,
+   "shared": 7,
+   "differs": [
+    "The headline starts 43% down here and 25% down in the reference."
+   ]
+  },
+  {
+   "query": "sb-business-casual",
+   "target": "sb-personal",
+   "label": "different templates",
+   "similarity": 0.199,
+   "shared": 3,
+   "differs": [
+    "The headline sizes differ (40px here, 64px in the reference).",
+    "The headline starts 10% down here and 26% down in the reference.",
+    "The main image is below the text here and absent in the reference.",
+    "The headline sits on a photograph here and on a light background in the reference.",
+    "The top bars differ (0 links here, 5 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-business-frontpage",
+   "target": "sb-modern-business",
+   "label": "different templates",
+   "similarity": 0.978,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a centred stack (headline, line of text and buttons one above the other in the middle); the reference uses a left-aligned stack with no main image beside it.",
+    "The headline is centred here and left-aligned in the reference.",
+    "The top bars differ (5 links here, 8 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-clean-blog",
+   "target": "sb-agency",
+   "label": "different templates",
+   "similarity": 0.405,
+   "shared": 7,
+   "differs": [
+    "The headline starts 25% down here and 43% down in the reference."
+   ]
+  },
+  {
+   "query": "sb-coming-soon",
+   "target": "fx-ai-saas",
+   "label": "different templates",
+   "similarity": 0.741,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses the headline laid over a full-width background image; the reference uses a centred stack (headline, line of text and buttons one above the other in the middle).",
+    "The headline is left-aligned here and centred in the reference.",
+    "The buttons differ: four buttons stacked, below headline, left here; four buttons side by side, below headline, centred in the reference.",
+    "The main image is full-bleed behind text here and absent in the reference.",
+    "The headline sits on a light background here and on a gradient background in the reference."
+   ]
+  },
+  {
+   "query": "sb-creative",
+   "target": "sb-clean-blog",
+   "label": "different templates",
+   "similarity": 0.397,
+   "shared": 7,
+   "differs": [
+    "The headline sizes differ (56px here, 80px in the reference)."
+   ]
+  },
+  {
+   "query": "sb-freelancer",
+   "target": "fx-ai-saas",
+   "label": "different templates",
+   "similarity": 0.779,
+   "shared": 2,
+   "differs": [
+    "The headline sizes differ (64px here, 48px in the reference).",
+    "The headline starts 63% down here and 23% down in the reference.",
+    "The buttons differ: no buttons here; four buttons side by side, below headline, centred in the reference.",
+    "The headline sits on a light background here and on a gradient background in the reference.",
+    "The top bars differ (4 links here, 0 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-grayscale",
+   "target": "sb-landing-page",
+   "label": "different templates",
+   "similarity": 0.406,
+   "shared": 3,
+   "differs": [
+    "The layouts differ: this page uses a centred stack (headline, line of text and buttons one above the other in the middle); the reference uses the headline laid over a full-width background image.",
+    "The headline sizes differ (104px here, 48px in the reference).",
+    "The main image is absent here and full-bleed behind text in the reference.",
+    "The headline sits on a gradient background here and on a photograph in the reference.",
+    "The top bars differ (4 links here, 2 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-heroic-features",
+   "target": "sb-small-business",
+   "label": "different templates",
+   "similarity": 0.944,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a centred stack (headline, line of text and buttons one above the other in the middle); the reference uses a split layout with the main image on the left and the text on the right.",
+    "The headline is centred here and right-aligned in the reference.",
+    "The buttons differ: no buttons here; one button, below headline, left in the reference.",
+    "The main image is absent here and left of the text in the reference."
+   ]
+  },
+  {
+   "query": "sb-landing-page",
+   "target": "sb-modern-business",
+   "label": "different templates",
+   "similarity": 0.549,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses the headline laid over a full-width background image; the reference uses a left-aligned stack with no main image beside it.",
+    "The headline is centred here and left-aligned in the reference.",
+    "The headline starts 32% down here and 20% down in the reference.",
+    "The main image is full-bleed behind text here and absent in the reference.",
+    "The headline sits on a photograph here and on a dark background in the reference.",
+    "The top bars differ (2 links here, 8 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-modern-business",
+   "target": "sb-business-frontpage",
+   "label": "different templates",
+   "similarity": 0.978,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a left-aligned stack with no main image beside it; the reference uses a centred stack (headline, line of text and buttons one above the other in the middle).",
+    "The headline is left-aligned here and centred in the reference.",
+    "The top bars differ (8 links here, 5 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-new-age",
+   "target": "tt-rainblur-landing-page",
+   "label": "different templates",
+   "similarity": 0.683,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses a left-aligned stack with no main image beside it; the reference uses the headline laid over a full-width background image.",
+    "The headline sizes differ (80px here, 48px in the reference).",
+    "The buttons differ: no buttons here; one button, below headline, left in the reference.",
+    "The main image is absent here and full-bleed behind text in the reference.",
+    "The headline sits on a light background here and on a photograph in the reference."
+   ]
+  },
+  {
+   "query": "sb-one-page-wonder",
+   "target": "sb-resume",
+   "label": "different templates",
+   "similarity": 0.402,
+   "shared": 3,
+   "differs": [
+    "The layouts differ: this page uses a split layout with the text on the left and the main image on the right; the reference uses a left-aligned stack with no main image beside it.",
+    "The headline is centred here and right-aligned in the reference.",
+    "The main image is right of the text here and absent in the reference.",
+    "The headline sits on a gradient background here and on a light background in the reference.",
+    "The top bars differ (3 links here, 7 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-personal",
+   "target": "sb-resume",
+   "label": "different templates",
+   "similarity": 0.592,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a centred stack (headline, line of text and buttons one above the other in the middle); the reference uses a left-aligned stack with no main image beside it.",
+    "The headline is centred here and right-aligned in the reference.",
+    "The headline sizes differ (64px here, 96px in the reference)."
+   ]
+  },
+  {
+   "query": "sb-resume",
+   "target": "sb-modern-business",
+   "label": "different templates",
+   "similarity": 0.842,
+   "shared": 4,
+   "differs": [
+    "The headline is right-aligned here and left-aligned in the reference.",
+    "The headline sizes differ (96px here, 48px in the reference).",
+    "The headline sits on a light background here and on a dark background in the reference."
+   ]
+  },
+  {
+   "query": "sb-scrolling-nav",
+   "target": "sb-business-frontpage",
+   "label": "different templates",
+   "similarity": 0.937,
+   "shared": 6,
+   "differs": [
+    "The headline sits on a gradient background here and on a dark background in the reference."
+   ]
+  },
+  {
+   "query": "sb-small-business",
+   "target": "sb-heroic-features",
+   "label": "different templates",
+   "similarity": 0.944,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a split layout with the main image on the left and the text on the right; the reference uses a centred stack (headline, line of text and buttons one above the other in the middle).",
+    "The headline is right-aligned here and centred in the reference.",
+    "The buttons differ: one button, below headline, left here; no buttons in the reference.",
+    "The main image is left of the text here and absent in the reference."
+   ]
+  },
+  {
+   "query": "sb-stylish-portfolio",
+   "target": "sb-clean-blog",
+   "label": "different templates",
+   "similarity": 0.175,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "tt-app-landing-page",
+   "target": "fx-distinct",
+   "label": "different templates",
+   "similarity": 0.621,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses the headline laid over a full-width background image; the reference uses a split layout with the text on the left and the main image on the right.",
+    "The headline starts 43% down here and 18% down in the reference.",
+    "The buttons differ: no buttons here; two buttons side by side, below headline, left in the reference.",
+    "The main image is full-bleed behind text here and right of the text in the reference.",
+    "The headline sits on a photograph here and on a light background in the reference."
+   ]
+  },
+  {
+   "query": "tt-landing-page",
+   "target": "tt-app-landing-page",
+   "label": "different templates",
+   "similarity": 0.554,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses a split layout with the text on the left and the main image on the right; the reference uses the headline laid over a full-width background image.",
+    "The headline starts 28% down here and 43% down in the reference.",
+    "The buttons differ: one button, below headline, left here; no buttons in the reference.",
+    "The main image is right of the text here and full-bleed behind text in the reference.",
+    "The headline sits on a gradient background here and on a photograph in the reference."
+   ]
+  },
+  {
+   "query": "tt-minimal-blog",
+   "target": "sb-scrolling-nav",
+   "label": "different templates",
+   "similarity": 0.92,
+   "shared": 6,
+   "differs": [
+    "The headline sits on a light background here and on a gradient background in the reference."
+   ]
+  },
+  {
+   "query": "tt-nordic-store",
+   "target": "tt-landing-page",
+   "label": "different templates",
+   "similarity": 0.287,
+   "shared": 0,
+   "differs": [
+    "The buttons differ: no buttons here; one button, below headline, left in the reference.",
+    "The main image is only element here and right of the text in the reference.",
+    "The headline sits on a light background here and on a gradient background in the reference.",
+    "The top bars differ (5 links here, 4 in the reference)."
+   ]
+  },
+  {
+   "query": "tt-rainblur-landing-page",
+   "target": "sb-new-age",
+   "label": "different templates",
+   "similarity": 0.683,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses the headline laid over a full-width background image; the reference uses a left-aligned stack with no main image beside it.",
+    "The headline sizes differ (48px here, 80px in the reference).",
+    "The buttons differ: one button, below headline, left here; no buttons in the reference.",
+    "The main image is full-bleed behind text here and absent in the reference.",
+    "The headline sits on a photograph here and on a light background in the reference."
+   ]
+  },
+  {
+   "query": "fx-ai-saas",
+   "target": "sb-business-frontpage",
+   "label": "different templates",
+   "similarity": 0.816,
+   "shared": 4,
+   "differs": [
+    "The buttons differ: four buttons side by side, below headline, centred here; no buttons in the reference.",
+    "The headline sits on a gradient background here and on a dark background in the reference.",
+    "The top bars differ (0 links here, 5 in the reference)."
+   ]
+  },
+  {
+   "query": "fx-distinct",
+   "target": "sb-small-business",
+   "label": "different templates",
+   "similarity": 0.916,
+   "shared": 3,
+   "differs": [
+    "The layouts differ: this page uses a split layout with the text on the left and the main image on the right; the reference uses a split layout with the main image on the left and the text on the right.",
+    "The headline is left-aligned here and right-aligned in the reference.",
+    "The buttons differ: two buttons side by side, below headline, left here; one button, below headline, left in the reference.",
+    "The main image is right of the text here and left of the text in the reference.",
+    "The top bars differ (0 links here, 5 in the reference)."
+   ]
+  },
+  {
+   "query": "fx-template-like",
+   "target": "sb-heroic-features",
+   "label": "different templates",
+   "similarity": 0.94,
+   "shared": 5,
+   "differs": [
+    "The buttons differ: two buttons side by side, below headline, centred here; no buttons in the reference.",
+    "This page has a small rounded label above the headline; the reference does not.",
+    "The headline sits on a gradient background here and on a light background in the reference."
+   ]
+  },
+  {
+   "query": "fx-distinctive",
+   "target": "fx-distinct",
+   "label": "different templates",
+   "similarity": 0.846,
+   "shared": 6,
+   "differs": [
+    "The headline sizes differ (64px here, 42px in the reference).",
+    "The buttons differ: one button, below headline, left here; two buttons side by side, below headline, left in the reference."
+   ]
+  },
+  {
+   "query": "sb-agency (rebranded)",
+   "target": "sb-agency",
+   "label": "same template, different branding",
+   "similarity": 0.945,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "sb-agency (rebranded)",
+   "target": "sb-clean-blog",
+   "label": "different templates",
+   "similarity": 0.434,
+   "shared": 7,
+   "differs": [
+    "The headline starts 43% down here and 25% down in the reference."
+   ]
+  },
+  {
+   "query": "sb-business-casual (rebranded)",
+   "target": "sb-business-casual",
+   "label": "same template, different branding",
+   "similarity": 0.888,
+   "shared": 7,
+   "differs": [
+    "The buttons differ: one button, below headline, left here; no buttons in the reference."
+   ]
+  },
+  {
+   "query": "sb-business-casual (rebranded)",
+   "target": "sb-one-page-wonder",
+   "label": "different templates",
+   "similarity": 0.233,
+   "shared": 1,
+   "differs": [
+    "The layouts differ: this page uses a centred stack (headline, line of text and buttons one above the other in the middle); the reference uses a split layout with the text on the left and the main image on the right.",
+    "The headline sizes differ (40px here, 96px in the reference).",
+    "The headline starts 10% down here and 27% down in the reference.",
+    "The buttons differ: one button, below headline, left here; no buttons in the reference.",
+    "The main image is below the text here and right of the text in the reference.",
+    "The headline sits on a photograph here and on a gradient background in the reference.",
+    "The top bars differ (0 links here, 3 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-business-frontpage (rebranded)",
+   "target": "sb-business-frontpage",
+   "label": "same template, different branding",
+   "similarity": 0.956,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "sb-business-frontpage (rebranded)",
+   "target": "sb-modern-business",
+   "label": "different templates",
+   "similarity": 0.944,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a centred stack (headline, line of text and buttons one above the other in the middle); the reference uses a left-aligned stack with no main image beside it.",
+    "The headline is centred here and left-aligned in the reference.",
+    "The top bars differ (5 links here, 8 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-clean-blog (rebranded)",
+   "target": "sb-clean-blog",
+   "label": "same template, different branding",
+   "similarity": 0.968,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "sb-clean-blog (rebranded)",
+   "target": "sb-creative",
+   "label": "different templates",
+   "similarity": 0.436,
+   "shared": 7,
+   "differs": [
+    "The headline sizes differ (80px here, 56px in the reference)."
+   ]
+  },
+  {
+   "query": "sb-coming-soon (rebranded)",
+   "target": "sb-coming-soon",
+   "label": "same template, different branding",
+   "similarity": 0.969,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "sb-coming-soon (rebranded)",
+   "target": "fx-ai-saas",
+   "label": "different templates",
+   "similarity": 0.704,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses the headline laid over a full-width background image; the reference uses a centred stack (headline, line of text and buttons one above the other in the middle).",
+    "The headline is left-aligned here and centred in the reference.",
+    "The buttons differ: four buttons stacked, below headline, left here; four buttons side by side, below headline, centred in the reference.",
+    "The main image is full-bleed behind text here and absent in the reference.",
+    "The headline sits on a light background here and on a gradient background in the reference."
+   ]
+  },
+  {
+   "query": "sb-creative (rebranded)",
+   "target": "sb-creative",
+   "label": "same template, different branding",
+   "similarity": 0.953,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "sb-creative (rebranded)",
+   "target": "sb-clean-blog",
+   "label": "different templates",
+   "similarity": 0.417,
+   "shared": 7,
+   "differs": [
+    "The headline sizes differ (56px here, 80px in the reference)."
+   ]
+  },
+  {
+   "query": "sb-freelancer (rebranded)",
+   "target": "sb-freelancer",
+   "label": "same template, different branding",
+   "similarity": 0.94,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "sb-freelancer (rebranded)",
+   "target": "fx-ai-saas",
+   "label": "different templates",
+   "similarity": 0.734,
+   "shared": 2,
+   "differs": [
+    "The headline sizes differ (64px here, 48px in the reference).",
+    "The headline starts 63% down here and 23% down in the reference.",
+    "The buttons differ: no buttons here; four buttons side by side, below headline, centred in the reference.",
+    "The headline sits on a light background here and on a gradient background in the reference.",
+    "The top bars differ (4 links here, 0 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-grayscale (rebranded)",
+   "target": "sb-grayscale",
+   "label": "same template, different branding",
+   "similarity": 0.99,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "sb-grayscale (rebranded)",
+   "target": "sb-landing-page",
+   "label": "different templates",
+   "similarity": 0.4,
+   "shared": 3,
+   "differs": [
+    "The layouts differ: this page uses a centred stack (headline, line of text and buttons one above the other in the middle); the reference uses the headline laid over a full-width background image.",
+    "The headline sizes differ (104px here, 48px in the reference).",
+    "The main image is absent here and full-bleed behind text in the reference.",
+    "The headline sits on a gradient background here and on a photograph in the reference.",
+    "The top bars differ (4 links here, 2 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-heroic-features (rebranded)",
+   "target": "sb-heroic-features",
+   "label": "same template, different branding",
+   "similarity": 0.984,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "sb-heroic-features (rebranded)",
+   "target": "sb-small-business",
+   "label": "different templates",
+   "similarity": 0.929,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a centred stack (headline, line of text and buttons one above the other in the middle); the reference uses a split layout with the main image on the left and the text on the right.",
+    "The headline is centred here and right-aligned in the reference.",
+    "The buttons differ: no buttons here; one button, below headline, left in the reference.",
+    "The main image is absent here and left of the text in the reference."
+   ]
+  },
+  {
+   "query": "sb-landing-page (rebranded)",
+   "target": "sb-landing-page",
+   "label": "same template, different branding",
+   "similarity": 0.897,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "sb-landing-page (rebranded)",
+   "target": "sb-modern-business",
+   "label": "different templates",
+   "similarity": 0.577,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses the headline laid over a full-width background image; the reference uses a left-aligned stack with no main image beside it.",
+    "The headline is centred here and left-aligned in the reference.",
+    "The headline starts 32% down here and 20% down in the reference.",
+    "The main image is full-bleed behind text here and absent in the reference.",
+    "The headline sits on a photograph here and on a dark background in the reference.",
+    "The top bars differ (2 links here, 8 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-modern-business (rebranded)",
+   "target": "sb-modern-business",
+   "label": "same template, different branding",
+   "similarity": 0.98,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "sb-modern-business (rebranded)",
+   "target": "sb-business-frontpage",
+   "label": "different templates",
+   "similarity": 0.96,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a left-aligned stack with no main image beside it; the reference uses a centred stack (headline, line of text and buttons one above the other in the middle).",
+    "The headline is left-aligned here and centred in the reference.",
+    "The top bars differ (8 links here, 5 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-new-age (rebranded)",
+   "target": "sb-new-age",
+   "label": "same template, different branding",
+   "similarity": 0.941,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "sb-new-age (rebranded)",
+   "target": "fx-ai-saas",
+   "label": "different templates",
+   "similarity": 0.649,
+   "shared": 1,
+   "differs": [
+    "The layouts differ: this page uses a left-aligned stack with no main image beside it; the reference uses a centred stack (headline, line of text and buttons one above the other in the middle).",
+    "The headline is left-aligned here and centred in the reference.",
+    "The headline sizes differ (80px here, 48px in the reference).",
+    "The buttons differ: no buttons here; four buttons side by side, below headline, centred in the reference.",
+    "The headline sits on a light background here and on a gradient background in the reference.",
+    "The top bars differ (3 links here, 0 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-one-page-wonder (rebranded)",
+   "target": "sb-one-page-wonder",
+   "label": "same template, different branding",
+   "similarity": 0.902,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "sb-one-page-wonder (rebranded)",
+   "target": "fx-ai-saas",
+   "label": "different templates",
+   "similarity": 0.43,
+   "shared": 3,
+   "differs": [
+    "The layouts differ: this page uses a split layout with the text on the left and the main image on the right; the reference uses a centred stack (headline, line of text and buttons one above the other in the middle).",
+    "The headline sizes differ (96px here, 48px in the reference).",
+    "The buttons differ: no buttons here; four buttons side by side, below headline, centred in the reference.",
+    "The main image is right of the text here and absent in the reference.",
+    "The top bars differ (3 links here, 0 in the reference)."
+   ]
+  },
+  {
+   "query": "sb-personal (rebranded)",
+   "target": "sb-personal",
+   "label": "same template, different branding",
+   "similarity": 0.956,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "sb-personal (rebranded)",
+   "target": "sb-resume",
+   "label": "different templates",
+   "similarity": 0.611,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a centred stack (headline, line of text and buttons one above the other in the middle); the reference uses a left-aligned stack with no main image beside it.",
+    "The headline is centred here and right-aligned in the reference.",
+    "The headline sizes differ (64px here, 96px in the reference)."
+   ]
+  },
+  {
+   "query": "sb-resume (rebranded)",
+   "target": "sb-resume",
+   "label": "same template, different branding",
+   "similarity": 0.778,
+   "shared": 5,
+   "differs": [
+    "The headline runs to 7 lines here and 1 in the reference.",
+    "The headline starts 10% down here and 27% down in the reference."
+   ]
+  },
+  {
+   "query": "sb-resume (rebranded)",
+   "target": "sb-business-frontpage",
+   "label": "different templates",
+   "similarity": 0.708,
+   "shared": 3,
+   "differs": [
+    "The layouts differ: this page uses a left-aligned stack with no main image beside it; the reference uses a centred stack (headline, line of text and buttons one above the other in the middle).",
+    "The headline is right-aligned here and centred in the reference.",
+    "The headline sizes differ (96px here, 48px in the reference).",
+    "The headline sits on a light background here and on a dark background in the reference."
+   ]
+  },
+  {
+   "query": "sb-scrolling-nav (rebranded)",
+   "target": "sb-scrolling-nav",
+   "label": "same template, different branding",
+   "similarity": 0.97,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "sb-scrolling-nav (rebranded)",
+   "target": "sb-heroic-features",
+   "label": "different templates",
+   "similarity": 0.929,
+   "shared": 6,
+   "differs": [
+    "The headline sits on a gradient background here and on a light background in the reference."
+   ]
+  },
+  {
+   "query": "sb-small-business (rebranded)",
+   "target": "sb-small-business",
+   "label": "same template, different branding",
+   "similarity": 0.982,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "sb-small-business (rebranded)",
+   "target": "sb-heroic-features",
+   "label": "different templates",
+   "similarity": 0.925,
+   "shared": 4,
+   "differs": [
+    "The layouts differ: this page uses a split layout with the main image on the left and the text on the right; the reference uses a centred stack (headline, line of text and buttons one above the other in the middle).",
+    "The headline is right-aligned here and centred in the reference.",
+    "The buttons differ: one button, below headline, left here; no buttons in the reference.",
+    "The main image is left of the text here and absent in the reference."
+   ]
+  },
+  {
+   "query": "sb-stylish-portfolio (rebranded)",
+   "target": "sb-stylish-portfolio",
+   "label": "same template, different branding",
+   "similarity": 0.96,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "sb-stylish-portfolio (rebranded)",
+   "target": "sb-coming-soon",
+   "label": "different templates",
+   "similarity": 0.14,
+   "shared": 3,
+   "differs": [
+    "The headline is centred here and left-aligned in the reference.",
+    "The headline sizes differ (88px here, 56px in the reference).",
+    "The buttons differ: no buttons here; four buttons stacked, below headline, left in the reference.",
+    "The headline sits on a photograph here and on a light background in the reference."
+   ]
+  },
+  {
+   "query": "tt-app-landing-page (rebranded)",
+   "target": "tt-app-landing-page",
+   "label": "same template, different branding",
+   "similarity": 0.925,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "tt-app-landing-page (rebranded)",
+   "target": "fx-distinct",
+   "label": "different templates",
+   "similarity": 0.686,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses the headline laid over a full-width background image; the reference uses a split layout with the text on the left and the main image on the right.",
+    "The headline starts 39% down here and 18% down in the reference.",
+    "The buttons differ: no buttons here; two buttons side by side, below headline, left in the reference.",
+    "The main image is full-bleed behind text here and right of the text in the reference.",
+    "The headline sits on a photograph here and on a light background in the reference."
+   ]
+  },
+  {
+   "query": "tt-landing-page (rebranded)",
+   "target": "tt-landing-page",
+   "label": "same template, different branding",
+   "similarity": 0.941,
+   "shared": 7,
+   "differs": [
+    "The headline runs to 4 lines here and 2 in the reference."
+   ]
+  },
+  {
+   "query": "tt-landing-page (rebranded)",
+   "target": "tt-app-landing-page",
+   "label": "different templates",
+   "similarity": 0.575,
+   "shared": 1,
+   "differs": [
+    "The layouts differ: this page uses a split layout with the text on the left and the main image on the right; the reference uses the headline laid over a full-width background image.",
+    "The headline runs to 4 lines here and 2 in the reference.",
+    "The headline starts 21% down here and 43% down in the reference.",
+    "The buttons differ: one button, below headline, left here; no buttons in the reference.",
+    "The main image is right of the text here and full-bleed behind text in the reference.",
+    "The headline sits on a gradient background here and on a photograph in the reference."
+   ]
+  },
+  {
+   "query": "tt-minimal-blog (rebranded)",
+   "target": "tt-minimal-blog",
+   "label": "same template, different branding",
+   "similarity": 0.99,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "tt-minimal-blog (rebranded)",
+   "target": "sb-scrolling-nav",
+   "label": "different templates",
+   "similarity": 0.906,
+   "shared": 6,
+   "differs": [
+    "The headline sits on a light background here and on a gradient background in the reference."
+   ]
+  },
+  {
+   "query": "tt-nordic-store (rebranded)",
+   "target": "tt-nordic-store",
+   "label": "same template, different branding",
+   "similarity": 0.971,
+   "shared": 4,
+   "differs": []
+  },
+  {
+   "query": "tt-nordic-store (rebranded)",
+   "target": "tt-landing-page",
+   "label": "different templates",
+   "similarity": 0.302,
+   "shared": 0,
+   "differs": [
+    "The buttons differ: no buttons here; one button, below headline, left in the reference.",
+    "The main image is only element here and right of the text in the reference.",
+    "The headline sits on a light background here and on a gradient background in the reference.",
+    "The top bars differ (5 links here, 4 in the reference)."
+   ]
+  },
+  {
+   "query": "tt-rainblur-landing-page (rebranded)",
+   "target": "tt-rainblur-landing-page",
+   "label": "same template, different branding",
+   "similarity": 0.951,
+   "shared": 6,
+   "differs": [
+    "The headline runs to 6 lines here and 2 in the reference."
+   ]
+  },
+  {
+   "query": "tt-rainblur-landing-page (rebranded)",
+   "target": "sb-new-age",
+   "label": "different templates",
+   "similarity": 0.702,
+   "shared": 2,
+   "differs": [
+    "The layouts differ: this page uses the headline laid over a full-width background image; the reference uses a left-aligned stack with no main image beside it.",
+    "The headline sizes differ (48px here, 80px in the reference).",
+    "The buttons differ: one button, below headline, left here; no buttons in the reference.",
+    "The main image is full-bleed behind text here and absent in the reference.",
+    "The headline sits on a photograph here and on a light background in the reference."
+   ]
+  },
+  {
+   "query": "fx-ai-saas (rebranded)",
+   "target": "fx-ai-saas",
+   "label": "same template, different branding",
+   "similarity": 0.911,
+   "shared": 7,
+   "differs": []
+  },
+  {
+   "query": "fx-ai-saas (rebranded)",
+   "target": "fx-template-like",
+   "label": "different templates",
+   "similarity": 0.806,
+   "shared": 6,
+   "differs": [
+    "The reference has a small rounded label above the headline; this page does not.",
+    "The top bars differ (0 links here, 3 in the reference)."
+   ]
+  },
+  {
+   "query": "fx-distinct (rebranded)",
+   "target": "fx-distinct",
+   "label": "same template, different branding",
+   "similarity": 0.988,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "fx-distinct (rebranded)",
+   "target": "sb-small-business",
+   "label": "different templates",
+   "similarity": 0.925,
+   "shared": 3,
+   "differs": [
+    "The layouts differ: this page uses a split layout with the text on the left and the main image on the right; the reference uses a split layout with the main image on the left and the text on the right.",
+    "The headline is left-aligned here and right-aligned in the reference.",
+    "The buttons differ: two buttons side by side, below headline, left here; one button, below headline, left in the reference.",
+    "The main image is right of the text here and left of the text in the reference.",
+    "The top bars differ (0 links here, 5 in the reference)."
+   ]
+  },
+  {
+   "query": "fx-template-like (rebranded)",
+   "target": "fx-template-like",
+   "label": "same template, different branding",
+   "similarity": 0.941,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "fx-template-like (rebranded)",
+   "target": "sb-heroic-features",
+   "label": "different templates",
+   "similarity": 0.905,
+   "shared": 4,
+   "differs": [
+    "The headline sizes differ (56px here, 48px in the reference).",
+    "The buttons differ: two buttons side by side, below headline, centred here; no buttons in the reference.",
+    "This page has a small rounded label above the headline; the reference does not.",
+    "The headline sits on a gradient background here and on a light background in the reference."
+   ]
+  },
+  {
+   "query": "fx-distinctive (rebranded)",
+   "target": "fx-distinctive",
+   "label": "same template, different branding",
+   "similarity": 0.955,
+   "shared": 8,
+   "differs": []
+  },
+  {
+   "query": "fx-distinctive (rebranded)",
+   "target": "fx-distinct",
+   "label": "different templates",
+   "similarity": 0.839,
+   "shared": 6,
+   "differs": [
+    "The headline sizes differ (64px here, 42px in the reference).",
+    "The buttons differ: one button, below headline, left here; two buttons side by side, below headline, left in the reference."
+   ]
+  }
+ ]
+}

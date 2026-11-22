@@ -8,3 +8,6 @@ next-env.d.ts
 audit-output/
 test-account.txt
 --help/
+
+# DIFF-002 local image model environment (worker/vision/README.md)
+worker/vision/.venv

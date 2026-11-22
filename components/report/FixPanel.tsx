@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { CopyButton } from '@/components/CopyButton.tsx';
 import type { AvaraFix } from '@/lib/report-types.ts';
+import { bulletLines } from '@/lib/bullets.ts';
 
 const NAMES: Record<string, string> = { lovable: 'Lovable', bolt: 'Bolt', v0: 'v0', cursor: 'Cursor', framer: 'Framer', webflow: 'Webflow', code: 'Plain code' };
 const ORDER = ['lovable', 'bolt', 'v0', 'cursor', 'framer', 'webflow', 'code'];
@@ -23,7 +24,7 @@ export function FixPanel({ fixes, id }: { fixes: AvaraFix[]; id: string }) {
     body = <div className="space-y-3"><div><p className="text-sm font-semibold text-neutral-700">Before</p><pre tabIndex={0} role="region" aria-label="Code before" className={`mt-1 max-h-52 overflow-y-auto whitespace-pre-wrap rounded-xl bg-white p-3 font-mono text-sm ${wrap}`}>{code.before}</pre></div>
       <div><p className="text-sm font-semibold text-neutral-700">After</p><pre tabIndex={0} role="region" aria-label="Code after" className={`mt-1 max-h-52 overflow-y-auto whitespace-pre-wrap rounded-xl bg-white p-3 font-mono text-sm ${wrap}`}>{code.after}</pre></div></div>;
   } else if (f.kind === 'steps') {
-    const steps = f.content.split('\n').map((l) => l.replace(/^\d+\.\s*/, '')); label = 'steps'; intro = `Follow these steps in ${NAMES[tool]}`; how = steps[steps.length - 1] ?? '';
+    const steps = bulletLines(f.content); label = 'steps'; intro = `Follow these steps in ${NAMES[tool]}`; how = steps[steps.length - 1] ?? '';
     body = <ol className="list-decimal space-y-1.5 rounded-xl bg-white p-4 pl-9 text-base">{steps.map((l, i) => <li key={i} className={wrap}>{l}</li>)}</ol>;
   } else { text = bare(f.content); how = /Verify:\s*([\s\S]+?)(?:\n|$)/.exec(text)?.[1] ?? ''; body = <pre tabIndex={0} role="region" aria-label={`Change for ${NAMES[tool]}`} data-testid="fix-text" className={`max-h-80 overflow-y-auto whitespace-pre-wrap rounded-xl bg-white p-3 font-mono text-sm leading-relaxed sm:p-4 sm:text-[15px] ${wrap}`}>{text}</pre>; }
   return (

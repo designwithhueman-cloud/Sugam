@@ -1,0 +1,352 @@
+{
+ "about": "Reference first screens for DIFF-002. Templates are MIT-licensed open-source templates cloned at the recorded commit; fixtures are this project's own test pages and are labelled as fixtures. Captured at 1280x800 with the scanner's own settle step and the hero probe. Rebuild: node --experimental-strip-types scripts/hero-references.ts",
+ "references": [
+  {
+   "id": "sb-agency",
+   "name": "Start Bootstrap Agency",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-agency @ b2d5d5c",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-agency/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-agency",
+    "commit": "b2d5d5c6b1396bc5b0e8dd92c693b106cfb7cee1"
+   }
+  },
+  {
+   "id": "sb-business-casual",
+   "name": "Start Bootstrap Business Casual",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-business-casual @ b6f9289",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-business-casual/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-business-casual",
+    "commit": "b6f928934386a54e08c2e7f40ebd9e4d7510bba4"
+   }
+  },
+  {
+   "id": "sb-business-frontpage",
+   "name": "Start Bootstrap Business Frontpage",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-business-frontpage @ b330ff6",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-business-frontpage/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-business-frontpage",
+    "commit": "b330ff68d31fca0950dcce5687796d71432fbd5f"
+   }
+  },
+  {
+   "id": "sb-clean-blog",
+   "name": "Start Bootstrap Clean Blog",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-clean-blog @ 1ebc4f8",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-clean-blog/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-clean-blog",
+    "commit": "1ebc4f8f3b6194335df237a2a7837955a5a4a9aa"
+   }
+  },
+  {
+   "id": "sb-coming-soon",
+   "name": "Start Bootstrap Coming Soon",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-coming-soon @ 5c42810",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-coming-soon/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-coming-soon",
+    "commit": "5c428101c48f34b85bf45e4faf26476b2f43215d"
+   }
+  },
+  {
+   "id": "sb-creative",
+   "name": "Start Bootstrap Creative",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-creative @ b1762d8",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-creative/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-creative",
+    "commit": "b1762d8c690a2379c078c776dc0830bdd81c6f55"
+   }
+  },
+  {
+   "id": "sb-freelancer",
+   "name": "Start Bootstrap Freelancer",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-freelancer @ 5bc65b4",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-freelancer/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-freelancer",
+    "commit": "5bc65b4bd01e4ab63186395d5f95c7fdaa26216d"
+   }
+  },
+  {
+   "id": "sb-grayscale",
+   "name": "Start Bootstrap Grayscale",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-grayscale @ d974402",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-grayscale/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-grayscale",
+    "commit": "d974402542d05abcbaa8d21d4dd78e53680f2edd"
+   }
+  },
+  {
+   "id": "sb-heroic-features",
+   "name": "Start Bootstrap Heroic Features",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-heroic-features @ a9b7e38",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-heroic-features/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-heroic-features",
+    "commit": "a9b7e388ba59526bf569839269e899e5c28c0bda"
+   }
+  },
+  {
+   "id": "sb-landing-page",
+   "name": "Start Bootstrap Landing Page",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-landing-page @ 247a46a",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-landing-page/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-landing-page",
+    "commit": "247a46a2503c91d1157179eab297953438ec498b"
+   }
+  },
+  {
+   "id": "sb-modern-business",
+   "name": "Start Bootstrap Modern Business",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-modern-business @ 7d29710",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-modern-business/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-modern-business",
+    "commit": "7d297106cbda2f04db4696752fcdb5b4dc9cd936"
+   }
+  },
+  {
+   "id": "sb-new-age",
+   "name": "Start Bootstrap New Age",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-new-age @ 5f61977",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-new-age/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-new-age",
+    "commit": "5f619773a873e44545b9e1e049d6565d3a9e81d7"
+   }
+  },
+  {
+   "id": "sb-one-page-wonder",
+   "name": "Start Bootstrap One Page Wonder",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-one-page-wonder @ 4a2712c",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-one-page-wonder/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-one-page-wonder",
+    "commit": "4a2712c4601d9f5209e97e2b4229d39d55beca84"
+   }
+  },
+  {
+   "id": "sb-personal",
+   "name": "Start Bootstrap Personal",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-personal @ 6a1ebcc",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-personal/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-personal",
+    "commit": "6a1ebcc76a93ead054412fcbdf417d9c83dc762b"
+   }
+  },
+  {
+   "id": "sb-resume",
+   "name": "Start Bootstrap Resume",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-resume @ c6fbe5e",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-resume/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-resume",
+    "commit": "c6fbe5ef431642984d0f17960194632f20cf67bc"
+   }
+  },
+  {
+   "id": "sb-scrolling-nav",
+   "name": "Start Bootstrap Scrolling Nav",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-scrolling-nav @ 45ee8f6",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-scrolling-nav/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-scrolling-nav",
+    "commit": "45ee8f6a5503ec6d4b41ec86cf5be2c930b606df"
+   }
+  },
+  {
+   "id": "sb-small-business",
+   "name": "Start Bootstrap Small Business",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-small-business @ 9c5ef57",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-small-business/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-small-business",
+    "commit": "9c5ef57a25c2c8e1223b274ef7312375925e281c"
+   }
+  },
+  {
+   "id": "sb-stylish-portfolio",
+   "name": "Start Bootstrap Stylish Portfolio",
+   "kind": "template",
+   "origin": "https://github.com/StartBootstrap/startbootstrap-stylish-portfolio @ a658eb7",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2013-2023 Start Bootstrap LLC (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/sb-stylish-portfolio/dist/index.html",
+   "source": {
+    "repo": "https://github.com/StartBootstrap/startbootstrap-stylish-portfolio",
+    "commit": "a658eb7130db599f69572384ef2dd6221757f028"
+   }
+  },
+  {
+   "id": "tt-app-landing-page",
+   "name": "Tailwind Toolbox App Landing Page",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/App-Landing-Page @ a63f1bb",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2019 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/tt-App-Landing-Page/index.html",
+   "source": {
+    "repo": "https://github.com/tailwindtoolbox/App-Landing-Page",
+    "commit": "a63f1bb7880621f0ffa0b8407c9d085f9b989101"
+   }
+  },
+  {
+   "id": "tt-landing-page",
+   "name": "Tailwind Toolbox Landing Page",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/Landing-Page @ 545f89e",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2019 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/tt-Landing-Page/index.html",
+   "source": {
+    "repo": "https://github.com/tailwindtoolbox/Landing-Page",
+    "commit": "545f89eb26e0997d7cdd15fe77dda35df73e575a"
+   }
+  },
+  {
+   "id": "tt-minimal-blog",
+   "name": "Tailwind Toolbox Minimal Blog",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/Minimal-Blog @ 2c21514",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2019 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/tt-Minimal-Blog/index.html",
+   "source": {
+    "repo": "https://github.com/tailwindtoolbox/Minimal-Blog",
+    "commit": "2c2151453ad26a6031883f9600aa8af2ba85e1d3"
+   }
+  },
+  {
+   "id": "tt-nordic-store",
+   "name": "Tailwind Toolbox Nordic Store",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/Nordic-Store @ b64edb8",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2019 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/tt-Nordic-Store/index.html",
+   "source": {
+    "repo": "https://github.com/tailwindtoolbox/Nordic-Store",
+    "commit": "b64edb872ec70d40297eb3aacb1fb4dfbb3a68c3"
+   }
+  },
+  {
+   "id": "tt-rainblur-landing-page",
+   "name": "Tailwind Toolbox Rainblur Landing Page",
+   "kind": "template",
+   "origin": "https://github.com/tailwindtoolbox/Rainblur-Landing-Page @ 4599fd5",
+   "license": "MIT",
+   "ownership": "Copyright (c) 2020 Tailwind Toolbox (MIT licence: screenshots may be stored and shown with this notice)",
+   "path": "/t/tt-Rainblur-Landing-Page/index.html",
+   "source": {
+    "repo": "https://github.com/tailwindtoolbox/Rainblur-Landing-Page",
+    "commit": "4599fd56c7e7ae187e578fcad5803ae03cc69231"
+   }
+  },
+  {
+   "id": "fx-ai-saas",
+   "name": "Avara fixture: stock AI-SaaS landing",
+   "kind": "fixture",
+   "origin": "fixture/site/detectors/ai-saas.html (this repository)",
+   "license": "Project fixture, owned by the Avara project",
+   "ownership": "Avara project (test fixture, not a real template)",
+   "path": "/f/detectors/ai-saas.html",
+   "source": {
+    "file": "fixture/site/detectors/ai-saas.html"
+   }
+  },
+  {
+   "id": "fx-distinct",
+   "name": "Avara fixture: editorial page",
+   "kind": "fixture",
+   "origin": "fixture/site/detectors/distinct.html (this repository)",
+   "license": "Project fixture, owned by the Avara project",
+   "ownership": "Avara project (test fixture, not a real template)",
+   "path": "/f/detectors/distinct.html",
+   "source": {
+    "file": "fixture/site/detectors/distinct.html"
+   }
+  },
+  {
+   "id": "fx-template-like",
+   "name": "Avara fixture: starter-template landing",
+   "kind": "fixture",
+   "origin": "fixture/site/template/template-like.html (this repository)",
+   "license": "Project fixture, owned by the Avara project",
+   "ownership": "Avara project (test fixture, not a real template)",
+   "path": "/f/template/template-like.html",
+   "source": {
+    "file": "fixture/site/template/template-like.html"
+   }
+  },
+  {
+   "id": "fx-distinctive",
+   "name": "Avara fixture: bakery page",
+   "kind": "fixture",
+   "origin": "fixture/site/template/distinctive.html (this repository)",
+   "license": "Project fixture, owned by the Avara project",
+   "ownership": "Avara project (test fixture, not a real template)",
+   "path": "/f/template/distinctive.html",
+   "source": {
+    "file": "fixture/site/template/distinctive.html"
+   }
+  }
+ ]
+}

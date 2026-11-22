@@ -45,7 +45,7 @@ const getJson = async (url: string, init: RequestInit) => {
 export async function fetchProfile(p: ProviderId, conf: Conf, code: string, verifier: string, redirect: string): Promise<{ email: string; name: string | null }> {
   const t = await getJson(conf.token, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' }, body: new URLSearchParams({ client_id: conf.id!, client_secret: conf.secret!, code, redirect_uri: redirect, grant_type: 'authorization_code', code_verifier: verifier }).toString() });
   const token = String(t.access_token || ''); if (!token) throw new Error('no access token');
-  const auth = { authorization: `Bearer ${token}`, accept: 'application/json', 'user-agent': 'Sugam' };
+  const auth = { authorization: `Bearer ${token}`, accept: 'application/json', 'user-agent': 'Avara' };
   const me = await getJson(conf.profile, { headers: auth });
   if (p === 'google') {
     if (me.email_verified !== true || typeof me.email !== 'string') throw new Error('no verified email');

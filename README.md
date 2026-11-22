@@ -31,6 +31,10 @@ Scanner without the web app: `node scanner/cli.ts <url> [standard] [outDir]` (ra
 | `REDIS_URL` | Queue scans with BullMQ; run `npm run worker` as a separate process (needs `DATABASE_URL` too) |
 | `SUGAM_AI=on` | Enable the Claude API layer (billed per scan). Credentials come from `ANTHROPIC_API_KEY` or an `ant auth login` profile |
 | `SUGAM_AI_MODEL` | Default `claude-opus-5-5` |
+| `AVARA_AI=on` | Enable AI review of the rules that need judgement (clarity, trust, calls to action and the other `llm` rules in `src/rules`). Off by default. Separate from `SUGAM_AI`, which only drives the fix writer in `analysis/claude.ts` |
+| `AVARA_AI_PROVIDER` | `claude` (default) or `gemini`. Any other value turns the rule review off rather than falling back to a paid provider |
+| `ANTHROPIC_API_KEY`, `AVARA_AI_MODEL` | Claude provider (billed per call). Model default `claude-sonnet-5-5` |
+| `GEMINI_API_KEY`, `AVARA_GEMINI_MODEL` | Gemini provider (Google AI Studio key, Developer API). Model default `gemini-2.5-flash`. **On the free tier Google may use submitted content to improve its products: use it only for scans of public demo pages.** A refusal, malformed output, a rate limit (429) or a Google server error marks that call's rules inconclusive, never passed or failed |
 | `SCAN_CONCURRENCY` | Scans run at once (default 2) |
 | `SCAN_RATE_LIMIT` | Scans per 10 minutes per visitor. Default 5 for anonymous visitors and 20 for signed-in users; setting it overrides both |
 | `TRUST_PROXY` | Set to `0` to ignore `x-forwarded-for` when rate limiting. Otherwise the last entry (added by your proxy) is used |

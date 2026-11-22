@@ -17,6 +17,7 @@ import { STANDARDS, type StandardId } from '../lib/standards.ts';
 import { checkUrl, BlockedUrlError } from '../lib/net/guard.ts';
 import { probeActions, runWorkflow, type ActionProbe } from './avara.ts';
 import { PAGE_CONTEXT, MOBILE_PROBE, TEXT_RESIZE, STRUCTURE_CONTEXT, VALIDATION_PROBE, FRAGMENT_PROBE, SIGNALS_PROBE } from './avara-inpage.ts';
+import { HERO_PROBE } from './hero-probe.ts';
 import { runLighthouse, type PerfResult } from './perf.ts';
 
 export type ViewportId = 'desktop' | 'mobile';
@@ -48,11 +49,11 @@ export type Extra = {
   nonTextContrast: NodeRef[]; textSpacing: NodeRef[]; dragging: NodeRef[]; positiveTabindex: NodeRef[];
   smallText: NodeRef[]; autofocus: NodeRef[]; newTab: NodeRef[]; vagueLinks: NodeRef[]; placeholderOnly: NodeRef[]; noMain: NodeRef[];
   autoplayVideo: NodeRef[]; voiceNameNotFirst: NodeRef[]; forcedColorsOptOut: NodeRef[];
-  imageOfText: NodeRef[]; autocompleteMissing: NodeRef[]; requiredNotMarked: NodeRef[]; radioGroups: NodeRef[]; invalidNoMessage: NodeRef[]; labelNotVisible: NodeRef[]; inputTypeMismatch: NodeRef[];
+  imageOfText: NodeRef[]; autocompleteMissing: NodeRef[]; requiredNotMarked: NodeRef[]; radioGroups: NodeRef[]; invalidNoMessage: NodeRef[]; invalidMessages?: (NodeRef & { message: string })[]; labelNotVisible: NodeRef[]; inputTypeMismatch: NodeRef[];
   headings: (NodeRef & { kind: 'no-h1' | 'many-h1' | 'skipped' | 'empty' })[];
   authentication: { passwordFields: number; pasteBlocked: NodeRef[]; autocompleteOff: NodeRef[]; captcha: NodeRef[] };
 };
-export type Motion = { hasReducedMotionRule: boolean; readableSheets: number; unreadableSheets: number; running: NodeRef[] };
+export type Motion = { hasReducedMotionRule: boolean; readableSheets: number; unreadableSheets: number; running: (NodeRef & { changed?: string[] })[]; still?: number; unsampled?: number };
 export type ViewportResult = {
   name: ViewportId; width: number; height: number; pageWidth: number; pageHeight: number;
   screenshot: Buffer; viewportShot: Buffer; truncated: boolean;
@@ -77,13 +78,13 @@ export class ScanError extends Error { code: string; constructor(code: string, m
 
 const axeTarget = (n: { target: unknown[] }) => (n.target.length === 1 && typeof n.target[0] === 'string' ? (n.target[0] as string) : null);
 
-async function settle(page: Page) {
+export async function settle(page: Page) {
   await page.waitForLoadState('networkidle', { timeout: 6000 }).catch(() => {});
   // Scroll through the page so lazy-loaded content renders, then return to the top.
   await page.evaluate(async () => {
     const step = Math.max(200, innerHeight * 0.9);
     for (let i = 0; i < 30 && scrollY + innerHeight < document.documentElement.scrollHeight; i++) { scrollBy(0, step); await new Promise((r) => setTimeout(r, 120)); }
-    scrollTo(0, 0);
+    scrollTo({ top: 0, left: 0, behavior: 'instant' });   // instant: a page with scroll-behavior: smooth would otherwise still be scrolling
   });
   await page.waitForTimeout(400);
 }
@@ -174,9 +175,11 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     if (vp.name === 'mobile') { try { mobileProbe = (await page.evaluate(`(${MOBILE_PROBE})()`)) as Record<string, unknown>; } catch { mobileProbe = null; } }
     const metrics = await page.evaluate(`${PAGE_METRICS}()`) as { width: number; height: number; title: string };
     const shotHeight = Math.min(metrics.height, MAX_SHOT_HEIGHT);
-    await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); scrollTo(0, 0); });
+    await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); scrollTo({ top: 0, left: 0, behavior: 'instant' }); });
     const screenshot = await page.screenshot({ type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: Math.max(vp.width, metrics.width), height: shotHeight } });
     const viewportShot = await page.screenshot({ type: 'jpeg', quality: 70 });
+    // DIFF-002 compares this first-screen image with reference templates; record its layout at the same moment, from the same scroll position.
+    if (pageContext) { try { pageContext.heroLayout = await page.evaluate(`(${HERO_PROBE})()`); } catch { /* the hero comparison reports its own skip reason */ } }
 
     const axe: AxeResults = await new AxeBuilder({ page }).withTags(STANDARDS[std].axeTags).analyze();
     const heuristics = await page.evaluate(`${HEURISTICS}(${JSON.stringify({ reflow: vp.name === 'mobile' })})`) as Heuristics;

@@ -3,7 +3,7 @@ import { CopyButton } from '@/components/CopyButton.tsx';
 import { Resource } from '@/components/landing/Resource.tsx';
 import { AI_RULES } from '@/lib/ai-rules.ts';
 
-export const metadata = { title: 'Accessibility rules for AI builders | Sugam', description: 'A short rules file to paste into Lovable, Bolt.new, v0, Cursor or any AI builder so new pages start accessible.' };
+export const metadata = { title: 'Accessibility rules for AI builders | Avara', description: 'A short rules file to paste into Lovable, Bolt.new, v0, Cursor or any AI builder so new pages start accessible.' };
 
 export default function Page() {
   return (

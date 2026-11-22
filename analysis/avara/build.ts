@@ -27,7 +27,8 @@ const SEV: Record<Severity, number> = { critical: 100, serious: 70, moderate: 40
 const CONF: Record<Confidence, number> = { high: 1, medium: 0.85, low: 0.6 };
 const WHO: Record<string, string> = { screen_reader: 'people who use screen readers', keyboard: 'people who use a keyboard', speech: 'people who use voice control', visual: 'people with low vision', hearing: 'people who are deaf or hard of hearing', cognitive: 'people with cognitive or attention needs', motor: 'people with limited dexterity' };
 const BLOCKS = new Set(['sugam/focus-offscreen', 'sugam/focus-obscured', 'button-name', 'link-name', 'sugam/non-semantic-clickable', 'input-button-name']);
-const lower = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
+// All-caps text ("BOOK A CALL") keeps its case; only a capitalised first word is lowered.
+export const lower = (s: string) => (/^[A-Z]{2,}\b/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1));
 const sec = (ms: number) => `${Math.round(ms / 100) / 10} s`;
 // One plain phrase for why a measured action fails, used in the one-sentence explanation of a priority.
 function phrase(c: Classification | null, m: Measurement | null): string {
@@ -58,7 +59,7 @@ export function analyzeAvara(out: ScanOutput, a: Analysis): AvaraAnalysis {
 
   // ---------- mobile responsiveness: the main action at 320px against desktop ----------
   const mCand = actionText && M ? M.candidates.find((c) => norm(c.candidate.text) === aKey) ?? null : null;
-  const measEv = (vp: string, m: Measurement | null, c: Classification | null): EvidenceDraft[] => m ? [{ kind: 'dom', viewport: vp, data: { selector: m.selector, html: m.html } }, { kind: 'measurement', viewport: vp, data: { phrase: phrase(c, m), box: m.box, width: m.width, height: m.height, visibleRatio: m.visibleRatio, clippedBy: m.clippedBy, cover: m.cover, outsideX: m.outsideX, viewportWidth: m.viewportWidth, pageWidth: m.pageWidth, level: c?.level, reasons: c?.reasons } }] : [];
+  const measEv = (vp: string, m: Measurement | null, c: Classification | null): EvidenceDraft[] => m ? [{ kind: 'dom', viewport: vp, data: { selector: m.selector, html: m.html } }, { kind: 'measurement', viewport: vp, data: { phrase: phrase(c, m), pointerEventsNone: m.pointerEventsNone, box: m.box, width: m.width, height: m.height, visibleRatio: m.visibleRatio, clippedBy: m.clippedBy, cover: m.cover, outsideX: m.outsideX, viewportWidth: m.viewportWidth, pageWidth: m.pageWidth, level: c?.level, reasons: c?.reasons } }] : [];
   if (action && M) {
     if (!mCand) {
       push({ key: 'mobile-missing', category: 'mobile', rule: rule('mobile/primary-action-missing'), bucket: 'confirmed_failure', severity: 'critical', confidence: inferred ? 'medium' : 'high',
@@ -76,6 +77,12 @@ export function analyzeAvara(out: ScanOutput, a: Analysis): AvaraAnalysis {
           title: `A ${m.cover!.position} element covers “${actionText}” at 320px wide`, summary: `At 320px wide ${m.cover!.selector} (position: ${m.cover!.position}) covers “${actionText}”${c.level === 'unusable' ? ', so a tap lands on it instead' : ''}. On desktop “${actionText}” is not covered.`,
           affects: sentenceMobile, trying: goalVerb, consequence: `Some visitors on phones may leave without being able to ${goalVerb}. This is a hypothesis; Sugam did not measure conversions.`, consequenceKind: 'hypothesis', goalImpact: c.level === 'unusable' ? 'blocks' : 'hinders',
           repairKey: `action:${aKey}`, fp: `mobile|sticky|${aKey}`, verify: { kind: 'action', viewport: 'mobile', text: actionText, selector: m.selector, goal: out.goal }, evidence: measEv('mobile', m, c), fix: buildAvaraFix(ctx) });
+      } else if (c.level === 'unusable' && c.unproven) {
+        // The measurement cannot tell a closed menu from a broken control, so this is a question for a person, not a confirmed blocker.
+        push({ key: 'mobile-unproven', category: 'mobile', rule: rule('mobile/primary-action-unusable'), bucket: 'needs_review', severity: 'serious', confidence: 'low',
+          title: `Check that “${actionText}” can be reached at 320px wide`, summary: `At 320px wide the only “${actionText}” Sugam found was hidden. ${c.unproven}`,
+          affects: sentenceMobile, trying: goalVerb, consequence: `If the menu is the only way to reach it, some visitors on phones may not find ${goalVerb}. This is a hypothesis; Sugam did not open the menu or measure conversions.`, consequenceKind: 'hypothesis', goalImpact: 'hinders',
+          repairKey: `action:${aKey}`, fp: `mobile|unproven|${aKey}`, verify: { kind: 'action', viewport: 'mobile', text: actionText, selector: m.selector, goal: out.goal }, evidence: measEv('mobile', m, c) });
       } else if (c.level === 'unusable') {
         push({ key: 'mobile-unusable', category: 'mobile', rule: rule('mobile/primary-action-unusable'), bucket: 'confirmed_failure', severity: 'critical', confidence: inferred ? 'medium' : 'high',
           title: `“${actionText}” cannot be used at 320px wide`, summary: `At 320px wide, “${actionText}” ${lower(c.reasons[0])} On desktop it works as expected.`,

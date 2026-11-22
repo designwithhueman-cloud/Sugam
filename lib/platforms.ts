@@ -3,8 +3,8 @@
 // Astro, Vue and Svelte were each scanned end to end (see README, "Verified so far"); the AI builders
 // and Claude/OpenAI are where the pasted fix prompt goes, and their sites are ordinary React or Vite
 // pages. Wix, Squarespace and Replit were removed until a real site on each has been scanned.
-// Sugam scans any public URL, so a site built on any of these can be scanned. `fix` says which
-// repair format Sugam writes for that tool:
+// Avara scans any public URL, so a site built on any of these can be scanned. `fix` says which
+// repair format Avara writes for that tool:
 //   prompt = a builder prompt written for the tool, steps = editor steps, patch = a code patch.
 // `wordmark: true` means the mark already spells the name (Wix, v0), so the name is not repeated.
 // Logos: `icon` is the SVG path (24x24 viewBox) of the brand's mark from the Simple Icons set

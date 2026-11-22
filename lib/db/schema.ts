@@ -390,6 +390,31 @@ export const scanResults = pgTable('scan_results', {
   ranAt: ts('ran_at').notNull(),
 });
 
+// One record per rule per scan: the scan's rule snapshot and what happened to each rule. Every coverage count is built from these rows.
+// Scans saved before this table existed have none; their records are derived at read time from rule_findings and marked unknown where evidence is missing.
+export const ruleExecutions = pgTable('rule_executions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  scanId: uuid('scan_id').notNull().references(() => scans.id, { onDelete: 'cascade' }),
+  ruleId: text('rule_id').notNull(),
+  ruleVersion: text('rule_version').notNull(),
+  definitionHash: text('definition_hash'),
+  category: text('category').notNull(),
+  title: text('title').notNull(),
+  mode: text('mode').notNull(),
+  weight: integer('weight').notNull(),
+  session: text('session'),
+  implementation: text('implementation').notNull(),   // detector | detector_and_ai | ai_only | person_only | rollup | not_built
+  execution: text('execution').notNull(),             // ran | not_applicable | skipped | unknown
+  reason: text('reason'),                             // missing_detector | ai_unavailable | missing_input | not_applicable | analyzer_error | needs_person | rollup_no_inputs
+  evidence: jsonb('evidence').$type<string[]>().notNull(),
+  outcome: text('outcome').notNull(),
+  method: text('method').notNull(),
+  scope: text('scope').notNull(),                     // full | measurable_part | summary | none
+  scoreEligible: boolean('score_eligible').notNull(),
+  observationOnly: boolean('observation_only').notNull(),
+  createdAt: ts('created_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('rule_executions_scan_rule_uq').on(t.scanId, t.ruleId)]);
+
 // What Avara has learned: facts worth keeping from each scan, and patterns computed across scans. Patterns only ever come from stored scans.
 export const knowledge = pgTable('knowledge', {
   id: uuid('id').primaryKey().defaultRandom(),

@@ -9,7 +9,7 @@ import { PageHead } from '@/components/dashboard/PageHead.tsx';
 import { QuickScanTable, EmptyNote } from '@/components/dashboard/Tables.tsx';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Quick scans | Sugam' };
+export const metadata = { title: 'Quick scans | Avara' };
 export default async function QuickScans({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
   const user = await requireUser(`/app/${org}/quick-scans`);

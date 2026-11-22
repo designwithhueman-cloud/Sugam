@@ -34,7 +34,7 @@ try {
   if (mode === 'main') {
     const orig = await scan('Join the waitlist');
     const first = await p.getByTestId('sentence').innerText(); const head = await p.getByTestId('headline').innerText();
-    check('the first priority is one sentence tied to the visitor goal, and the headline names the control', /Join the waitlist/.test(first) && /320px/.test(first) && /join the waitlist/.test(first) && first.split(/\.\s/).length === 1 && /Join the waitlist/.test(head), `${head} | ${first}`);
+    check('the first priority is one sentence that names the control, says how much is visible at 320px and what the visitor cannot do; the headline names the control', /Join the waitlist/.test(first) && /320px/.test(first) && /cannot tap it/.test(first) && first.split(/\.\s/).length === 1 && /On phones, .Join the waitlist. is cut off\./.test(head), `${head} | ${first}`);
     check('the clipped signup button is ONE action across mobile, accessibility and UX, shown first and marked as blocking', (await p.getByTestId('blocker').count()) === 1 && /One change fixes this and 2 related findings/.test(await prim().innerText()));
     await openTech(); const tr = await prim().getByTestId('trace').innerText();
     check('its technical details name all three categories', ['Accessibility', 'Mobile', 'UX and workflow'].every((c) => tr.includes(c)), tr.slice(0, 200));
@@ -52,6 +52,7 @@ try {
     const clip = await p.evaluate(() => navigator.clipboard.readText());
     check('Copy prompt copies the exact prompt, which is concise and names the element, the smallest change and how to verify', clip.trim() === prompt.trim() && prompt.length < 1200 && /Element:/.test(prompt) && /Change:/.test(prompt) && /Verify:/.test(prompt), `${prompt.length} chars`);
     check('"How to check it" is shown beside the fix', /How to check it/.test(await fixBox.innerText()));
+    fs.mkdirSync(out, { recursive: true });
     fs.writeFileSync(out + 'avara-generated-fix.txt', prompt + '\n');
     check('the fix does not touch brand tokens or ask for a redesign', /keep|preserve|do not change|unchanged/i.test(prompt));
     check('the other fixes keep their builder panel back on the free plan', (await p.getByTestId('other-row').evaluateAll((rows) => rows.every((r) => !r.querySelector('select')))));

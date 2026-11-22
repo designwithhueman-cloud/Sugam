@@ -157,7 +157,7 @@ export function analyze(scan: ScanOutput): Analysis {
       if (t.keyboard && !t.keyboard.arrowMovesFocus) problems.push('Pressing the Right arrow key on the selected tab did not move focus to the next tab.');
       if (t.keyboard && !t.keyboard.tabLeavesTablist) problems.push('Pressing Tab on the selected tab moved to another tab instead of into the panel.');
       if (!problems.length) continue;
-      c.add({ ruleId: 'sugam/aria-tablist', source: 'heuristic', bucket: 'confirmed_failure', severity: 'serious', title: 'Tabs do not follow the ARIA tabs pattern', wcag: sc('4.1.2', '2.1.1'), impactGroups: ['keyboard', 'screen_reader'], roleTag: 'dev', groupBy: signature(t.html),
+      c.add({ ruleId: 'sugam/aria-tablist', source: 'heuristic', bucket: problems.every((p) => /points to an element that does not exist/.test(p)) ? 'needs_review' : 'confirmed_failure', severity: 'serious', title: 'Tabs do not follow the ARIA tabs pattern', wcag: sc('4.1.2', '2.1.1'), impactGroups: ['keyboard', 'screen_reader'], roleTag: 'dev', groupBy: signature(t.html),
         whatToChange: 'This tab set announces itself as tabs but does not behave like them: ' + problems.join(' ') },
       { selector: t.selector, html: t.html, detail: problems.join(' '), viewport: v.name, box: box(t.selector) });
     }
@@ -170,7 +170,7 @@ export function analyze(scan: ScanOutput): Analysis {
     if (v.motion && v.motion.running.length)
       for (const m of v.motion.running)
         c.add({ ruleId: 'sugam/reduced-motion', source: 'heuristic', bucket: 'needs_review', severity: 'moderate', title: 'Animation ignores the reduced-motion setting', wcag: sc('2.2.2'), impactGroups: ['cognitive', 'visual'], roleTag: 'design', groupBy: signature(m.html),
-          whatToChange: `With "reduce motion" switched on in the operating system, this animation keeps running.${v.motion.hasReducedMotionRule ? '' : ' None of the readable stylesheets contain a prefers-reduced-motion rule.'} Moving content that lasts more than five seconds needs a way to pause it (WCAG 2.2.2), and motion can make people with vestibular disorders unwell.` },
+          whatToChange: `With "reduce motion" switched on in the operating system, this element still moves${m.changed?.length ? ` (it animates ${m.changed.join(', ')})` : ''}.${v.motion.hasReducedMotionRule ? '' : ' None of the readable stylesheets contain a prefers-reduced-motion rule.'} Check whether the movement is essential; if not, show a static state or a gentler change such as a fade. Motion can make people with vestibular disorders unwell, and moving content that lasts more than five seconds needs a way to pause it (WCAG 2.2.2).` },
         { ...m, viewport: v.name, box: box(m.selector) });
 
     // ---- speech in media (captions and transcripts) ----

@@ -4,12 +4,20 @@
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 const plan = process.argv[2]; const base = process.argv[3] || 'http://localhost:3100';
-const creds = fs.readFileSync(process.env.GATING_FILE || '.data/test-account.txt', 'utf8'); const email = creds.match(/Email: (\S+)/)[1]; const pw = creds.match(/Password: (\S+)/)[1];
+// Each plan has its own account. Running without a plan, or with another plan's account, used to assert free-plan rules against the agency workspace.
+const ACCOUNT = { free: '.data/test-free.txt', site: '.data/test-site.txt', agency: '.data/test-account.txt' };
+if (!ACCOUNT[plan]) { console.error('usage: node test/gating.mjs <free|site|agency> [baseUrl]'); process.exit(2); }
+const creds = fs.readFileSync(process.env.GATING_FILE || ACCOUNT[plan], 'utf8'); const email = creds.match(/Email: (\S+)/)[1]; const pw = creds.match(/Password: (\S+)/)[1];
 const slug = creds.match(/Slug: (\S+)/)?.[1] ?? 'test-agency'; const results = [];
+const PLAN_NAME = { free: 'Free instant check', site: 'Creator / Startup', agency: 'Agency Pro' };
 const check = (n, ok, x = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  [${plan}] ${n}${x ? '  ' + x : ''}`); };
 const b = await chromium.launch({ channel: 'chrome' }); const ctx = await b.newContext(); const page = await ctx.newPage();
 await page.goto(base + '/login'); await page.fill('input[type=email]', email); await page.fill('input[type=password]', pw);
 await page.locator('input[type=password]').evaluate((e) => e.form.requestSubmit()); await page.waitForURL('**/app**');
+await page.goto(`${base}/app/${slug}/settings`);
+const onPlan = (await page.locator('main').innerText()).match(/This workspace is on the (.+?) plan/)?.[1];
+if (onPlan !== PLAN_NAME[plan]) { console.log(`FAIL  [${plan}] the signed-in workspace is on "${onPlan}", not ${PLAN_NAME[plan]}: set it with scripts/set-plan.ts ${slug} ${plan}`); await b.close(); process.exit(1); }
+check('the signed-in workspace is on the plan under test', true, onPlan);
 await page.goto(`${base}/app/${slug}`);
 const proj = (await page.locator(`a[href*="/projects/"]`).first().getAttribute('href'));
 await page.goto(base + proj + '/reports'); await page.waitForTimeout(800);
@@ -34,7 +42,7 @@ const shot = await get(`/api/scans/${sid}/screenshot/desktop`); check('screensho
 const exp = await get(`/api/scans/${sid}/export?format=csv`); check('CSV export', paid ? exp.status() === 200 : exp.status() === 402, 'HTTP ' + exp.status());
 const share = await ctx.request.post(`${base}/api/scans/${sid}/share`, { headers: { origin: base } }); check('share link', plan === 'agency' ? share.status() === 201 : share.status() === 402, 'HTTP ' + share.status());
 await page.goto(`${base}/scans/${sid}`); const sp = await page.locator('body').innerText();
-check('scan page', paid ? sp.includes('Every finding, pinned on the screenshot') : /page review/i.test(sp) && !sp.includes('Show on screenshot') && !sp.includes('Every finding, pinned'));
+check('scan page', paid ? sp.includes('Every element-level finding, pinned on the full screenshot') : /page review/i.test(sp) && !sp.includes('Show on screenshot') && !sp.includes('Every finding, pinned'));
 const body = await (await get(`/scans/${sid}`)).text();
 const opened = await page.locator('[data-testid=primary] pre[aria-label="Element"]').count();
 check('free report opens at most the one unlocked finding (1 to 3 elements), no screenshots', paid || (opened >= 1 && opened <= 3 && !/\\?"screenshotUrl\\?":\s*\\?"\/api/.test(body)), `elements shown ${opened}`);

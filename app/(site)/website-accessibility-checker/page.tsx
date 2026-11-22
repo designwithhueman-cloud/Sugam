@@ -4,13 +4,13 @@ import { ScanBar } from '@/components/landing/ScanBar.tsx';
 import { LandingFaq } from '@/components/landing/Faq.tsx';
 import { kicker, h2 } from '@/components/landing/Sections.tsx';
 
-export const metadata = { title: 'Free Website Accessibility Checker | Sugam', description: 'Check any public page against WCAG 2.2 AA, ADA Title II, EN 301 549 or AODA. See what is wrong and get a fix you can paste into your builder.' };
+export const metadata = { title: 'Free Website Accessibility Checker | Avara', description: 'Check any public page against WCAG 2.2 AA, ADA Title II, EN 301 549 or AODA. See what is wrong and get a fix you can paste into your builder.' };
 
 const STANDARDS = [
-  { icon: Globe2, title: 'WCAG 2.2 Level AA', text: 'The current W3C standard and Sugam’s default target. It adds criteria such as Focus Not Obscured and Target Size. Parsing (4.1.1) is retired in 2.2 and is never reported.' },
-  { icon: Landmark, title: 'ADA Title II', text: 'US state and local government websites must meet WCAG 2.1 Level AA under the Title II rule. Sugam checks the 2.1 AA set when you pick this target.' },
+  { icon: Globe2, title: 'WCAG 2.2 Level AA', text: 'The current W3C standard and Avara’s default target. It adds criteria such as Focus Not Obscured and Target Size. Parsing (4.1.1) is retired in 2.2 and is never reported.' },
+  { icon: Landmark, title: 'ADA Title II', text: 'US state and local government websites must meet WCAG 2.1 Level AA under the Title II rule. Avara checks the 2.1 AA set when you pick this target.' },
   { icon: Scale, title: 'European Accessibility Act (EN 301 549)', text: 'The EAA applies to many products and services sold in the EU. EN 301 549 maps web content to WCAG 2.1 Level AA.' },
-  { icon: Leaf, title: 'Ontario AODA', text: 'Covered Ontario organisations follow WCAG 2.0 Level AA, excluding live captions and pre-recorded audio description. Sugam leaves out newer criteria for this target.' },
+  { icon: Leaf, title: 'Ontario AODA', text: 'Covered Ontario organisations follow WCAG 2.0 Level AA, excluding live captions and pre-recorded audio description. Avara leaves out newer criteria for this target.' },
 ];
 const STEPS = [
   [Link2, 'Enter your URL', 'One public page. Pick the standard you need to meet under Scan settings.'],
@@ -18,8 +18,8 @@ const STEPS = [
   [Wrench, 'Fix and rescan', 'Copy the repair for your builder or code, then rescan to confirm it worked.'],
 ] as const;
 const FAQ: [string, string][] = [
-  ['What does the free checker test?', 'One public page, loaded in a real browser at desktop and 320px mobile width. It runs axe-core rules for your chosen standard, Sugam’s checks for patterns common in AI-built sites, and a 25-step keyboard trace.'],
-  ['Will a clean scan make my site compliant?', 'No tool can promise that. Automated checks find a share of accessibility barriers, and real screen-reader testing is still needed. Sugam never claims legal compliance.'],
+  ['What does the free checker test?', 'One public page, loaded in a real browser at desktop and 320px mobile width. It runs axe-core rules for your chosen standard, Avara’s checks for patterns common in AI-built sites, and a 25-step keyboard trace.'],
+  ['Will a clean scan make my site compliant?', 'No tool can promise that. Automated checks find a share of accessibility barriers, and real screen-reader testing is still needed. Avara never claims legal compliance.'],
   ['Do I need to install anything?', 'No. There is no script, plugin or integration. Paste the address and scan.'],
 ];
 const section = 'px-5 pb-16 sm:px-10 lg:pb-24';

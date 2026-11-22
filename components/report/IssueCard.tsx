@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils.ts';
 import { SEV_COLOR } from './PinViewer.tsx';
 
 import { impactLabels, IMPACT_NOTE } from '@/lib/impact.ts';
+import { nonEmpty } from '@/lib/bullets.ts';
 const ROLE: Record<string, string> = { design: 'Design Fix', no_code: 'No-Code Inspector', dev: 'Dev / Code Fix' };
 const BUILDERS = [['lovable', 'Lovable'], ['bolt', 'Bolt.new'], ['v0', 'v0'], ['cursor', 'Cursor']] as const;
 
@@ -93,7 +94,7 @@ export const IssueCard = React.forwardRef<HTMLElement, Props>(function IssueCard
                 </TabsContent>
                 <TabsContent value="nocode">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {([['Framer', f.noCode.framer], ['Webflow', f.noCode.webflow]] as const).map(([name, steps]) => (
+                    {([['Framer', nonEmpty(f.noCode.framer)], ['Webflow', nonEmpty(f.noCode.webflow)]] as const).map(([name, steps]) => (
                       <div key={name} className="rounded-lg border border-slate-200 p-3">
                         <div className="flex items-center justify-between"><h5 className="text-sm font-semibold">{name}</h5><CopyButton text={steps.map((s, n) => `${n + 1}. ${s}`).join('\n')} label={`${name} steps`} /></div>
                         <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-700">{steps.map((s) => <li key={s}>{s}</li>)}</ol>

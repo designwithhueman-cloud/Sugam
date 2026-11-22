@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "avara-hero-match",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev", "-p", "3317"],
+      "port": 3317,
+      "env": { "ALLOW_PRIVATE_HOSTS": "127.0.0.1:4317,localhost:4317", "SCAN_RATE_LIMIT": "50" }
+    }
+  ]
+}
