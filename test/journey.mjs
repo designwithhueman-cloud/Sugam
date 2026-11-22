@@ -15,7 +15,9 @@ try {
   const orig = p.url(); const prim = p.getByTestId('primary'); const first = await prim.innerText();
   check('the first priority is the booking button covered on a phone', /Book a call/i.test(first) && /(cover|banner|hidden|320px)/i.test(first), first.slice(0, 140).replace(/\s+/g, ' '));
   const body = await p.locator('body').innerText();
-  check('no score is shown as a number: "not scored" with the reason (no rule is score-eligible)', (await p.getByTestId('overall-score').innerText().catch(() => '–')).trim() === '–' && /not scored/i.test(body) && /score-eligible/i.test(body));
+  // A number appears only with its basis (how many categories contributed); otherwise "not scored" with the reason.
+  const shown = (await p.getByTestId('overall-score').innerText().catch(() => '–')).trim();
+  check('the page score is a number with its basis, or "not scored" with the reason', /^\d+$/.test(shown) ? new RegExp(`Page score: ${shown}\\s*/100`).test(body) && /Based on \d of 8 scored categories/.test(body) : /not scored/i.test(body) && /Insufficient coverage|admitted/i.test(body), shown);
   await p.getByTestId('see-fix').first().click(); await p.waitForTimeout(300); const fix = await p.locator('main').innerText();
   check('the first fix opens free, with a copyable prompt and how to check it', (await p.getByRole('button', { name: /Copy prompt/ }).count()) >= 1 && /How to check it/.test(fix));
   fs.copyFileSync(dir + 'book-call-fixed.html', live);   // the repair: the banner no longer sits over the button

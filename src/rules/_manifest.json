@@ -328,6 +328,10 @@
     "a11y/reading-order",
     "design/font-families",
     "sugam/reduced-motion",
-    "aria-valid-attr-value"
+    "aria-valid-attr-value",
+    "a11y/error-prevention",
+    "mobile/navigation-accessibility",
+    "perf/interaction-latency",
+    "ux/journey-continuity"
   ]
 }

@@ -16,7 +16,7 @@ export type Item = {
   title: string; location: string; sentence: string; categories: string[]; sharedBy: number; fixes: AvaraFix[] | null; fixText: string | null; locked: boolean;
   members: AvaraFinding[]; shot: Shot | null; evidence: string[]; source: string | null;
   issueId?: string; level: Level;
-  trace: { owner: AvaraRecommendation['owner']; related: AvaraRecommendation['related']; lenses: AvaraRecommendation['lenses']; deductions: AvaraRecommendation['deductions'] } | null;
+  trace: { owner: AvaraRecommendation['owner']; related: AvaraRecommendation['related']; lenses: AvaraRecommendation['lenses']; scoring: AvaraRecommendation['scoring'] } | null;
 };
 export type Level = 'critical' | 'high' | 'medium' | 'review';
 export type Score = { label: string; score: number | null; status: 'provisional' | 'final'; coveragePct: number; missing: number; unscored?: string; ran: number; rules: number; notRun: NotRunRule[]; issues: number; critical: number; review: number; observationsOnly: boolean };
@@ -42,7 +42,7 @@ export type View = {
 };
 
 const CAT: Record<string, string> = { accessibility: 'Accessibility', mobile: 'Mobile', ux_workflow: 'UX and workflow', performance: 'Performance' };
-const ENGINE_CAT: Record<string, string> = { 'Product Clarity': 'Product clarity', 'UX & Workflow Quality': 'UX and workflow', 'Mobile Responsiveness': 'Mobile', Accessibility: 'Accessibility', 'Trust & Credibility': 'Trust', 'Design & Brand Quality': 'Design', 'Conversion Readiness': 'Conversion', Performance: 'Performance', 'Differentiation & Design Maturity': 'Differentiation' };
+export const ENGINE_CAT: Record<string, string> = { 'Product Clarity': 'Product clarity', 'UX & Workflow Quality': 'UX and workflow', 'Mobile Responsiveness': 'Mobile', Accessibility: 'Accessibility', 'Trust & Credibility': 'Trust', 'Design & Brand Quality': 'Design', 'Conversion Readiness': 'Conversion', Performance: 'Performance', 'Differentiation & Design Maturity': 'Differentiation' };
 const LEVEL = { fix_immediately: 'critical', fix_before_launch: 'high', improve_later: 'medium' } as const;
 const lvl = (s: string): Level => (/crit/i.test(s) ? 'critical' : /high|major|serious/i.test(s) ? 'high' : 'medium');
 const SEV = { critical: 0, serious: 1, moderate: 2, minor: 3 } as const;
@@ -147,7 +147,7 @@ export function buildView(report: Report, access: View['access']): View {
     const { lead, members } = leadOf(rec, findings); const w = lead ? words(lead, members) : { headline: rec.title, sentence: rec.sentence };
     const loc = lead ? locationOf(report, lead, members, 640) : '';
     return { id: rec.id, level: LEVEL[rec.tier], kind: 'fix', rank: rec.rank, tier: rec.tier, blocker: rec.tier === 'fix_immediately' && members.some((m) => m.goalImpact === 'blocks'), title: w.headline, location: loc, sentence: w.sentence,
-      categories: rec.categories.map((c) => CAT[c] ?? c), sharedBy: Math.max(0, members.length - 1), fixes: rec.fixes, fixText: fixTextOf(rec.fixes), locked: rec.fixLocked || !rec.fixes?.length, members, evidence: [], trace: { owner: rec.owner, related: rec.related, lenses: rec.lenses, deductions: rec.deductions },
+      categories: rec.categories.map((c) => CAT[c] ?? c), sharedBy: Math.max(0, members.length - 1), fixes: rec.fixes, fixText: fixTextOf(rec.fixes), locked: rec.fixLocked || !rec.fixes?.length, members, evidence: [], trace: { owner: rec.owner, related: rec.related, lenses: rec.lenses, scoring: rec.scoring },
       shot: lead ? shotFor(report, lead, members, loc.split(' · ')[1] ?? 'the affected control') : null, source: lead?.sourceSection ?? null };
   }) : legacyItems(report);
   const covered = new Set(findings.flatMap((f) => (f.canonicalId ? [f.canonicalId] : [])).concat(recs.flatMap((r) => [r.owner?.id, ...r.related.map((x) => x.id)]).filter((x): x is string => !!x)));
@@ -172,9 +172,9 @@ export function buildView(report: Report, access: View['access']): View {
   const strict = new Map((lib?.strict ?? []).map((c) => [c.label, c]));
   const board: Board = {
     overall: rv ? { score: lib ? lib.overall : null, status: 'provisional', coveragePct: rv.overall.coveragePct, note: lib?.overallWithheld ?? (lib ? rv.overall.note : 'No strict score is available for this scan.'), assessed: (lib?.strict ?? []).filter((c) => c.assessed && !c.observationsOnly).length, total: (lib?.strict ?? []).filter((c) => !c.observationsOnly).length || rv.categories.length,
-      why: [...(lib?.overallWithheld && /score-eligible/.test(lib.overallWithheld) ? [lib.overallWithheld] : []), ...unscoredWhy(!!rv.ai && rv.ai.used === false, lib?.coverage.origin === 'historical')] } : null,
+      why: [...(lib?.overallWithheld ? [lib.overallWithheld] : []), ...unscoredWhy(!!rv.ai && rv.ai.used === false, lib?.coverage.origin === 'historical')] } : null,
     cats: (rv?.categories ?? []).map((c) => { const label = ENGINE_CAT[c.category] ?? c.category; const st = strict.get(c.category); const mine = all.filter((i) => i.categories.includes(label)); return { label, score: st?.assessed ? st.score : null, status: 'provisional' as const, coveragePct: c.coveragePct, missing: st?.missing ?? 0, ran: lib?.coverage.byCategory.find((b) => b.category === c.category)?.ran ?? 0, rules: lib?.coverage.byCategory.find((b) => b.category === c.category)?.rules ?? 0,
-        notRun: (lib?.notRunRules ?? []).filter((r) => r.category === c.category).map(({ id, title, outcome, reason }) => ({ id, title, outcome, reason })), unscored: st?.note?.startsWith('Not scored') ? st.note : undefined, issues: mine.filter((i) => i.level !== 'review').length, critical: mine.filter((i) => i.level === 'critical').length, review: mine.filter((i) => i.level === 'review').length, observationsOnly: c.weight === 0 }; }),
+        notRun: (lib?.notRunRules ?? []).filter((r) => r.category === c.category).map(({ id, title, outcome, reason }) => ({ id, title, outcome, reason })), unscored: st && st.status !== 'scored' ? st.note : undefined, issues: mine.filter((i) => i.level !== 'review').length, critical: mine.filter((i) => i.level === 'critical').length, review: mine.filter((i) => i.level === 'review').length, observationsOnly: c.weight === 0 }; }),
     totals,
   };
   return {

@@ -230,6 +230,90 @@ function perfThirdParty(out: ScanOutput): DetectorReport {
 }
 
 /** Every derived detector id. The ids are written into src/rules/*.json under the one rule that owns each. */
+// =====================================================================================================================================
+// The four rules that had no detector. Each says exactly what it exercised; anything it could not exercise is "needs a person", never a pass.
+// =====================================================================================================================================
+const pass = (note: string): DetectorReport => ({ ran: true, hits: [], passNote: note });
+
+// ---- A11Y-017 Error Prevention (WCAG 2.2 SC 3.3.4, AA): a form whose submission is a legal commitment, a financial transaction, changes or deletes
+// the visitor's stored data, or submits test answers must be reversible, checked for input errors with a chance to correct, or confirmed.
+// Avara never submits, so it can only see the form itself: a confirm/review step it can read passes; none is "needs a person", never a failure.
+type FormCtx = { fields: { type: string; label: string; required: boolean; name: string | null; autocomplete?: string | null; checked?: boolean }[]; submit: string; action?: string | null; text?: string };
+const COVERED: { kind: string; test: (f: FormCtx) => string | null }[] = [
+  { kind: 'a financial transaction', test: (f) => { const x = f.fields.find((i) => /^cc-/.test(i.autocomplete ?? '') || /card ?number|cvc|cvv|security code|expiry|expiration|iban|routing|account number|sort code/i.test(`${i.label} ${i.name ?? ''}`)); return x ? `field “${x.label || x.name}”${x.autocomplete ? ` (autocomplete ${x.autocomplete})` : ''}` : /^(pay|pay now|purchase|place (my )?order|buy( now)?|complete (purchase|order|payment)|donate|send money|transfer)\b/i.test(f.submit.trim()) ? `submit button “${f.submit}”` : null; } },
+  { kind: 'a change to or deletion of stored data', test: (f) => /\b(delete|remove|erase|close|deactivate|cancel)\b.*\b(account|data|profile|subscription|workspace|project)\b/i.test(f.submit) ? `submit button “${f.submit}”` : null },
+  { kind: 'a legal commitment', test: (f) => /\b(sign|e-?sign|accept)\b.*\b(contract|agreement|lease|offer)\b/i.test(f.submit) ? `submit button “${f.submit}”` : f.fields.find((i) => /signature/i.test(`${i.label} ${i.name ?? ''}`)) ? 'a signature field' : null },
+  { kind: 'test answers', test: (f) => /\bsubmit (my |your )?(answers|test|exam|quiz|assessment)\b/i.test(f.submit) ? `submit button “${f.submit}”` : null },
+];
+const SAFEGUARD = /review (your |the )?(order|details|answers|information)|step \d+ of \d+|you('ll| will) (be able to )?(review|confirm)|confirm on the next|before (you|we) (charge|submit)|undo|cancel (any ?time|within)|full refund|you can (change|edit|cancel)/i;
+function errorPrevention(out: ScanOutput): DetectorReport {
+  const pc = vp(out, 'desktop')?.pageContext as PageCtx | undefined; if (!pc) return off('The page-content capture did not run.');
+  const forms = (pc.forms ?? []) as FormCtx[];
+  const covered = forms.map((f) => { for (const c of COVERED) { const why = c.test(f); if (why) return { f, kind: c.kind, why }; } return null; }).filter((x): x is NonNullable<typeof x> => !!x);
+  if (!covered.length) return na(forms.length ? `None of the ${forms.length} form${forms.length === 1 ? '' : 's'} on this page is a legal, financial, data-deleting or test submission, so SC 3.3.4 does not apply.` : 'No form on this page, so SC 3.3.4 does not apply.');
+  const hits: DetectorHit[] = []; const ok: string[] = [];
+  for (const { f, kind, why } of covered) {
+    const box = f.fields.find((i) => i.type === 'checkbox' && /confirm|i (have )?(read|reviewed|checked)|i understand|is correct/i.test(i.label));
+    const nextStep = /^(continue|next|review)\b/i.test(f.submit.trim());
+    const text = (f.text ?? '').match(SAFEGUARD)?.[0];
+    if (box || nextStep || text) { ok.push(`“${f.submit}” (${kind}): ${box ? `confirm checkbox “${box.label}”` : nextStep ? 'the button goes to another step first' : `the form says “${text}”`}`); continue; }
+    hits.push(review(`“${f.submit}” commits ${kind} without a visible check or confirm step`, `This form looks like ${kind} (${why}). Avara never submits a form, so it cannot see whether a confirmation, review step or undo follows. Submit it once with test data and confirm one of those exists.`, [`form submit “${f.submit}”${f.action ? `, action ${f.action}` : ''}`, `covered because of the ${why}`, 'no confirm checkbox, review step or reversal wording found in the form']));
+  }
+  return hits.length ? ran(hits) : pass(`Each covered form shows a safeguard before it commits: ${ok.join('; ')}.`);
+}
+
+// ---- MOB-008 Navigation Accessibility (WAI-ARIA APG: disclosure navigation and modal dialog): the collapsed phone menu has a name, says whether it
+// is open (aria-expanded), opens with Enter, lets Tab reach its links, and closes with Escape with focus back on the button.
+function navigationAccessibility(out: ScanOutput): DetectorReport {
+  const v = vp(out, 'mobile'); if (!v || v.navMenu === undefined) return off('The phone menu check did not run on this scan (it was added after the scan was made).');
+  const m = v.navMenu; if (!m) return off('The phone menu check started but did not complete.');
+  if (!m.found) return na(m.why);
+  const at = `${m.selector} at ${v.width}px`; const who = m.name ? `“${m.name}” menu button` : 'The menu button';
+  const ev = [`${at}: aria-expanded ${m.expandedAttr ?? 'absent'}, ${m.target.w}×${m.target.h}px`, `Enter: ${m.focusable === false ? 'not pressed (the button cannot take focus)' : m.openedByKeyboard ? `opened (${m.linksBefore} → ${m.linksAfter} visible links)` : 'nothing opened'}${m.openedByClick !== null ? `; tap: ${m.openedByClick ? 'opened' : 'nothing opened'}` : ''}`];
+  const hits: DetectorHit[] = [];
+  if (!m.name) hits.push(fail('The phone menu button has no name', `${who} has no text or aria-label, so a screen reader announces only “button”.`, ev));
+  if (!m.openedByKeyboard && m.openedByClick) hits.push(fail('The phone menu opens with a tap but not with the keyboard', m.focusable === false ? `${who} opens when tapped, but it cannot take keyboard focus (it is not a button), so keyboard and switch users cannot reach the navigation.` : `${who} opened when tapped but not when focused and Enter was pressed, so keyboard and switch users cannot reach the navigation.`, ev));
+  if (!m.openedByKeyboard && m.openedByClick === false) hits.push(review('Avara could not open the phone menu', `${who} did not open with Enter or a tap. Open it by hand and confirm it works with the keyboard.`, ev));
+  const open = m.openedByKeyboard || !!m.openedByClick;
+  if (open && m.expandedAttr === null) hits.push(review('The phone menu button does not say whether the menu is open', `${who} has no aria-expanded, so a screen reader user is not told the menu opened. The APG disclosure pattern sets aria-expanded on the button.`, ev));
+  if (open && m.tabIntoMenu === false) hits.push(review('Tab does not reach the menu links after it opens', `After ${who} opened, four presses of Tab did not land on a link in the menu. The links may come late in the focus order.`, [...ev, 'Tab ×4 from the button: no menu link focused']));
+  if (open && m.escapeCloses === false) hits.push(review('Escape does not close the phone menu', `With the menu open, Escape left it open. Visitors using a keyboard expect Escape to close it.`, [...ev, 'Escape: still open']));
+  if (open && m.escapeCloses && m.focusReturned === false) hits.push(review('Focus is lost when the phone menu closes', `Escape closed the menu but focus did not return to ${who}.`, [...ev, 'Escape: closed, focus not on the button']));
+  return hits.length ? ran(hits) : pass(`${who} at ${v.width}px: named, aria-expanded ${m.expandedAttr}, opened with Enter, Tab reached a menu link, Escape closed it and returned focus.`);
+}
+
+// ---- PERF-003 Interaction to Next Paint (web.dev): good at 200 ms or less. Measured here with Event Timing on the real key presses and taps the
+// phone pass makes, on one unthrottled load. That is lab interaction latency, labelled as such; field INP (p75 of real visits) is not available,
+// and Total Blocking Time is never used in its place.
+function interactionLatency(out: ScanOutput): DetectorReport {
+  const v = vp(out, 'mobile'); if (!v || v.interaction === undefined) return off('Interaction timing was not recorded on this scan (it was added after the scan was made).');
+  const t = v.interaction; if (!t) return off('Interaction timing started but did not complete.');
+  if (!t.supported) return off('The browser did not report Event Timing, so no interaction latency was measured.');
+  if (!t.interactions) return off('No key press or tap was made on the phone pass, so there was nothing to time.');
+  const good = param('PERF-003', 'goodMs', 200);
+  const worst = t.worst ?? 0; const scope = `Lab, one load at ${v.width}px, unthrottled CPU, ${t.interactions} key presses and taps; not field INP (p75 of real visits).`;
+  const top = t.measured.slice(0, 3).map((x) => `${x.name} on ${x.target || 'the page'}: ${x.duration} ms`);
+  if (worst > good) return ran([fail(`An interaction took ${worst} ms to show a response`, `The slowest of ${t.interactions} interactions took ${worst} ms from input to the next frame, over the ${good} ms “good” limit for Interaction to Next Paint.`, [...top, scope])]);
+  return pass(`The slowest of ${t.interactions} interactions took ${worst >= 16 ? `${worst} ms` : 'under 16 ms'} (limit ${good} ms). ${scope}`);
+}
+
+// ---- UX-014 User Journey Continuity (Nielsen heuristic 3, user control and freedom: a clearly marked way out). After the main action is
+// activated at 390px: if it opened a page, browser Back must return to the start with the action there again; if it opened a dialog, Escape or a
+// visible close control must dismiss it. Revising entered data needs typing and submitting, which Avara does not do.
+function journeyContinuity(out: ScanOutput): DetectorReport {
+  const v = vp(out, 'mobile'); if (!v || v.journey === undefined) return off('The way-back check did not run on this scan (it was added after the scan was made).');
+  const j = v.journey; if (!j) return off(v.avara?.candidates.length ? 'The way-back check started but did not complete.' : 'No main action was found on the phone, so there was no journey to follow.');
+  if (!j.tested) return /changed nothing/.test(j.why ?? '') ? na(j.why!) : off(j.why ?? 'The main action was not followed.');
+  if (j.kind === 'page') {
+    if (!j.backReturns) return ran([fail('Back does not return to the page the visitor came from', `After the main action opened a new page, browser Back went to ${j.backUrl || 'a blank page'} instead of the starting page.`, j.steps)]);
+    if (j.actionAgain === false) return ran([review('After Back, the main action is not where it was', 'Back returned to the starting page, but the main action could not be found again. Check that the page restores its state.', j.steps)]);
+    return pass(j.steps.join(' '));
+  }
+  if (!j.escapeCloses && !j.closeControl) return ran([fail('The dialog that opens has no way out', 'The main action opens a dialog that Escape does not close and that has no visible close or cancel control, so a visitor who opened it by mistake is stuck.', j.steps)]);
+  if (!j.escapeCloses) return ran([review('Escape does not close the dialog', `The dialog has a “${j.closeControl}” control, but Escape leaves it open.`, j.steps)]);
+  return pass(j.steps.join(' '));
+}
+
 export function derivedReports(out: ScanOutput): Record<string, DetectorReport> {
   const pc = vp(out, 'desktop')?.pageContext as PageCtx | undefined; const vc = pc as VPC | undefined;
   return {
@@ -244,6 +328,7 @@ export function derivedReports(out: ScanOutput): Record<string, DetectorReport> 
     'conv/trial-visibility': trial(pc), 'conv/cta-consistency': ctaConsistency(pc), 'conv/field-count': fieldCount(pc),
     'ux/scannability': scannability(pc), 'design/visual-hierarchy': visualHierarchy(out, vc), 'design/spacing-rhythm': spacingRhythm(vc), 'ux/error-recovery': errorRecovery(out), 'ux/generic-error-message': genericErrorMessage(out), 'nav/fragment-target': fragmentTarget(out), 'a11y/reading-order': readingOrder(out), 'design/font-families': fontFamilies(out), 'conv/generic-primary-action': genericPrimaryAction(out), 'trust/unfinished-proof': unfinishedProof(vc), 'design/typography-hierarchy': typographyHierarchy(pc), 'design/cta-emphasis': ctaEmphasis(out, pc), 'design/component-consistency': componentConsistency(pc),
     'perf/image-optimization': perfImages(out), 'perf/font-optimization': perfFonts(out), 'perf/javascript-efficiency': perfJs(out), 'perf/css-efficiency': perfCss(out), 'perf/render-blocking': perfBlocking(out), 'perf/third-party': perfThirdParty(out),
+    'a11y/error-prevention': errorPrevention(out), 'mobile/navigation-accessibility': navigationAccessibility(out), 'perf/interaction-latency': interactionLatency(out), 'ux/journey-continuity': journeyContinuity(out),
   };
 }
 

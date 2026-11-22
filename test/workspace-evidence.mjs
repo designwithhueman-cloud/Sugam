@@ -45,13 +45,16 @@ check('UX-017 on the clean page says what it checked', /1 visible linked error m
 check('the new checks stay advisory: needs review, never a confirmed failure', ['UX-017', 'A11Y-003', 'A11Y-016'].every((r) => find(fr, r).result === 'needs_human_review'));
 await page.goto(`${base}/scans/${flagsId}`); await page.waitForTimeout(500); const html = await page.content();
 check('report page shows the saved evidence to the member', html.includes('Invalid input.') && html.includes('changes transform'));
-// Scoring, end to end on this stored scan: no production rule is score-eligible, so every surface says "Not scored" with the reason, never a number.
-check('review API: no overall score, and the note gives the eligibility reason', fr.overall.score === null && /score-eligible/.test(fr.overall.note), fr.overall.note);
-check('report page: "Not scored" with the reason, and no legacy number as the score', /Not scored|not scored/.test(html) && /score-eligible/.test(html));
+// Scoring, end to end on these stored scans: one result (lib/page-summary.ts) on the review API, the report page, the project page and quick
+// scans. A number always comes with its basis; without one, "not scored" comes with the reason.
+const ps = fr.pageSummary, cs = cr.pageSummary;
+check('review API: the page score and its basis, from the same policy as the report', !!ps && ps.policy === 'avara-score-1.0' && (ps.score === null ? !!ps.reason : ps.contributing >= 1) && fr.overall.score === ps.score, `${ps?.score} (${ps?.contributing} of ${ps?.scorable})`);
+check('report page: the same page score, or "not scored" with the reason', ps.score === null ? /not scored/i.test(html) : new RegExp(`Page score: ${ps.score}`).test(html.replace(/<[^>]+>/g, '')));
 await page.goto(base + proj); const pj = await page.locator('main').innerText();
-check('project page: the score reads "Not scored" with the reason', /(Avara score|Score)\s*Not scored/i.test(pj) && /score-eligible/.test(pj), pj.match(/Avara score[\s\S]{0,90}/i)?.[0].replace(/\s+/g, ' '));
-await page.goto(`${base}/app/${slug}/quick-scans`); const qs = await page.locator('main').innerHTML();
-check('quick scans: the Score column shows "Not scored", not the legacy number', !/<th[^>]*>Score<\/th>/.test(qs) || /Not scored/.test(qs));
+const known = [ps.score, cs?.score].filter((x) => x != null).map(String);
+check('project page: the Score card shows one of these scans’ page scores (its latest), never the legacy number', known.some((n) => new RegExp(`Score\\s*${n}\\b`).test(pj)) || /Score\s*Not scored/i.test(pj), pj.match(/Score[\s\S]{0,60}/)?.[0].replace(/\s+/g, ' '));
+await page.goto(`${base}/app/${slug}/quick-scans`); const qs = await page.locator('main').innerText();
+check('quick scans: the Score column shows page scores from the same policy', known.some((n) => qs.includes(n)) || /Not scored/.test(qs));
 // Category tabs: the per-category counts add up to the All total (worth-a-look items and observation-only categories included), and skipped
 // rules are listed with their saved reason instead of a bare "no issues".
 await page.goto(`${base}/scans/${flagsId}`); await page.waitForTimeout(500);

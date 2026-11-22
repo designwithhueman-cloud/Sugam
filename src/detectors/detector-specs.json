@@ -953,12 +953,14 @@
       "outcomes": {
         "pass": "Back, dismiss and revise return the visitor safely.",
         "fail": "A path loses input or traps the visitor.",
-        "couldNotVerify": "Path needs submission or sign-in: could not verify."
+        "couldNotVerify": "The main action submits a form, is not activated, or changes nothing: not run or not applicable. Revising entered data is not exercised."
       },
       "implementation": {
-        "status": "not-built",
-        "detectors": [],
-        "exercisedOnFixtures": false,
+        "status": "partial",
+        "detectors": [
+          "ux/journey-continuity"
+        ],
+        "exercisedOnFixtures": true,
         "engineEvaluator": "detector",
         "suggestedEvaluator": "detector"
       },
@@ -1401,9 +1403,11 @@
         "couldNotVerify": "No menu at this width: not applicable."
       },
       "implementation": {
-        "status": "not-built",
-        "detectors": [],
-        "exercisedOnFixtures": false,
+        "status": "partial",
+        "detectors": [
+          "mobile/navigation-accessibility"
+        ],
+        "exercisedOnFixtures": true,
         "engineEvaluator": "detector",
         "suggestedEvaluator": "detector"
       },
@@ -2216,13 +2220,15 @@
       ],
       "outcomes": {
         "pass": "Covered submissions can be reversed, checked or confirmed.",
-        "fail": "A covered submission has none of these.",
+        "fail": "Never a confirmed failure: Avara does not submit, so a covered form without a visible safeguard is needs-review.",
         "couldNotVerify": "Not covered by SC 3.3.4: not applicable."
       },
       "implementation": {
-        "status": "not-built",
-        "detectors": [],
-        "exercisedOnFixtures": false,
+        "status": "partial",
+        "detectors": [
+          "a11y/error-prevention"
+        ],
+        "exercisedOnFixtures": true,
         "engineEvaluator": "detector",
         "suggestedEvaluator": "llm"
       },
@@ -3819,14 +3825,16 @@
         "interaction, duration; for field: p75, device, window"
       ],
       "outcomes": {
-        "pass": "INP is 200 ms or less (field p75).",
-        "fail": "INP is over 200 ms.",
-        "couldNotVerify": "No field data: could not verify. Total Blocking Time is never substituted."
+        "pass": "The slowest measured lab interaction is 200 ms or less (labelled lab, not field p75).",
+        "fail": "A measured lab interaction took over 200 ms.",
+        "couldNotVerify": "No Event Timing or no interaction: could not verify. Field p75 (CrUX) is not collected. Total Blocking Time is never substituted."
       },
       "implementation": {
-        "status": "not-built",
-        "detectors": [],
-        "exercisedOnFixtures": false,
+        "status": "partial",
+        "detectors": [
+          "perf/interaction-latency"
+        ],
+        "exercisedOnFixtures": true,
         "engineEvaluator": "detector",
         "suggestedEvaluator": "llm"
       },

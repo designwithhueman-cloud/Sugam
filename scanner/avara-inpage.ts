@@ -26,7 +26,9 @@ export const FIND_ACTIONS = `function (goal) {
   ${CSS_PATH}
   const norm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\\s+/g, ' ').trim();
   const CTA = /(sign ?up|join|get started|get access|start|try|book|buy|subscribe|waitlist|wait list|demo|contact|download|register|request|claim|free|create account|schedule)/i;
-  const cands = [...document.querySelectorAll('a[href],button,[role=button],input[type=submit],input[type=button],summary')].filter((e) => !e.closest('[aria-hidden=true]') && label(e) && !e.disabled);
+  // Skip links ("Skip to content", pointing at an anchor on the same page) are hidden off-screen until focused by design: never the main action.
+  const skipLink = (e) => e.localName === 'a' && /^#./.test(e.getAttribute('href') || '') && /^skip\\b/i.test(label(e));
+  const cands = [...document.querySelectorAll('a[href],button,[role=button],input[type=submit],input[type=button],summary')].filter((e) => !e.closest('[aria-hidden=true]') && label(e) && !e.disabled && !skipLink(e));
   const g = goal ? norm(goal) : '';
   const out = [];
   for (const e of cands) {
@@ -146,8 +148,10 @@ export const PAGE_CONTEXT = `function () {
   for (let n = w.nextNode(); n && first.length < 1500; n = w.nextNode()) { const p = n.parentElement; if (!p || !t(n.nodeValue) || /^(SCRIPT|STYLE|NOSCRIPT)$/.test(p.tagName)) continue; const r = p.getBoundingClientRect(); if (vis(p) && r.top >= 0 && r.top < innerHeight) first += t(n.nodeValue) + ' '; }
   const ctas = [...document.querySelectorAll('button, a[role=button], input[type=submit], a.btn, a[class*=button], a[class*=cta], [class*=cta]')].filter(vis).slice(0, 20).map((e) => ({ text: label(e).slice(0, 80), tag: e.tagName.toLowerCase(), href: e.getAttribute('href') ? abs(e.getAttribute('href')) : null, inViewport: e.getBoundingClientRect().top < innerHeight, style: style(e) }));
   const forms = [...document.querySelectorAll('form')].slice(0, 6).map((f) => ({
-    fields: [...f.querySelectorAll('input, select, textarea')].filter((i) => i.type !== 'hidden').slice(0, 25).map((i) => ({ type: i.type || i.localName, label: t((i.labels && i.labels[0] && i.labels[0].innerText) || i.getAttribute('aria-label') || i.placeholder || '').slice(0, 60), required: i.required, name: i.name || null })),
+    fields: [...f.querySelectorAll('input, select, textarea')].filter((i) => i.type !== 'hidden').slice(0, 25).map((i) => ({ type: i.type || i.localName, label: t((i.labels && i.labels[0] && i.labels[0].innerText) || i.getAttribute('aria-label') || i.placeholder || '').slice(0, 60), required: i.required, name: i.name || null, autocomplete: (i.getAttribute('autocomplete') || '').slice(0, 40) || null, checked: i.type === 'checkbox' ? !!i.checked : undefined })),
     submit: label(f.querySelector('button[type=submit], input[type=submit], button') || document.body).slice(0, 60),
+    action: (f.getAttribute('action') || '').slice(0, 160) || null,
+    text: t(f.innerText).slice(0, 400),
   }));
   const all = [...document.querySelectorAll('a[href]')].filter(vis);
   const find = (re) => all.filter((a) => re.test(label(a) + ' ' + (a.getAttribute('href') || ''))).slice(0, 4).map((a) => ({ text: label(a).slice(0, 60), href: abs(a.getAttribute('href')) }));

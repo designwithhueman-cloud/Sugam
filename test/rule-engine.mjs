@@ -65,7 +65,7 @@ rev = await new RuleEngine(L5, null).review(ctxOf({ detectors: { 'color-contrast
 const a11y = rev.categories.find((c) => c.category === 'Accessibility'); const mob = rev.categories.find((c) => c.category === 'Mobile Responsiveness'); const perf = rev.categories.find((c) => c.category === 'Performance');
 check('Accessibility reads measurements: a failing detector gives an observed failure with its evidence', a11y.findings.find((f) => f.ruleId === 'A11Y-001').result === 'observed_failure' && a11y.findings.find((f) => f.ruleId === 'A11Y-001').evidence.length === 1);
 check('Mobile: a detector hit becomes a failure on its owner rule', mob.findings.find((f) => f.ruleId === 'MOB-013')?.result === 'observed_failure');
-check('Performance: a passing measurement passes; a measurement that did not run is "not run", not a pass', perf.findings.find((f) => f.ruleId === 'PERF-001')?.passed === true && !perf.findings.some((f) => f.ruleId === 'PERF-002') && perf.counts.not_run >= 1 && perf.counts.unimplemented >= 1);
+check('Performance: a passing measurement passes; a measurement that did not run is "not run", not a pass', perf.findings.find((f) => f.ruleId === 'PERF-001')?.passed === true && !perf.findings.some((f) => f.ruleId === 'PERF-002') && perf.counts.not_run >= 2 && perf.findings.every((f) => f.ruleId !== 'PERF-003'));
 // ---- findings schema + determinism ----
 const f = a11y.findings.find((x) => x.ruleId === 'A11Y-001'); const again = await new RuleEngine(L5, null).review(ctxOf({ detectors: { 'color-contrast': hit('confirmed_failure', 'Text is too faint on 3 elements.') } }));
 check('a finding has the required fields and a deterministic id', ['findingId', 'ruleId', 'category', 'title', 'severity', 'score', 'passed', 'confidence', 'evidence', 'businessImpact', 'userImpact', 'recommendation'].every((k) => f[k] !== undefined) && typeof f.confidence === 'number' && f.findingId === again.categories.find((c) => c.category === 'Accessibility').findings.find((x) => x.ruleId === 'A11Y-001').findingId);
@@ -111,4 +111,14 @@ check('pattern detection states only what the stored scans show: 5 of 6 low-Mobi
 const few = await detectPatterns({ low: 60, minSupport: 10 });
 check('with too few sites the same pattern is stored as emerging, and says so', few.find((p) => p.key === p1.key).status === 'emerging_observation' && /too few sites/.test(few.find((p) => p.key === p1.key).description));
 fs.rmSync(tmp, { recursive: true, force: true }); fs.rmSync(dbDir, { recursive: true, force: true });
+// A hybrid rule whose detector ran and passed, then judged by the model: the record keeps the detector as evidence beside the model (the
+// detector run is not lost from "executed checks" when AI also contributes).
+{
+  const { RuleLoader: RL } = await import('../src/engines/rule-engine/RuleLoader.ts');
+  const hy = await new RuleEngine(new RL(), stub((r) => ({ ruleId: r.ruleId, result: 'pass', observation: 'ok', evidence: [], confidence: 0.5 }))).review(ctxOf({ detectors: { 'trust/privacy-link': { ran: true, hits: [], passNote: 'Privacy link opens.' } } }));
+  const rec = hy.executions.find((x) => x.ruleId === 'TRUST-002');
+  check('hybrid rule decided by AI keeps its detector evidence: TRUST-002 records trust/privacy-link and the model', rec.method === 'ai_assisted' && rec.evidence.includes('trust/privacy-link') && rec.evidence.includes('model'), JSON.stringify(rec.evidence));
+  const off = await new RuleEngine(new RL(), null).review(ctxOf({ detectors: { 'trust/privacy-link': { ran: true, hits: [], passNote: 'Privacy link opens.' } } }));
+  check('…and with AI off the same measurement decides it alone', off.executions.find((x) => x.ruleId === 'TRUST-002').method === 'measured');
+}
 const failed = results.filter((x) => !x).length; console.log(failed ? `\n${failed} FAILED` : '\nAll passed'); process.exit(failed ? 1 : 0);

@@ -101,7 +101,7 @@ export function AvaraPanel({ report, readOnly = false, hideFirstFix = false }: {
                   {r.related.length > 0 && <><dt className="font-semibold">Also relevant</dt><dd className={wrap} data-testid="related">{r.related.map((x) => `${x.id} ${x.title}`).join(' · ')} <span className="text-neutral-700">(linked as evidence, not counted again)</span></dd></>}
                   <dt className="font-semibold">Categories</dt><dd>{r.categories.map((c) => CAT[c]).join(', ')}</dd>
                   {r.lenses.length > 0 && <><dt className="font-semibold">Heuristic lenses</dt><dd className={wrap} data-testid="lenses">{r.lenses.map((l) => `${l.lens} ${l.name}`).join(' · ')} <span className="text-neutral-700">(a lens adds observations, never a penalty)</span></dd></>}
-                  <dt className="font-semibold">Deductions</dt><dd className={wrap} data-testid="deductions"><b>{r.deductions.groups} repair group</b>, {r.deductions.points} points once scoring is enabled. {r.deductions.why}</dd>
+                  <dt className="font-semibold">Score effect</dt><dd className={wrap} data-testid="score-effect"><b>{r.scoring.admitted ? `Weight ${r.scoring.weight}` : 'Not scored'}</b>. {r.scoring.why}</dd>
                 </dl>)}
               <details className="mt-3 rounded-xl border border-black/15 p-3"><summary className="min-h-11 cursor-pointer text-base font-semibold">Why Avara thinks so ({members.length} finding{members.length === 1 ? '' : 's'})</summary>
                 <ul className="mt-3 space-y-3">{members.map((f) => <Finding key={f.id} f={f} />)}</ul></details>
@@ -121,7 +121,6 @@ export function AvaraPanel({ report, readOnly = false, hideFirstFix = false }: {
           <details data-testid="lib-human"><summary className="min-h-11 cursor-pointer font-semibold">Needs a person ({av.library.needsPerson.reviewTasks} review tasks, {av.library.needsPerson.personOnlyTopics} session topics)</summary><p className="mt-2 text-neutral-800">{humanSentence(av.library)} A model walkthrough alone cannot verify comprehension or conversion behaviour. {av.library.needsPerson.ids.join(', ')}.</p></details>
           <details data-testid="lib-sources"><summary className="min-h-11 cursor-pointer font-semibold">Sources awaiting verification ({av.library.unverifiedSources.length})</summary><ul className="mt-2 list-disc space-y-1 pl-5">{av.library.unverifiedSources.map((x) => <li key={x.key} className={wrap}>{x.name} ({x.topics} topics){x.url ? <> · <a className="underline" href={x.url} target="_blank" rel="noreferrer">link</a></> : ' · needs owner or design-system input'}</li>)}</ul><p className="mt-2 text-neutral-700">No exact passage has been verified yet, so no rule is score-eligible.</p></details>
         </div>
-        {av.library.advisoryCount > 0 && <p className="mt-2 text-base text-neutral-700">{av.library.advisoryCount} confirmed finding group{av.library.advisoryCount === 1 ? '' : 's'} shown above do not change a number: they stay advisory until their rule is score-eligible.</p>}
       </section>
       {(failed.length > 0 || av.coverage.length > 0) && (
         <section aria-labelledby="cov-h" className="rounded-[2rem] border border-black/10 bg-white p-5 sm:p-8">

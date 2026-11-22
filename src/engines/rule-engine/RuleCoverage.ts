@@ -47,7 +47,8 @@ export function recordsFromOutcomes(rules: Rule[], outcomes: Map<string, RuleOut
   return rules.map((r): RuleRecord => {
     const b = base(r); const o = outcomes.get(r.ruleId);
     if (!o) return { ...b, execution: 'unknown', reason: null, evidence: [], outcome: 'unknown', method: 'unknown', scope: 'none', origin: 'engine' };
-    const evidence = o.method === 'ai_assisted' ? ['model'] : o.method === 'human' ? [] : o.detectorsRan ?? [];
+    // An AI-decided hybrid rule keeps the detectors that ran before the model was asked: both are evidence that it ran.
+    const evidence = o.method === 'ai_assisted' ? [...(o.detectorsRan ?? []), 'model'] : o.method === 'human' ? [] : o.detectorsRan ?? [];
     if (DECIDED.includes(o.result)) {
       if (!evidence.length) return { ...b, execution: 'unknown', reason: null, evidence, outcome: 'unknown', method: o.method, scope: 'none', origin: 'engine' };
       const scope: Scope = o.method === 'rollup' ? 'summary' : o.method === 'measured' && !(r.mode === 'M' && specOf(r).type === 'detector') ? 'measurable_part' : 'full';

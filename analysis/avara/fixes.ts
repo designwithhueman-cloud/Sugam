@@ -9,6 +9,8 @@ export type FixContext = {
   causes: { kind: string; detail: string }[]; clippedBy?: string | null; cover?: { selector: string; position: string; text?: string } | null; width: number;
   perf?: { lcpElement?: { selector: string; snippet: string } | null; renderBlocking?: { url: string; wastedMs: number }[]; unsized?: { selector: string; snippet: string }[]; metric?: string; value?: number };
   workflow?: { reason: string; firstField?: string; outcome: string };
+  /** Sideways scrolling on phones: each width with the page width measured there, and the elements that extend past the screen. */
+  hscroll?: { widths: { width: number; pageWidth: number }[]; offenders: { selector: string; html: string }[] };
   /** Code evidence from the scan (scanner/code-evidence.ts): which short selectors match only the measured elements, the page's own @media
    *  rules for them, and the widths where the problem was seen and where the same action was measured clear. Without it, no CSS is given. */
   evidence?: { action?: CodeTarget | null; cover?: CodeTarget | null; clippedBy?: CodeTarget | null; seenAt: number[]; clearAt: number[] } | null;
@@ -46,6 +48,21 @@ function recipe(c: FixContext): Recipe {
   const kinds = c.causes.map((x) => x.kind);
   const actionVerify = `Rescan: Avara measures ${q} again ${at}, the width${ws.length > 1 ? 's' : ''} it was found at, on the page as it first loads, and marks it Fixed only when it is fully on screen, not covered and large enough to tap.`;
   const tap = `On a phone, tap ${q}: it responds.`;
+  if (c.ruleId === 'mobile/horizontal-scroll' && c.hscroll) {
+    const h = c.hscroll; const ws = h.widths.map((x) => x.width); const off = h.offenders[0];
+    const who = off ? describeElement({ html: off.html, selector: off.selector, width: ws[0] }).phrase.replace(/, on a phone \(\d+px wide\)$/, '') : null;
+    const more = h.offenders.length > 1 ? `, and ${h.offenders.length - 1} more element${h.offenders.length === 2 ? '' : 's'}` : '';
+    return {
+      title: `The page scrolls sideways at ${ws.join('px and ')}px wide`, language: 'css', before: off ? compact(off.html) : '',
+      element: `${who ? `${who}${more}` : 'The page'}, on a phone (${ws.join('px and ')}px wide). ${h.widths.map((x, i) => `${i ? 'at' : 'At'} ${x.width}px the page is ${x.pageWidth}px wide`).join('; ')}${who ? ', and this element extends past the right edge of the screen' : ''}.`,
+      change: `${who ? 'Stop this element from being wider than the screen' : 'Find the element that is wider than the screen and stop it'}: remove its fixed width (or min-width), or let it shrink with max-width: 100%. For a wide table or code block, put it in a wrapper that scrolls on its own (overflow-x: auto) instead of the whole page. Change nothing else.`,
+      code: null, after: '', note: 'No paste-ready patch here: the right width depends on the layout. Follow the Change text, which names the property to edit.',
+      verify: `Rescan: Avara measures the page width again at ${ws.join('px and ')}px wide on the page as it first loads, and marks it Fixed only when the page is no wider than the screen.`,
+      manual: 'On a phone, swipe sideways anywhere on the page: nothing moves.',
+      framer: ['Open the phone breakpoint.', `Select ${who ?? 'the element that sticks out past the right edge'}.`, 'Set its width to Fill (or a percentage) instead of a fixed number of pixels.', 'Preview at 390px and 320px: no sideways scroll.'],
+      webflow: ['Switch to the mobile portrait breakpoint.', `Select ${who ?? 'the element that sticks out past the right edge'}.`, 'In Style, clear its fixed Width / Min W and set Max W to 100%.', 'Preview at 390px and 320px: no sideways scroll.'],
+    };
+  }
   if (c.ruleId.startsWith('mobile/') || c.ruleId === 'workflow/action-cannot-be-activated') {
     if (kinds.includes('covered') && c.cover) {
       const g = gateCss(c, 'cover', 'position', /^(fixed|sticky)$/i, 'position: static;');

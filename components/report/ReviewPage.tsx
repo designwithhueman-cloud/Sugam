@@ -34,7 +34,7 @@ function Technical({ item }: { item: Item }) {
           {item.trace.related.length > 0 && <><dt className="font-semibold">Also relevant</dt><dd className={wrap} data-testid="related">{item.trace.related.map((x) => `${x.id} ${x.title}`).join(' · ')} <span className="text-neutral-700">(linked as evidence, not counted again)</span></dd></>}
           <dt className="font-semibold">Categories</dt><dd>{item.categories.join(', ')}</dd>
           {item.trace.lenses.length > 0 && <><dt className="font-semibold">Heuristic lenses</dt><dd className={wrap} data-testid="lenses">{item.trace.lenses.map((l) => `${l.lens} ${l.name}`).join(' · ')} <span className="text-neutral-700">(a lens adds observations, never a penalty)</span></dd></>}
-          <dt className="font-semibold">Deductions</dt><dd className={wrap} data-testid="deductions"><b>{item.trace.deductions.groups} repair group</b>, {item.trace.deductions.points} points once scoring is enabled. {item.trace.deductions.why}</dd>
+          <dt className="font-semibold">Score effect</dt><dd className={wrap} data-testid="score-effect"><b>{item.trace.scoring.admitted ? `Weight ${item.trace.scoring.weight}` : 'Not scored'}</b>. {item.trace.scoring.why}</dd>
         </dl>)}
       {item.members.length > 0 ? <ul className="mt-3 space-y-3">{item.members.map((f) => <Finding key={f.id} f={f} />)}</ul>
         : <div className="mt-3 space-y-2 text-sm text-neutral-800">{nonEmpty(item.evidence).slice(0, 4).map((e, i) => <pre key={i} tabIndex={0} role="region" aria-label="Element" className={`max-h-40 overflow-y-auto whitespace-pre-wrap rounded-xl bg-[#f6f5f1] p-3 font-mono text-xs ${wrap}`}>{e}</pre>)}{item.source && <p>Source: {item.source}. The exact passage has not been verified yet.</p>}</div>}
@@ -119,7 +119,7 @@ export function ReviewPage({ report, access, mode = 'owner' }: { report: Report;
           </section>
         )}
 
-        <ReviewBoard board={v.board} domain={v.domain} locked={!!report.locked} primary={
+        <ReviewBoard board={v.board} domain={v.domain} locked={!!report.locked} summary={report.pageSummary ?? null} primary={
           p ? (
           <section aria-labelledby="first-h" className="rounded-[1.75rem] bg-[#f3fbd9] p-5 ring-1 ring-black/10 sm:p-8" data-testid="primary">
             <div className="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] md:gap-10">

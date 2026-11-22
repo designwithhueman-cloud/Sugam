@@ -5,7 +5,7 @@ import { eq } from 'drizzle-orm';
 import { getDb, schema } from '../db/index.ts';
 import { ruleLoader } from '../../src/engines/rule-engine/RuleLoader.ts';
 import { recordsFromHistory, summarize, bucketOf, type CoverageSummary, type RuleRecord } from '../../src/engines/rule-engine/RuleCoverage.ts';
-import { DEFAULT_PROFILE, scoreGroups, type ScoredGroup, type ScoreResult } from './scoring.ts';
+import { DEFAULT_PROFILE, scoreRecords, type ScoreResult } from './scoring.ts';
 import { canonicalFor, type CatCode } from './catalog.ts';
 
 export type ScanCoverage = {
@@ -36,18 +36,14 @@ export async function loadRecords(scanId: string): Promise<{ records: RuleRecord
 export function buildCoverage(loaded: NonNullable<Awaited<ReturnType<typeof loadRecords>>>, fs: Finding[], repairGroups: number): ScanCoverage {
   const { records, snapshot, saved } = loaded;
   const summary = summarize(records, snapshot);
-  const ran = new Set(records.filter((r) => r.execution === 'ran' && r.evidence.length).map((r) => r.ruleId));
-  const eligible = new Map(records.map((r) => [r.ruleId, r.scoreEligible]));
-  // Strict policy, the only one used anywhere: a repair group deducts only when confirmed and its owning rule is score-eligible; a category is scored
-  // only when every required rule has saved execution evidence; the overall number is withheld otherwise.
-  const groups: ScoredGroup[] = [...new Map(fs.filter((f) => f.bucket === 'confirmed_failure').map((f) => [f.repairKey, f])).values()].map((f) => {
-    const owner = canonicalFor(f.ruleId) ?? f.ruleId;
-    return { groupId: f.repairKey, ownerRuleId: owner, category: f.category as CatCode, severity: f.severity === 'critical' ? 'critical' : f.severity === 'serious' ? 'major' : 'minor', confirmed: true, scoreEligible: eligible.get(owner) ?? false, advisory: false, blocksMainTask: f.goalImpact === 'blocks' };
-  });
-  // Eligibility comes from the scan's own rule snapshot (records), so a later change to the library never rescores an old scan.
-  const strict = scoreGroups(groups, ran, DEFAULT_PROFILE, new Set(records.filter((r) => r.scoreEligible).map((r) => r.ruleId)));
+  // Policy avara-score-1.0 (lib/avara/scoring.ts), the only score anywhere. Eligibility comes from the scan's own rule snapshot (records), so a
+  // later admission never rescores an old scan. A record without saved execution evidence is treated as not run.
+  const confirmed = [...new Map(fs.filter((f) => f.bucket === 'confirmed_failure').map((f) => [f.repairKey, f])).values()];
+  const blocker = confirmed.find((f) => f.goalImpact === 'blocks');
+  const strict = scoreRecords(records.map((r) => (r.execution === 'ran' && !r.evidence.length ? { ...r, execution: 'unknown' } : r)), DEFAULT_PROFILE,
+    blocker ? `A confirmed blocker on the main task (${canonicalFor(blocker.ruleId) ?? blocker.ruleId}) comes before any average.` : null);
   const review = fs.filter((f) => f.bucket === 'needs_review');
-  const human = { ...summary.human, reviewFindings: review.length, reviewRepairs: new Set(review.map((f) => f.repairKey)).size, confirmedRepairs: groups.length, repairGroups };
+  const human = { ...summary.human, reviewFindings: review.length, reviewRepairs: new Set(review.map((f) => f.repairKey)).size, confirmedRepairs: confirmed.length, repairGroups };
   const cannotProve = saved ? [] : [
     `${summary.totals.buckets.unknown} of ${records.length} rules have no saved per-rule result. This scan stored only rules that produced a finding, so whether the others were skipped, not applicable, or waiting for AI cannot be recovered.`,
     'The rule definitions used at scan time were not saved per scan; records use today\'s rule library, which matches the scan\'s per-category rule counts but may differ in wording or detectors.',

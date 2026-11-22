@@ -14,5 +14,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (!((await canViewScan(user, id)) || (await isClaimed(id)))) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   const report = await loadReport(id); const review = report?.review ?? null;
   // The launch checks travel with the review for paid plans only; loadReport already returns null for them on the free plan.
-  return review ? NextResponse.json({ ...review, launch: report?.launch ?? null }) : NextResponse.json({ error: 'no_review', message: 'This scan has no rule review.' }, { status: 404 });
+  // pageSummary is the same object the report page renders (score, nine categories, totals, first fix); it is identical on Free and Paid.
+  // Fixes and findings are already redacted by plan in loadReport.
+  const av = report?.avara;
+  const extra = { pageSummary: report?.pageSummary ?? null, locked: !!report?.locked, url: report?.finalUrl || report?.url,
+    recommendations: av?.recommendations.map((r) => ({ id: r.id, rank: r.rank, title: r.title, fixLocked: r.fixLocked, fixes: r.fixes })) ?? [],
+    findings: av?.findings.map((f) => ({ id: f.id, ruleId: f.ruleId, bucket: f.bucket, category: f.category, viewports: f.evidence ? [...new Set(f.evidence.map((e) => e.viewport).filter(Boolean))] : null })) ?? [] };
+  return review ? NextResponse.json({ ...review, ...extra, launch: report?.launch ?? null }) : NextResponse.json({ error: 'no_review', message: 'This scan has no rule review.' }, { status: 404 });
 }

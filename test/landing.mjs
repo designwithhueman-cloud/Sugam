@@ -223,7 +223,7 @@ async function submitUrl(page, label, viaKeyboard) {
   await page.goto(home); await page.fill('#hero-url', FIXTURE); await page.getByRole('button', { name: /Scan my page free/ }).first().click(); await page.waitForURL('**/scans/**');
   await page.waitForFunction(() => document.querySelector('[data-testid=primary]'), null, { timeout: 90000 });
   const t = await text(page, 'main');
-  check('result page uses the Sunbeam frame, leads with one finding, and shows no score', (await page.locator('.sunbeam header').count()) >= 1 && /page review/i.test(t) && !/Sugam score|Avara score|out of 100/i.test(t));
+  check('result page uses the Sunbeam frame, leads with one finding, and shows the same page score as a paid report (or why not), never a branded score', (await page.locator('.sunbeam header').count()) >= 1 && /page review/i.test(t) && !/Sugam score|Avara score/i.test(t) && /Page score: (\d+\s*\/100|not scored)/.test(t));
   check('the first finding is in plain language', /Buttons that have no name|Images without a text description|Accessibility attributes set to invalid values|Text that is hard to read/.test(await page.getByTestId('headline').innerText()));
   await page.getByTestId('see-fix').click(); await page.waitForTimeout(200); const t2 = await text(page, 'main');
   check('one finding is fully unlocked on demand: a prompt with a Copy button and how to check it, with the elements under Technical details', t2.includes('Technical details') && t2.includes('Paste this into') && t2.includes('Copy prompt') && t2.includes('How to check it') && (await page.getByTestId('technical').first().evaluate((d) => d.textContent.includes('Who is affected'))));

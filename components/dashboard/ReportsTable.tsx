@@ -115,6 +115,7 @@ export function ReportsTable({ data, projectBase, projectId, decisions, locked =
           {canShare && <button type="button" className={btnCls} onClick={() => share(true)} disabled={!filtered}><Link2 aria-hidden className="size-4" />Share filtered report</button>}
           {canShare && <button type="button" className={btnCls} onClick={() => share(false)}><Share2 aria-hidden className="size-4" />Share full report</button>}
           <a className={btnCls} href={`/api/scans/${r.id}/export?format=csv`}><Download aria-hidden className="size-4" />Download issues CSV</a>
+          <a className={btnCls} href={`/api/scans/${r.id}/export?format=summary`}><Download aria-hidden className="size-4" />Score summary CSV</a>
           <a className={btnCls} href={`/api/scans/${r.id}/export?format=sarif`} title="SARIF 2.1.0 for code-scanning tools"><Download aria-hidden className="size-4" />SARIF</a>
         </div>
         )}

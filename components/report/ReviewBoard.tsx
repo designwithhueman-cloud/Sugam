@@ -6,6 +6,7 @@ import * as React from 'react';
 import { MapPin } from 'lucide-react';
 import type { Board, Level } from '@/lib/review-view.ts';
 import type { ViewportId } from '@/lib/report-types.ts';
+import type { PageSummary } from '@/lib/page-summary.ts';
 import { reasonLabel, remedyFor } from '@/lib/coverage-copy.ts';
 
 export type BoardItem = {
@@ -220,7 +221,38 @@ function Preview({ shots, items, activeId, onPick, locked }: { shots: Shot[]; it
   );
 }
 
-export function ReviewBoard({ board, primary, lead, items, shots, locked, domain }: { board: Board; primary: React.ReactNode; lead: BoardItem | null; items: BoardItem[]; shots: Shot[]; locked: boolean; domain: string }) {
+const STATUS: Record<string, string> = { insufficient: 'Insufficient coverage', observation: 'Observation only', not_applicable: 'Not applicable', unknown: 'Not reviewed' };
+/** All nine categories by confirmed issues, highest first: score or scoring status, issues, and how many admitted rules were scored here. */
+function CategorySummary({ summary, onPick }: { summary: PageSummary; onPick: (boardLabel: string) => void }) {
+  return (
+    <section aria-labelledby="catsum-h" className="mt-10" data-testid="category-summary">
+      <h2 id="catsum-h" className="text-3xl font-semibold tracking-tight text-ink">Categories by confirmed issues</h2>
+      <p className="mt-1 max-w-3xl text-base text-neutral-700">Highest first. A score appears only where enough admitted rules were checked on this page; otherwise the reason is given.</p>
+      <div aria-hidden className="mt-5 hidden grid-cols-[2rem_minmax(0,1fr)_8rem_7rem_7rem] gap-x-3 px-5 pb-2 text-sm font-semibold uppercase tracking-[0.1em] text-neutral-600 sm:grid"><span /><span>Category</span><span className="text-right">Score</span><span className="text-right">Issues</span><span className="text-right">Scored rules</span></div>
+      <ol className="mt-2 divide-y divide-black/10 overflow-hidden rounded-[1.5rem] bg-white ring-1 ring-black/10 sm:mt-0">
+        {summary.categories.map((c, i) => (
+          <li key={c.code} className={`grid grid-cols-[2rem_minmax(0,1fr)] gap-x-3 gap-y-2 p-4 sm:grid-cols-[2rem_minmax(0,1fr)_8rem_7rem_7rem] sm:items-center sm:p-5 ${c.firstFix ? 'bg-[#f3fbd9]' : ''}`} data-testid="catsum-row" data-code={c.code}>
+            <span aria-hidden className="pt-0.5 text-lg font-semibold text-neutral-500">{i + 1}</span>
+            <div className="min-w-0">
+              <p className="text-lg font-semibold text-ink">{c.label}</p>
+              {c.status !== 'scored' && <p className="text-sm text-neutral-700 [overflow-wrap:anywhere]" data-testid="catsum-reason">{c.note}</p>}
+              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-base">
+                {c.issues > 0 && <button type="button" onClick={() => onPick(c.boardLabel)} className="font-semibold text-[#5b2fd0] underline underline-offset-4 hover:text-[#432099]">Show {c.label} issues</button>}
+                {c.firstFix && <a href="#first-h" className="font-semibold text-[#3b5b00] underline underline-offset-4" data-testid="catsum-first">Fix this first is in this category ↑</a>}
+              </div>
+            </div>
+            <dl className="col-span-2 grid grid-cols-3 gap-2 sm:contents">
+              <div className="sm:text-right"><dt className="text-sm text-neutral-600 sm:sr-only">Score</dt><dd className="text-lg font-semibold text-ink" data-testid="catsum-score">{c.score != null ? <>{c.score}<span className="text-neutral-500">/100</span></> : <span className="text-base text-neutral-700">{STATUS[c.status]}</span>}</dd></div>
+              <div className="sm:text-right"><dt className="text-sm text-neutral-600 sm:sr-only">Confirmed issues</dt><dd className="text-lg font-semibold text-ink" data-testid="catsum-issues">{c.issues}<span className="hidden text-sm font-normal text-neutral-600 sm:inline"> issue{c.issues === 1 ? '' : 's'}</span></dd></div>
+              <div className="sm:text-right"><dt className="text-sm text-neutral-600 sm:sr-only">Scored rules</dt><dd className="text-lg font-semibold text-ink" data-testid="catsum-rules">{c.scoredRules}<span className="hidden text-sm font-normal text-neutral-600 sm:inline"> scored rule{c.scoredRules === 1 ? '' : 's'}</span></dd></div>
+            </dl>
+          </li>))}
+      </ol>
+    </section>
+  );
+}
+
+export function ReviewBoard({ board, primary, lead, items, shots, locked, domain, summary }: { board: Board; primary: React.ReactNode; lead: BoardItem | null; items: BoardItem[]; shots: Shot[]; locked: boolean; domain: string; summary?: PageSummary | null }) {
   const [cat, setCat] = React.useState<string | null>(null); const [lvl, setLvl] = React.useState<Level | null>(null); const [activeId, setActive] = React.useState<string | null>(null);
   const shown = items.filter((i) => (!cat || i.categories.includes(cat)) && (!lvl || i.level === lvl));
   const leadShown = lead && (!cat || lead.categories.includes(cat)) && (!lvl || lead.level === lvl) ? lead : null; const total = shown.length + (leadShown ? 1 : 0);
@@ -245,11 +277,17 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
         <span aria-hidden className="pointer-events-none absolute -right-16 -top-20 size-72 rounded-full bg-[#d9f56e]/60 blur-3xl" />
         <span aria-hidden className="pointer-events-none absolute -bottom-24 -left-10 size-72 rounded-full bg-[#5b2fd0]/10 blur-3xl" />
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
-          <Ring score={ov?.score ?? null} />
+          <Ring score={summary ? summary.score : ov?.score ?? null} />
           <div className="min-w-0 flex-1">
-            <h1 id="score-h" className="text-balance text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">{ov?.score == null ? `Review of ${domain}` : <>Launch readiness: <span className={band(ov.score).t}>{ov.score}</span></>}</h1>
+            <h1 id="score-h" className="text-balance text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">{summary ? (summary.score == null ? <>Page score: <span className="text-neutral-600">not scored</span></> : <>Page score: <span className={band(summary.score).t}>{summary.score}</span><span className="text-neutral-500">/100</span></>) : ov?.score == null ? `Review of ${domain}` : <>Launch readiness: <span className={band(ov.score).t}>{ov.score}</span></>}</h1>
             <p className="mt-2 flex flex-wrap items-center gap-2 text-lg font-semibold text-ink"><span data-testid="verdict">{verdict}</span>{ov?.score != null && ov.status !== 'final' && <span className="rounded-full bg-[#efe9ff] px-3 py-0.5 text-sm text-[#432099]">Provisional</span>}</p>
-            <p className="mt-1 max-w-2xl text-base text-neutral-700" data-testid="score-status">{!ov ? 'No score could be calculated for this scan.' : ov.score != null ? `Every required check ran. ${ov.coveragePct}% of all checks reached a decision.` : `No score yet: ${ov.assessed} of ${ov.total} categories had every required check run. ${ov.why.join(' ')}`}</p>
+            <p className="mt-1 max-w-2xl text-base text-neutral-700" data-testid="score-status">{summary ? (summary.score != null ? `Based on ${summary.contributing} of ${summary.scorable} scored categories; the others have insufficient coverage on this page. Differentiation is observation only.` : summary.reason) : !ov ? 'No score could be calculated for this scan.' : ov.score != null ? `Every required check ran. ${ov.coveragePct}% of all checks reached a decision.` : `No score yet: ${ov.assessed} of ${ov.total} categories had every required check run. ${ov.why.join(' ')}`}</p>
+            {summary && <dl className="mt-4 grid max-w-xl grid-cols-3 gap-2" data-testid="page-totals">
+              <div className="rounded-2xl bg-[#fde7e1] px-4 py-3"><dt className="text-sm font-semibold text-[#7a1f0b]">Confirmed issues</dt><dd className="text-3xl font-semibold leading-tight text-ink" data-testid="total-issues">{summary.issues}</dd></div>
+              <div className="rounded-2xl bg-[#efe9ff] px-4 py-3"><dt className="text-sm font-semibold text-[#432099]">Fixes</dt><dd className="text-3xl font-semibold leading-tight text-ink" data-testid="total-fixes">{summary.fixes}</dd></div>
+              <div className="rounded-2xl bg-[#f1f0ec] px-4 py-3"><dt className="text-sm font-semibold text-neutral-700">To review</dt><dd className="text-3xl font-semibold leading-tight text-ink">{summary.observations}</dd></div>
+            </dl>}
+            {summary && summary.fixes !== summary.issues && <p className="mt-2 text-sm text-neutral-700">{summary.issues} confirmed issue{summary.issues === 1 ? '' : 's'}, grouped into {summary.fixes} fix{summary.fixes === 1 ? '' : 'es'}: one change can resolve several.</p>}
             {t.critical + t.high + t.medium + t.review > 0 && <div aria-hidden className="mt-4 flex h-3 max-w-xl gap-0.5 overflow-hidden rounded-full">{(['critical', 'high', 'medium', 'review'] as Level[]).filter((k) => t[k] > 0).map((k) => <span key={k} className="h-full" style={{ flexGrow: t[k], background: LEVELS[k].pin }} />)}</div>}
             <ul className="mt-4 flex flex-wrap gap-2" aria-label="Issues by severity">
               {(['critical', 'high', 'medium', 'review'] as Level[]).map((k) => (
@@ -261,6 +299,8 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
       </section>
 
       <div className="mt-6">{primary}</div>
+
+      {summary && <CategorySummary summary={summary} onPick={(label) => { setCat(label); document.getElementById('issues-h')?.scrollIntoView({ block: 'start' }); }} />}
 
       <section aria-labelledby="issues-h" className="mt-12" data-testid="others">
         <div className="flex flex-wrap items-end justify-between gap-3">

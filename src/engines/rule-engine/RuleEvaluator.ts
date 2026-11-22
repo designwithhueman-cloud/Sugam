@@ -34,6 +34,8 @@ export abstract class CategoryEvaluator {
 
   async evaluate(ctx: WebsiteContext, rules: Rule[], llm: LlmClient | null): Promise<{ outcomes: RuleOutcome[]; judged: number; aiNote?: string }> {
     const outcomes: RuleOutcome[] = []; const forAi: Rule[] = []; let judged = 0; let aiNote: string | undefined;
+    // A hybrid rule's detectors may have run before the model is asked; their evidence stays on the outcome the model decides.
+    const measured = new Map<string, RuleOutcome>();
     for (const r of rules) {
       const spec = specOf(r);
       if (spec.type === 'rollup') continue;                                        // resolved later, with zero weight
@@ -48,6 +50,7 @@ export abstract class CategoryEvaluator {
       // Hybrid rule whose measurement did not run, with no model: keep the detector's own skip reason (missing input, analyzer error). Filing it
       // under "AI unavailable" would hide that the implemented detector itself was skipped.
       if (first && !llm && (first.result === 'not_run' || first.result === 'unimplemented')) { outcomes.push({ ...first, observation: `${first.observation} ${ctx.aiPending ? AI_PENDING_NOTE : aiOffNote()}` }); continue; }
+      if (first?.detectorsRan?.length) measured.set(r.ruleId, first);
       forAi.push(r);
     }
     if (forAi.length) {
@@ -63,7 +66,8 @@ export abstract class CategoryEvaluator {
               if (!v) { outcomes.push(this.out(r, 'inconclusive', 'ai_assisted', 'The model returned no verdict for this rule.', [], 0.3)); continue; }
               // An unanswered call (rate limit, overload, refusal) is not a judgement: the rule did not run, and says why.
               if (v.undecided) { const why = v.observation.replace(/^Not decided: /, 'The model gave no answer: ').replace(/ This says nothing about the page\.$/, ''); aiNote ??= why; outcomes.push(this.measuredOr(r, ctx, why) ?? { ...this.out(r, 'not_run', 'none', `${why}. This says nothing about the page.`, [], 0), skip: 'ai_no_answer' }); continue; }
-              judged++; outcomes.push(this.fromVerdict(r, v, haystack));
+              judged++; const o = this.fromVerdict(r, v, haystack); const m = measured.get(r.ruleId);
+              outcomes.push(m ? { ...o, detectorsRan: m.detectorsRan, observation: `${o.observation} Measured part: ${m.observation}` } : o);
             }
           } catch (e) { aiNote = `The model call failed (${(e as Error).message.split('\n')[0].slice(0, 100)}).`; for (const r of chunk) outcomes.push(this.measuredOr(r, ctx, aiNote) ?? { ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: 'ai_unavailable' }); }
         }

@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 // Avara Launch Scanner integration, offline: all sixteen entries map to a real Avara rule once, every row keeps rule version, viewport, page
 // state, target, evidence and outcome, a missing input keeps its specific reason, the 320px hit sample attaches to the existing main-action
 // repair (never a new finding), and nothing is weighted. Uses the vendored pack's own evaluators. Run: node --experimental-strip-types test/launch-pack.mjs
@@ -14,7 +15,7 @@ check('the pack’s A11Y-003 (button-name) is owned by A11Y-015, which lists axe
 check('the pack’s PERF-004 (lazy LCP image) is owned by PERF-001, which lists perf/lcp-image-lazy', entryFor({ ruleId: 'PERF-004', detectorId: 'launch/lcp-image' }).hostRuleId === 'PERF-001' && rules.get('PERF-001').evaluator.detectors.includes('perf/lcp-image-lazy'));
 check('every decision is reused, improved, added or blocked, and blocked ones say what input they need', LAUNCH_ENTRIES.every((e) => ['reused', 'improved', 'added', 'blocked'].includes(e.decision)) && LAUNCH_ENTRIES.filter((e) => e.decision === 'blocked').every((e) => e.needs));
 check('DIFF-010 is untouched: still a rollup of DIFF-001 to DIFF-009', rules.get('DIFF-010').evaluator.type === 'rollup' && rules.get('DIFF-010').evaluator.rollsUp.length === 9);
-check('the touched host rules stay zero-weight where they were and never score-eligible', ['DIFF-007', 'DIFF-009'].every((id) => rules.get(id).weight === 0) && LAUNCH_ENTRIES.every((e) => rules.get(e.hostRuleId).scoreEligible === false));
+check('the touched host rules stay zero-weight where they were, and the pack never makes a rule score-eligible (only a recorded admission does)', ['DIFF-007', 'DIFF-009'].every((id) => rules.get(id).weight === 0) && LAUNCH_ENTRIES.every((e) => rules.get(e.hostRuleId).scoreEligible === JSON.parse(fs.readFileSync('src/rules/_admissions.json', 'utf8')).rules.some((a) => a.ruleId === e.hostRuleId)));
 
 // A capture like the scanner's: a covered phone action, one unnamed button, a clicked-here CTA; nothing owner-supplied.
 const action = (pts) => ({ selector: '#book', text: 'Book a call', points: 9, accessiblePoints: pts, language: 'en' });

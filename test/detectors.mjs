@@ -13,7 +13,7 @@ const state = (r) => !r ? 'missing' : !r.ran ? 'not-run' : r.notApplicable ? 'n/
 // ---- 1. wiring ----
 const derivedIds = Object.keys(derivedReports({ viewports: [], perf: null, analyzers: {} }));
 check('77 rules now name a detector, and every detector id belongs to exactly one rule', rules.filter((r) => r.evaluator?.detectors?.length).length >= 77 && rules.flatMap((r) => r.evaluator?.detectors ?? []).length === ownerOf.size);
-check('every derived detector is named by a rule, and the fixed list of 58 derived detectors is complete', derivedIds.length === 58 && derivedIds.every((d) => ownerOf.has(d)), derivedIds.filter((d) => !ownerOf.has(d)).join(','));
+check('every derived detector is named by a rule, and the fixed list of 62 derived detectors is complete (58 before the four continuity detectors)', derivedIds.length === 62 && derivedIds.every((d) => ownerOf.has(d)), derivedIds.filter((d) => !ownerOf.has(d)).join(','));
 
 // ---- 2. a detector with nothing to read says "did not run", never "pass" ----
 const empty = derivedReports({ viewports: [], perf: null, analyzers: {} });

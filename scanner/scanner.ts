@@ -24,6 +24,7 @@ export const VIEWPORT_STAGES = ['loaded', 'action', 'screenshots', 'rules', 'key
 export type ViewportStage = typeof VIEWPORT_STAGES[number];
 export type ScanStages = { desktop: ViewportStage[]; mobile: ViewportStage[]; performance?: 'running' | 'done' | 'skipped' };
 export type EarlyBlocker = { viewport: 'mobile'; width: number; height: number; candidate: Candidate; measurement: Measurement; classification: Classification; shot: Buffer };
+import { navMenu as probeNavMenu, startInteractionTiming, readInteractionTiming, journeyAfterAction, openDialogs, type NavMenu, type InteractionTiming, type Journey } from './continuity.ts';
 import { PAGE_CONTEXT, MOBILE_PROBE, TEXT_RESIZE, STRUCTURE_CONTEXT, VALIDATION_PROBE, FRAGMENT_PROBE, SIGNALS_PROBE, HERO_LAYOUT } from './avara-inpage.ts';
 import { runLighthouse, type PerfResult } from './perf.ts';
 import { stripSecrets } from '../lib/net/url-privacy.ts';
@@ -82,6 +83,7 @@ export type ViewportResult = {
   nameChecks?: Record<string, NameCheck>;   // aria-label removal tested on a temporary copy (scanner/name-check.ts)
   stable?: Record<string, string | null>;   // flagged element selector -> a short selector that matches only it, in the captured state (scanner/code-evidence.ts)
   launch?: LaunchResult | null;   // the Avara Launch Scanner rows for this viewport (scanner/launch.ts); never scored
+  navMenu?: NavMenu | null; interaction?: InteractionTiming | null; journey?: Journey | null;   // phone only (scanner/continuity.ts)
 };
 export type ScanOutput = {
   url: string; finalUrl: string; title: string; standard: StandardId;
@@ -173,6 +175,9 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
       throw new ScanError('http_error', `The page answered with HTTP ${st}.${hint}`);
     }
     await settle(page); onStage?.('loaded');
+    // The address the page landed on, before anything is clicked: the report names it and Lighthouse measures it (the workflow check later
+    // activates the main action, which can navigate away).
+    const landedUrl = stripSecrets(page.url()).toString();
 
     // Measure the main action first, on the page exactly as a visitor first sees it: Tab and clicks would scroll hidden containers and hide the problem.
     let avara: ActionProbe | null = null; let avaraError: string | undefined;
@@ -237,7 +242,14 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     try { const ev = (await page.evaluate(`(${CODE_EVIDENCE})(${JSON.stringify({ targets: [...selectors].slice(0, 200).map((sel) => ({ key: sel, selector: sel, props: [] })) })})`)) as Record<string, CodeEvidence>; stable = Object.fromEntries(Object.entries(ev).map(([k, v]) => [k, v.stable])); } catch { stable = {}; }
 
     onStage?.('rules');
+    if (vp.name === 'mobile') await startInteractionTiming(page).catch(() => {});
     const keyboard = await keyboardTrace(page); onStage?.('keyboard');
+    let navMenu: NavMenu | null = null; let interaction: InteractionTiming | null = null; let journey: Journey | null = null;
+    if (vp.name === 'mobile') {
+      await page.evaluate(() => scrollTo(0, 0)).catch(() => {});
+      try { navMenu = await probeNavMenu(page); } catch { navMenu = null; }
+      try { interaction = await readInteractionTiming(page); } catch { interaction = null; }
+    }
     let motion: Motion | null = null;
     if (vp.name === 'desktop') {
       await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -279,8 +291,15 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     // Activating the main action changes the page, so it is the last thing done (and never submits anything).
     if (avara && avara.candidates[0] && process.env.AVARA_FAIL_ANALYZER !== 'workflow') {
       const c = avara.candidates[0];
+      const startUrl = page.url();
+      const dialogsBefore = vp.name === 'mobile' ? await openDialogs(page).catch(() => 0) : 0;
       try { avara.workflow = await runWorkflow(page, c.candidate, c.classification); }
       catch (e) { avaraError = avaraError ?? (e as Error).message.split('\n')[0]; }
+      // The way back from the main action (UX-014), only when it was clicked (never for a form submit).
+      const wf = avara.workflow;
+      if (vp.name === 'mobile' && wf && !c.candidate.submits && ['form_reached', 'form_not_reached', 'navigated_no_form'].includes(wf.outcome)) {
+        try { journey = await journeyAfterAction(page, { startUrl, dialogsBefore, actionText: c.candidate.text, actionSelector: c.candidate.selector }); } catch { journey = null; }
+      } else if (vp.name === 'mobile') journey = { tested: false, startUrl, why: !wf ? 'The main action was not activated.' : c.candidate.submits ? 'The main action submits a form, which Avara never does.' : `The main action was not followed: ${wf.reason}`, steps: [] };
     }
     // Text at 200% changes every text size on the page, so it is the very last thing done.
     let textResize: Record<string, unknown> | null = null;
@@ -289,12 +308,12 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     if (metrics.height > MAX_SHOT_HEIGHT) limitations.push(`The ${vp.name} page is ${metrics.height}px tall; the screenshot stops at ${MAX_SHOT_HEIGHT}px, so pins below that are listed without a highlight.`);
 
     return {
-      finalUrl: stripSecrets(page.url()).toString(), title: metrics.title, axeVersion: axe.testEngine.version,
+      finalUrl: landedUrl, title: metrics.title, axeVersion: axe.testEngine.version,
       result: {
         name: vp.name, width: vp.width, height: vp.height, pageWidth: Math.max(vp.width, metrics.width), pageHeight: shotHeight, launch, stable, nameChecks,
         screenshot, viewportShot, truncated: metrics.height > MAX_SHOT_HEIGHT,
         axe: { violations: axe.violations, incomplete: axe.incomplete, passes: axe.passes.map((p) => ({ id: p.id, help: p.help, tags: p.tags })) },
-        heuristics, keyboard, motion, boxes, avara, avaraError, pageContext, mobileProbe, orientation, textResize, validation, fragments, signals,
+        heuristics, keyboard, motion, boxes, avara, avaraError, pageContext, mobileProbe, orientation, textResize, validation, fragments, signals, navMenu, interaction, journey,
       },
     };
   } finally { await context.close(); }

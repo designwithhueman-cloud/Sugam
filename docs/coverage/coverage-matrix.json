@@ -2,30 +2,30 @@
  "generated": "derived from the runtime registry; do not edit",
  "registry": {
   "rules": 135,
-  "rulesNamingDetector": 81,
+  "rulesNamingDetector": 85,
   "rulesNamingDetectorByType": {
-   "detector": 71,
+   "detector": 75,
    "llm": 10
   },
-  "rulesAllDetectorsListedProven": 57,
-  "rulesSomeDetectorListedProven": 67,
-  "detectorIdsNamed": 135,
+  "rulesAllDetectorsListedProven": 61,
+  "rulesSomeDetectorListedProven": 71,
+  "detectorIdsNamed": 139,
   "detectorIdsNamedByFamily": {
    "axe": 26,
    "sugam": 37,
-   "derived": 58,
+   "derived": 62,
    "other": 14
   },
-  "detectorIdsListedProven": 97,
+  "detectorIdsListedProven": 101,
   "detectorIdsListedProvenByFamily": {
    "axe": 6,
    "sugam": 34,
-   "derived": 53,
+   "derived": 57,
    "other": 4
   },
-  "derivedDetectors": 58,
+  "derivedDetectors": 62,
   "categories": 9,
-  "scoreEligible": 0,
+  "scoreEligible": 10,
   "trackChecks": 21,
   "loaderIssues": 0
  },
@@ -233,7 +233,7 @@
    "note": "",
    "rule": "A11Y-001",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "color-contrast",
     "sugam/non-text-contrast"
@@ -242,8 +242,11 @@
     "avara-catalog.mjs",
     "fix-format.mjs",
     "fix-writer.mjs",
+    "launch-report.mjs",
     "rule-engine.mjs",
-    "scanner-accuracy.mjs"
+    "scanner-accuracy.mjs",
+    "score-admission.mjs",
+    "scoring.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -259,7 +262,7 @@
    "note": "",
    "rule": "A11Y-002",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "image-alt",
     "input-image-alt",
@@ -270,7 +273,8 @@
     "avara-catalog.mjs",
     "fix-enrichment.mjs",
     "fix-format.mjs",
-    "scanner-accuracy.mjs"
+    "scanner-accuracy.mjs",
+    "scoring.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -286,7 +290,7 @@
    "note": "An empty or whitespace aria-label, title or label no longer counts as a name, so a placeholder-only field is still caught (test/detector-pack-v3.mjs).",
    "rule": "A11Y-003",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "label",
     "select-name",
@@ -363,14 +367,15 @@
    "note": "",
    "rule": "A11Y-005",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "sugam/focus-not-visible",
     "sugam/focus-obscured",
     "sugam/focus-offscreen"
    ],
    "tests": [
-    "scanner-accuracy.mjs"
+    "scanner-accuracy.mjs",
+    "scoring.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -432,7 +437,7 @@
    "note": "",
    "rule": "A11Y-009",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "link-name",
     "sugam/vague-link-text",
@@ -441,7 +446,8 @@
    ],
    "tests": [
     "fix-writer.mjs",
-    "scanner-accuracy.mjs"
+    "scanner-accuracy.mjs",
+    "scoring.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -489,12 +495,14 @@
    "note": "",
    "rule": "A11Y-012",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "td-headers-attr",
     "th-has-data-cells"
    ],
-   "tests": [],
+   "tests": [
+    "scoring.mjs"
+   ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
    "status": "reused",
@@ -537,8 +545,7 @@
     "target-size"
    ],
    "tests": [
-    "avara-catalog.mjs",
-    "scoring.mjs"
+    "avara-catalog.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -591,7 +598,8 @@
     "a11y/reading-order"
    ],
    "tests": [
-    "batch-detectors.mjs"
+    "batch-detectors.mjs",
+    "scoring.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -684,7 +692,7 @@
    "note": "button-name",
    "rule": "A11Y-015",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "button-name",
     "aria-allowed-attr",
@@ -700,6 +708,7 @@
     "launch-integration.mjs",
     "launch-pack.mjs",
     "scanner-accuracy.mjs",
+    "scoring.mjs",
     "workspace-evidence.mjs"
    ],
    "fixture": "fixture-proven",
@@ -716,7 +725,7 @@
    "note": "",
    "rule": "A11Y-003",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "label",
     "select-name",
@@ -772,9 +781,9 @@
     "perf/cls-unsized-images"
    ],
    "tests": [
-    "avara-catalog.mjs",
     "fix-format.mjs",
-    "rule-engine.mjs"
+    "rule-engine.mjs",
+    "scoring.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -813,16 +822,22 @@
    "ref": "PERF-003",
    "note": "INP needs field data or scripted interaction; recorded as couldn't verify",
    "rule": "PERF-003",
-   "ruleStatus": "catalogued",
+   "ruleStatus": "partial",
    "scoreEligible": false,
-   "detectors": [],
-   "tests": [
-    "detector-spec.mjs"
+   "detectors": [
+    "perf/interaction-latency"
    ],
-   "fixture": "no detector",
+   "tests": [
+    "continuity-detectors.mjs",
+    "detector-spec.mjs",
+    "rule-engine.mjs"
+   ],
+   "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
    "status": "blocked",
-   "ownDerived": []
+   "ownDerived": [
+    "perf/interaction-latency"
+   ]
   },
   {
    "source": "joao-ux",
@@ -838,7 +853,6 @@
     "ux/primary-task-visible"
    ],
    "tests": [
-    "avara-catalog.mjs",
     "avara.mjs",
     "detectors.mjs"
    ],
@@ -1030,7 +1044,7 @@
    ],
    "tests": [
     "avara-catalog.mjs",
-    "scoring.mjs"
+    "fix-format.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1129,9 +1143,9 @@
     "avara.mjs",
     "fix-format.mjs",
     "launch-pack.mjs",
+    "launch-report.mjs",
     "phone-widths.mjs",
-    "rule-engine.mjs",
-    "scoring.mjs"
+    "rule-engine.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1192,14 +1206,20 @@
    "ref": "MOB-008",
    "note": "needs scripted menu interaction per site; needs a person",
    "rule": "MOB-008",
-   "ruleStatus": "catalogued",
+   "ruleStatus": "partial",
    "scoreEligible": false,
-   "detectors": [],
-   "tests": [],
-   "fixture": "no detector",
+   "detectors": [
+    "mobile/navigation-accessibility"
+   ],
+   "tests": [
+    "continuity-detectors.mjs"
+   ],
+   "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
    "status": "blocked",
-   "ownDerived": []
+   "ownDerived": [
+    "mobile/navigation-accessibility"
+   ]
   },
   {
    "source": "uiux-pro-max",
@@ -1439,7 +1459,6 @@
     "conv/cta-visible"
    ],
    "tests": [
-    "avara-catalog.mjs",
     "avara.mjs",
     "cta-regression.mjs",
     "detectors.mjs"
@@ -1594,7 +1613,8 @@
     "trust/privacy-link"
    ],
    "tests": [
-    "detectors.mjs"
+    "detectors.mjs",
+    "rule-engine.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1777,7 +1797,8 @@
     "avara-catalog.mjs",
     "fix-format.mjs",
     "launch-pack.mjs",
-    "rule-engine.mjs"
+    "rule-engine.mjs",
+    "scoring.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1799,9 +1820,9 @@
     "perf/cls-unsized-images"
    ],
    "tests": [
-    "avara-catalog.mjs",
     "fix-format.mjs",
-    "rule-engine.mjs"
+    "rule-engine.mjs",
+    "scoring.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -2346,7 +2367,7 @@
    "note": "sugam/aria-tablist: a missing panel alone is needs_review, not a confirmed failure (test/detector-pack-v3.mjs).",
    "rule": "A11Y-015",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "button-name",
     "aria-allowed-attr",
@@ -2362,6 +2383,7 @@
     "launch-integration.mjs",
     "launch-pack.mjs",
     "scanner-accuracy.mjs",
+    "scoring.mjs",
     "workspace-evidence.mjs"
    ],
    "fixture": "fixture-proven",

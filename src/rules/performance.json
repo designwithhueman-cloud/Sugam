@@ -97,13 +97,15 @@
       "confidenceBasis": null,
       "evaluator": {
         "type": "detector",
-        "detectors": []
+        "detectors": [
+          "perf/interaction-latency"
+        ]
       },
       "recommendationTemplate": "Fix \"Interaction To Next Paint\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",
       "recommendationTemplateStatus": "generic",
       "related": [],
       "lenses": [],
-      "status": "catalogued",
+      "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "Interpret the measured evidence for \"Interaction To Next Paint\". Use appropriate interaction evidence; for field assessment record p75, device and scope. Never substitute TBT. Do not guess beyond the measurements supplied.",

@@ -16,7 +16,9 @@ const want = { 'sugam/placeholder-only-label': 'A11Y-003', 'ux/generic-error-mes
 for (const [id, rule] of Object.entries(want)) {
   const f = flags.rep[id], c = clean.rep[id];
   check(`${id} (${rule}): advisory on the flawed page, clear on the look-alike`, f?.ran && f.hits.length >= 1 && f.hits.every((h) => h.bucket === 'needs_review') && c?.ran && !c.hits.length, f?.hits.map((h) => h.title).join(' / '));
-  check(`${rule} names ${id} and stays not score-eligible`, byId.get(rule).evaluator.detectors.includes(id) && byId.get(rule).scoreEligible === false);
+  // Eligibility comes only from a recorded admission (src/rules/_admissions.json, test/score-admission.mjs), never from adding a detector.
+  const admitted = JSON.parse((await import('node:fs')).readFileSync('src/rules/_admissions.json', 'utf8')).rules.some((a) => a.ruleId === rule);
+  check(`${rule} names ${id}, and is score-eligible only through its recorded admission`, byId.get(rule).evaluator.detectors.includes(id) && byId.get(rule).scoreEligible === admitted);
 }
 check('an empty aria-label does not count as a label', /placeholder/i.test(JSON.stringify(flags.rep['sugam/placeholder-only-label'].hits)));
 check('the generic error quotes the page message, not a typed value', JSON.stringify(flags.rep['ux/generic-error-message'].hits).includes('Invalid input.'));

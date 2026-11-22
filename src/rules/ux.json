@@ -448,13 +448,15 @@
       "confidenceBasis": null,
       "evaluator": {
         "type": "detector",
-        "detectors": []
+        "detectors": [
+          "ux/journey-continuity"
+        ]
       },
       "recommendationTemplate": "Fix \"User Journey Continuity\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",
       "recommendationTemplateStatus": "generic",
       "related": [],
       "lenses": [],
-      "status": "catalogued",
+      "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "Interpret the measured evidence for \"User Journey Continuity\". Trace safe transitions, back paths, revisions and dismissals. Record last observed state. Do not guess beyond the measurements supplied.",

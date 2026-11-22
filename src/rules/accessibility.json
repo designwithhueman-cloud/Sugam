@@ -12,14 +12,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/TR/WCAG22/",
       "sourceKey": "W",
-      "sourceSection": null,
+      "sourceSection": "SC 1.4.3",
       "severity": "high",
       "weight": 10,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -33,7 +33,7 @@
       "lenses": [],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Color Contrast\". SC 1.4.3 for text, 1.4.11 for relevant non-text elements. Apply exceptions and distinguish unresolved backgrounds. Do not guess beyond the measurements supplied.",
       "valueTier": 1
     },
@@ -47,14 +47,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/TR/WCAG22/",
       "sourceKey": "W",
-      "sourceSection": null,
+      "sourceSection": "SC 1.1.1",
       "severity": "medium",
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -70,7 +70,7 @@
       "lenses": [],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Alt Text Presence\". SC 1.1.1. Inspect purpose and accessible equivalent. Decorative images may use empty alt. Do not guess beyond the measurements supplied.",
       "valueTier": 2
     },
@@ -84,14 +84,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/TR/WCAG22/",
       "sourceKey": "W",
-      "sourceSection": null,
+      "sourceSection": "SC 1.3.1, SC 3.3.2, SC 4.1.2, SC 2.5.3",
       "severity": "high",
       "weight": 10,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -115,7 +115,7 @@
       ],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Accessible Form Labels\". SC 1.3.1, 3.3.2, 4.1.2, and 2.5.3 where applicable. Compare visible label, association and computed name. Do not guess beyond the measurements supplied.",
       "valueTier": 1
     },
@@ -166,14 +166,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/TR/WCAG22/",
       "sourceKey": "W",
-      "sourceSection": null,
+      "sourceSection": "SC 2.4.7",
       "severity": "high",
       "weight": 10,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -188,7 +188,7 @@
       "lenses": [],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Visible Focus States\". SC 2.4.7. Record actual rendered focused state, including custom indicators. Do not guess beyond the measurements supplied.",
       "valueTier": 1
     },
@@ -202,14 +202,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/TR/WCAG22/",
       "sourceKey": "W",
-      "sourceSection": null,
+      "sourceSection": "SC 1.3.1",
       "severity": "medium",
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -224,7 +224,7 @@
       "lenses": [],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Semantic Structure\". SC 1.3.1. Compare visual grouping and programmatic relationships; specific heading/table defects use their own owners. Do not guess beyond the measurements supplied.",
       "valueTier": 2
     },
@@ -310,14 +310,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/TR/WCAG22/",
       "sourceKey": "W",
-      "sourceSection": null,
+      "sourceSection": "SC 2.4.4, SC 4.1.2",
       "severity": "medium",
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -335,7 +335,7 @@
       ],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Accessible Links\". SC 2.4.4 and 4.1.2. Evaluate purpose with permitted context, including linked images. Do not guess beyond the measurements supplied.",
       "valueTier": 2
     },
@@ -385,14 +385,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/TR/WCAG22/",
       "sourceKey": "W",
-      "sourceSection": null,
+      "sourceSection": "SC 1.4.4, SC 1.4.10",
       "severity": "high",
       "weight": 10,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -408,7 +408,7 @@
       "lenses": [],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Zoom Support\". SC 1.4.4 and 1.4.10. Test actual zoom/reflow and loss of function. Do not guess beyond the measurements supplied.",
       "valueTier": 1
     },
@@ -422,14 +422,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/TR/WCAG22/",
       "sourceKey": "W",
-      "sourceSection": null,
+      "sourceSection": "SC 1.3.1",
       "severity": "medium",
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -443,7 +443,7 @@
       "lenses": [],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Accessible Tables\". SC 1.3.1. Verify data cells can be associated with the relevant headers. Do not guess beyond the measurements supplied.",
       "valueTier": 2
     },
@@ -535,14 +535,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/",
       "sourceKey": "APG",
-      "sourceSection": null,
+      "sourceSection": "SC 4.1.2",
       "severity": "medium",
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -561,7 +561,7 @@
       ],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"ARIA Usage\". Inspect names, roles, states and actual widget keyboard behaviour. Consult SC 4.1.2 separately. Do not guess beyond the measurements supplied.",
       "valueTier": 2
     },
@@ -620,7 +620,9 @@
       "confidenceBasis": null,
       "evaluator": {
         "type": "detector",
-        "detectors": []
+        "detectors": [
+          "a11y/error-prevention"
+        ]
       },
       "recommendationTemplate": "Fix \"Error Prevention\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",
       "recommendationTemplateStatus": "generic",
@@ -628,7 +630,7 @@
       "lenses": [
         "H5"
       ],
-      "status": "catalogued",
+      "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "Interpret the measured evidence for \"Error Prevention\". SC 3.3.4 for covered legal, financial, data and test submissions. Inspect reversibility, checking or confirmation. Do not guess beyond the measurements supplied.",
@@ -718,14 +720,14 @@
       "sourceType": "standard",
       "sourceUrl": "https://www.w3.org/TR/WCAG22/",
       "sourceKey": "W",
-      "sourceSection": null,
+      "sourceSection": "SC 1.4.1",
       "severity": "medium",
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22: WCAG 2.2 passage checked against the W3C Recommendation; failing and clean fixtures pass in test/score-admission.mjs (src/rules/_admissions.json).",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -738,7 +740,7 @@
       "lenses": [],
       "status": "partial",
       "enabled": true,
-      "sourceStatus": "passage-unverified",
+      "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Color Independence\". SC 1.4.1. Check whether meaning conveyed by colour also has an effective alternative cue. Do not guess beyond the measurements supplied.",
       "valueTier": 2
     }

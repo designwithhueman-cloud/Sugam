@@ -9,6 +9,9 @@ import { loadLaunch } from './launch/view.ts';
 import { hasFeature } from './plans.ts';
 import { BY_ID, CATALOG, CATEGORIES, LENSES, HEURISTICS, RELATED, SOURCES, canonicalFor, coverage as libCoverage } from './avara/catalog.ts';
 import { buildCoverage, loadRecords, EMPTY_LOADED } from './avara/coverage.ts';
+import { pageSummary } from './page-summary.ts';
+import { ruleLoader } from '../src/engines/rule-engine/RuleLoader.ts';
+const ruleWeight = new Map(ruleLoader().loadAllRules({ includeDisabled: true }).map((r) => [r.ruleId, r.weight]));
 import { collapsedContainer, collapsedNote, fixCaps } from './avara/evidence-check.ts';
 import { loadReview } from '../src/services/findings-service/index.ts';
 
@@ -32,14 +35,13 @@ function recMeta(r: typeof schema.recommendations.$inferSelect, fs: (typeof sche
   const relIds = [...new Set([...(ownerId ? RELATED[ownerId] ?? [] : []), ...members.map((m) => canonicalFor(m.ruleId)).filter((x): x is string => !!x && x !== ownerId)])];
   const lensIds = [...new Set([...(ownerId ? LENSES[ownerId] ?? [] : []), ...relIds.flatMap((x) => LENSES[x] ?? [])])];
   const sev = ownerF?.severity === 'critical' ? 'critical' : ownerF?.severity === 'serious' ? 'major' : 'minor';
-  const pts = { critical: 40, major: 15, minor: 5 }[sev];
   const ownerOther = members.length > 1 ? 'Most specific rule that directly explains the failure; the other findings in this group are linked evidence and are not counted again.' : 'The only rule that explains this failure.';
   return {
     ownerIssueId: ownerF?.issueId ?? null,
     owner: top ? { id: top.id, title: top.title, why: ownerOther } : null,
     related: relIds.map((x) => BY_ID.get(x)).filter(Boolean).map((x) => ({ id: x!.id, title: x!.title })),
     lenses: lensIds.map((l) => HEURISTICS.find((h) => h.lens === l)).filter(Boolean).map((h) => ({ lens: h!.lens, name: h!.name })),
-    deductions: { groups: 1, points: pts, applied: !!top?.scoreEligible, why: top?.scoreEligible ? 'Counted once for this repair group.' : 'This repair counts once when scoring is enabled. No rule is score-eligible yet, so nothing is deducted today.' },
+    scoring: { ruleId: top?.id ?? null, weight: top ? (ruleWeight.get(top.id) ?? 0) : 0, admitted: !!top?.scoreEligible, why: top?.scoreEligible ? `${top.id} is admitted for scoring: as a confirmed failure it counts once, as failed weight in its category.` : `${top?.id ?? 'Its rule'} is not admitted for scoring yet (its source passage and failing and clean tests are not recorded), so this fix does not change the score.` },
   };
 }
 /** The AI half of a report-first scan is still running: flagged pending and finished less than 15 minutes ago (older means it never finished). */
@@ -80,8 +82,8 @@ async function loadAvara(scanId: string, scan: typeof schema.scans.$inferSelect)
       notRun: { total: t.buckets.not_run + t.buckets.not_applicable, reasons: Object.fromEntries(Object.entries(t.reasons).filter(([, n]) => n > 0)), unknown: t.buckets.unknown },
       needsPerson: { ...cv.human, ids: cv.records.filter((r) => r.implementation === 'person_only' || r.outcome === 'needs_human_review').map((r) => r.ruleId) },
       unverifiedSources: Object.values(SOURCES).map((src) => ({ key: src.key, name: src.name, url: src.url, topics: CATALOG.filter((r) => r.sourceKey === src.key).length })).filter((x) => x.topics > 0),
-      catalogued: cov.catalogued, implemented: cov.implemented, exercisedOnFixtures: cov.exercisedOnFixtures, executedOnUrl: ranRecs.length, scoreEligible: t.scoreEligible, policy: sc.policy, coverageProfile: sc.coverageProfile, overall: sc.overall, overallWithheld: sc.overallWithheld, headline: sc.headline, advisoryCount: sc.advisory.length,
-      strict: sc.categories.map((c) => ({ label: CATEGORIES[c.category].label, assessed: c.assessed, score: c.score, missing: c.missing.length, note: c.note, observationsOnly: CATEGORIES[c.category].weight === 0 })),
+      catalogued: cov.catalogued, implemented: cov.implemented, exercisedOnFixtures: cov.exercisedOnFixtures, executedOnUrl: ranRecs.length, scoreEligible: t.scoreEligible, policy: sc.policy, coverageProfile: sc.coverageProfile, overall: sc.overall, overallRaw: sc.overallRaw, contributing: sc.contributing, scorable: sc.scorable, overallWithheld: sc.overallWithheld, headline: sc.headline,
+      strict: sc.categories.map((c) => ({ code: c.category, label: CATEGORIES[c.category].label, status: c.status, assessed: c.assessed, score: c.score, raw: c.raw, weight: c.weight, scoredRules: c.scoredRules, eligibleRules: c.eligibleRules, passedWeight: c.passedWeight, evaluatedWeight: c.evaluatedWeight, rules: c.rules, missing: c.missing.length, note: c.note, observationsOnly: c.status === 'observation' })),
       coverage: { origin: loaded.records.length ? cv.summary.origin : 'none', snapshotSize: cv.summary.snapshotSize, records: cv.records.length, reconciles: cv.summary.reconciles, problems: cv.summary.problems, buckets: t.buckets, implementation: t.implementation,
         byCategory: cv.summary.byCategory.map(({ category, rules, ran, buckets, reasons }) => ({ category, rules, ran, buckets, reasons })), cannotProve: cv.cannotProve } },
     goal: scan.goal ?? null, analyzers: scan.analyzers ?? {}, coverage: scan.summary?.coverage ?? [],
@@ -131,11 +133,13 @@ export async function loadReport(scanId: string, opts: { shareToken?: string } =
   // The engine saved provisional averages; every reader (page, board, API) gets the strict scores and record-based counts instead, so none can disagree.
   if (report.review && report.avara) {
     const lib = report.avara.library; const st = new Map(lib.strict.map((c) => [c.label, c])); const bc = new Map(lib.coverage.byCategory.map((c) => [c.category, c]));
-    report.review.overall = { ...report.review.overall, score: lib.overall, assessedCategories: lib.strict.filter((c) => c.assessed && !c.observationsOnly).length, note: lib.overall == null ? `No overall score under the strict policy: ${lib.overallWithheld ?? 'scoring is not enabled.'}` : `Strict policy ${lib.policy}.` };
-    report.review.categories = report.review.categories.map((c) => { const x = st.get(c.category); return { ...c, score: x?.assessed ? x.score : null, counts: bc.get(c.category)?.buckets ?? {}, note: x?.assessed ? c.note : x?.observationsOnly ? 'Observations only: this category carries no weight.' : x?.note?.startsWith('Not scored') ? x.note : `${x?.missing ?? 0} required rules have no saved execution evidence.` }; });
+    report.review.overall = { ...report.review.overall, score: lib.overall, assessedCategories: lib.strict.filter((c) => c.assessed && !c.observationsOnly).length, note: lib.overall == null ? (lib.overallWithheld ?? 'Insufficient coverage.') : `Based on ${lib.contributing} of ${lib.scorable} scored categories (${lib.policy}).` };
+    report.review.categories = report.review.categories.map((c) => { const x = st.get(c.category); return { ...c, score: x?.assessed ? x.score : null, counts: bc.get(c.category)?.buckets ?? {}, note: x?.note ?? c.note }; });
   }
   // One score everywhere: the strict overall, or null with the reason. scans.score (the legacy accessibility number) is kept in the row, unread.
   if (report.avara) { report.score = report.avara.library.overall; report.scoreReason = report.score == null ? (report.avara.library.overallWithheld ?? 'Scoring is not enabled yet.') : null; }
+  // The page summary is built from the full report, before redaction, so Free and Paid see the same score, breakdown and totals.
+  report.pageSummary = pageSummary(report);
   // Entitlements are applied here so no caller can hand a locked report to the browser by accident.
   return hasFeature(await planForScan(scanId), 'full_report') ? report : redactReport(report);
 }

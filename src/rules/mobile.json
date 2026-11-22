@@ -262,13 +262,15 @@
       "confidenceBasis": null,
       "evaluator": {
         "type": "detector",
-        "detectors": []
+        "detectors": [
+          "mobile/navigation-accessibility"
+        ]
       },
       "recommendationTemplate": "Fix \"Navigation Accessibility\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",
       "recommendationTemplateStatus": "generic",
       "related": [],
       "lenses": [],
-      "status": "catalogued",
+      "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "Interpret the measured evidence for \"Navigation Accessibility\". Exercise the mobile menu, keyboard interaction, and return path. Apply pattern guidance to the actual widget. Do not guess beyond the measurements supplied.",
