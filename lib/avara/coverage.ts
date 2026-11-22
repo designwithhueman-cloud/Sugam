@@ -44,7 +44,8 @@ export function buildCoverage(loaded: NonNullable<Awaited<ReturnType<typeof load
     const owner = canonicalFor(f.ruleId) ?? f.ruleId;
     return { groupId: f.repairKey, ownerRuleId: owner, category: f.category as CatCode, severity: f.severity === 'critical' ? 'critical' : f.severity === 'serious' ? 'major' : 'minor', confirmed: true, scoreEligible: eligible.get(owner) ?? false, advisory: false, blocksMainTask: f.goalImpact === 'blocks' };
   });
-  const strict = scoreGroups(groups, ran, DEFAULT_PROFILE);
+  // Eligibility comes from the scan's own rule snapshot (records), so a later change to the library never rescores an old scan.
+  const strict = scoreGroups(groups, ran, DEFAULT_PROFILE, new Set(records.filter((r) => r.scoreEligible).map((r) => r.ruleId)));
   const review = fs.filter((f) => f.bucket === 'needs_review');
   const human = { ...summary.human, reviewFindings: review.length, reviewRepairs: new Set(review.map((f) => f.repairKey)).size, confirmedRepairs: groups.length, repairGroups };
   const cannotProve = saved ? [] : [

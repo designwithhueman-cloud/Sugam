@@ -71,13 +71,13 @@ export const MEASURE_ACTION = `function (sel, text) {
   const r = el.getBoundingClientRect();
   // the part of the box a visitor can see: cut it down by every ancestor that clips its overflow, and by the screen itself
   let vis = { l: r.left, t: r.top, r: r.right, b: r.bottom };
-  let clippedBy = null;
+  let clippedBy = null, clipEl = null;
   for (let n = el.parentElement; n && n !== document.documentElement; n = n.parentElement) {
     const c = getComputedStyle(n);
     if (['hidden', 'clip', 'scroll', 'auto'].includes(c.overflowX) || ['hidden', 'clip', 'scroll', 'auto'].includes(c.overflowY)) {
       const q = n.getBoundingClientRect(); const nv = { l: Math.max(vis.l, q.left), t: Math.max(vis.t, q.top), r: Math.min(vis.r, q.right), b: Math.min(vis.b, q.bottom) };
       const before = Math.max(0, (vis.r - vis.l)) * Math.max(0, (vis.b - vis.t)); const after = Math.max(0, (nv.r - nv.l)) * Math.max(0, (nv.b - nv.t));
-      if (after < before - 1 && !clippedBy) clippedBy = cssPath(n);
+      if (after < before - 1 && !clippedBy) { clippedBy = cssPath(n); clipEl = n; }
       vis = nv;
     }
   }
@@ -88,8 +88,8 @@ export const MEASURE_ACTION = `function (sel, text) {
   const cx = Math.min(Math.max(r.left + r.width / 2, 0), innerWidth - 1), cy = Math.min(Math.max(r.top + r.height / 2, 0), innerHeight - 1);
   const top = document.elementFromPoint(cx, cy);
   const covered = !!top && top !== el && !el.contains(top) && !top.contains(el);
-  let cover = null;
-  if (covered) { let holder = top; let pos = getComputedStyle(top).position; for (let n = top.parentElement; n && pos === 'static'; n = n.parentElement) { pos = getComputedStyle(n).position; holder = n; } cover = { selector: cssPath(holder), position: pos, text: label(top).slice(0, 40), dismissible: (() => { const hay = ((holder.id || '') + ' ' + (holder.className || '') + ' ' + (holder.innerText || '').slice(0, 400)).toLowerCase(); return /cookie|consent|gdpr|privacy (choices|preferences)/.test(hay) && [...holder.querySelectorAll('button, a, [role=button], input[type=button], input[type=submit]')].some((c) => /accept|agree|allow|reject|decline|deny|got it|dismiss|close|manage|preferences|save/i.test(label(c))); })(), box: (() => { const q = holder.getBoundingClientRect(); return { x: Math.round(q.left), y: Math.round(q.top), width: Math.round(q.width), height: Math.round(q.height) }; })() }; }
+  let cover = null, coverEl = null;
+  if (covered) { let holder = top; let pos = getComputedStyle(top).position; for (let n = top.parentElement; n && pos === 'static'; n = n.parentElement) { pos = getComputedStyle(n).position; holder = n; } coverEl = holder; cover = { selector: cssPath(holder), position: pos, text: label(top).slice(0, 40), dismissible: (() => { const hay = ((holder.id || '') + ' ' + (holder.className || '') + ' ' + (holder.innerText || '').slice(0, 400)).toLowerCase(); return /cookie|consent|gdpr|privacy (choices|preferences)/.test(hay) && [...holder.querySelectorAll('button, a, [role=button], input[type=button], input[type=submit]')].some((c) => /accept|agree|allow|reject|decline|deny|got it|dismiss|close|manage|preferences|save/i.test(label(c))); })(), box: (() => { const q = holder.getBoundingClientRect(); return { x: Math.round(q.left), y: Math.round(q.top), width: Math.round(q.width), height: Math.round(q.height) }; })() }; }
   return {
     found: true, selector: cssPath(el), text: label(el).slice(0, 80), html: el.outerHTML.replace(/\\s+/g, ' ').slice(0, 260), tag: el.localName,
     rendered, pointerEventsNone: pe, disabled: !!el.disabled || el.getAttribute('aria-disabled') === 'true',
@@ -97,6 +97,8 @@ export const MEASURE_ACTION = `function (sel, text) {
     width: Math.round(r.width), height: Math.round(r.height), belowFirstScreen: topBefore > innerHeight,
     outsideX: r.left < -1 || r.right > innerWidth + 1, sidewaysScrollPossible: docW > innerWidth + 1 && !xHidden, xOverflowHidden: xHidden,
     pageWidth: docW, viewportWidth: innerWidth, visibleRatio, clippedBy, covered, cover,
+    // Code evidence on the very elements measured (scanner/code-evidence.ts): a path selector can match more than one of them.
+    code: typeof window.__avaraCodeEvidence === 'function' ? window.__avaraCodeEvidence({ targets: [{ key: 'action', node: el, props: ['display', 'min-width', 'min-height'] }, ...(coverEl ? [{ key: 'cover', node: coverEl, props: ['position', 'display'] }] : []), ...(clipEl ? [{ key: 'clippedBy', node: clipEl, props: ['flex-wrap', 'overflow', 'overflow-x'] }] : [])] }) : null,
     centerPoint: { x: Math.round(cx), y: Math.round(cy) },
   };
 }`;

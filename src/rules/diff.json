@@ -423,10 +423,10 @@
     },
     {
       "ruleId": "DIFF-009",
-      "version": "1.0.0-draft",
+      "version": "1.1.0-draft",
       "category": "Differentiation & Design Maturity",
       "title": "Feature Grid Saturation",
-      "description": "The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 3 or more such grids fails; 2 needs a person; one passes.",
+      "description": "The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 2 or more such grids need a person (a count of grids is a pattern, never a confirmed failure); one passes.",
       "source": "NN/g Ten Usability Heuristics (aesthetic and minimalist design)",
       "sourceType": "avara",
       "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/",
@@ -445,7 +445,7 @@
           "diff/feature-grid-saturation"
         ]
       },
-      "evaluationPrompt": "Feature Grid Saturation: The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 3 or more such grids fails; 2 needs a person; one passes. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "evaluationPrompt": "Feature Grid Saturation: The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 2 or more such grids need a person (a count of grids is a pattern, never a confirmed failure); one passes. Deterministic evidence first; a person confirms. A model does not decide this rule.",
       "recommendationTemplate": "The page has {{observation}}. Keep the grid for the features that matter most and show the rest differently: one annotated screenshot, a short list, or a worked example. Evidence: {{evidence}}",
       "recommendationTemplateStatus": "authored",
       "userImpact": "Repeated icon cards are scanned, not read, and make features blur into one another. This is a hypothesis from reading the page, not measured behaviour.",

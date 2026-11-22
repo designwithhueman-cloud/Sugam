@@ -12,17 +12,18 @@ const item = 'inline-flex min-h-11 items-center rounded-xl px-4 text-base font-m
 export function LogoMark({ className = '', onDark = false }: { className?: string; onDark?: boolean }) {
   const ink = onDark ? '#ffffff' : '#111111';
   return (
-    <svg aria-hidden viewBox="0 0 410 400" className={`h-[1em] w-[1.025em] shrink-0 ${className}`}>
-      <path fill={ink} d="M0 0h210v60H62v140H0z" />
-      <rect fill="#b9f000" x="105" y="103" width="200" height="194" />
-      <path fill={ink} d="M410 400H200v-60h148V200h62z" />
+    // Brand mark, measured from the master artwork: two corner brackets and the lime square, as tall as the AVARA capitals.
+    <svg aria-hidden viewBox="0 0 286 296" className={`h-[0.74em] w-[0.715em] shrink-0 ${className}`}>
+      <path fill={ink} d="M0 0H141V44H42V143H0Z" />
+      <rect fill="#aacb03" x="69" y="72" width="146" height="152" />
+      <path fill={ink} d="M286 296H138V252H242V145H286Z" />
     </svg>
   );
 }
 
 export function Wordmark({ className = '', onDark = false }: { className?: string; onDark?: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-[0.32em] text-[1.7rem] font-extrabold leading-none tracking-[-0.01em] ${onDark ? 'text-white' : 'text-ink'} ${className}`}>
+    <span className={`inline-flex items-center gap-[0.24em] text-[1.7rem] font-extrabold leading-none tracking-[-0.01em] ${onDark ? 'text-white' : 'text-ink'} ${className}`}>
       <LogoMark onDark={onDark} />
       <span aria-hidden>AVARA</span><span className="sr-only">Avara</span>
     </span>

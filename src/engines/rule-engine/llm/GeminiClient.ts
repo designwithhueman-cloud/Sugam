@@ -76,7 +76,7 @@ export async function geminiJson(model: string, system: string, parts: GeminiPar
   try { return JSON.parse(text); } catch { throw new Undecided(`Gemini returned output that was not valid JSON${cand.finishReason === 'MAX_TOKENS' ? ' (cut off)' : ''}`); }
 }
 
-export const geminiModel = () => process.env.AVARA_GEMINI_MODEL || 'gemini-2.5-flash';
+export const geminiModel = () => process.env.AVARA_GEMINI_MODEL || 'gemini-3.5-flash';   // gemini-2.5-flash is closed to new API keys; 3.8-flash was overloaded (503) when tested on 2026-11-21
 
 export function createGeminiClient(model = geminiModel()): LlmClient | null {
   if (!geminiConfigured()) return null;
@@ -85,7 +85,7 @@ export function createGeminiClient(model = geminiModel()): LlmClient | null {
     async evaluate({ system, rules, context, images }) {
       const imgs: GeminiPart[] = (images ?? ([] as WebsiteContext['screenshots'])).slice(0, MAX_IMAGES).map((i) => ({ inline_data: { mime_type: i.mime || 'image/jpeg', data: i.data.toString('base64') } }));
       const parts: GeminiPart[] = [...imgs, { text: `RULES (data):\n${JSON.stringify(rules)}\n\nPAGE CONTEXT (data):\n${JSON.stringify(context)}` }];
-      const undecided = (why: string): LlmVerdict[] => rules.map((r) => ({ ruleId: r.ruleId, result: 'inconclusive', observation: `Not decided: ${why}. This says nothing about the page.`, evidence: [], confidence: 0 }));
+      const undecided = (why: string): LlmVerdict[] => rules.map((r) => ({ ruleId: r.ruleId, result: 'inconclusive', observation: `Not decided: ${why}. This says nothing about the page.`, evidence: [], confidence: 0, undecided: true }));
       try {
         const parsed = Verdicts.safeParse(await limited(() => geminiJson(model, system, parts, VERDICTS_SCHEMA)));
         if (!parsed.success) return undecided('Gemini returned verdicts in an unexpected shape');

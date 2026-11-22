@@ -240,6 +240,8 @@
    ],
    "tests": [
     "avara-catalog.mjs",
+    "fix-format.mjs",
+    "fix-writer.mjs",
     "rule-engine.mjs",
     "scanner-accuracy.mjs"
    ],
@@ -266,6 +268,8 @@
    ],
    "tests": [
     "avara-catalog.mjs",
+    "fix-enrichment.mjs",
+    "fix-format.mjs",
     "scanner-accuracy.mjs"
    ],
    "fixture": "fixture-proven",
@@ -301,11 +305,20 @@
     "crawl.mjs",
     "detector-pack-v3.mjs",
     "detector-trace.mjs",
+    "fix-format.mjs",
+    "fix-writer.mjs",
     "fixpanel.mjs",
     "gating.mjs",
     "landing.mjs",
+    "launch-integration.mjs",
+    "launch-pack.mjs",
+    "not-run-reasons.mjs",
+    "phone-product.mjs",
+    "phone-widths.mjs",
     "rule-engine.mjs",
     "scanner-accuracy.mjs",
+    "scoring.mjs",
+    "security.mjs",
     "value-detectors.mjs",
     "workspace-evidence.mjs"
    ],
@@ -332,6 +345,8 @@
    ],
    "tests": [
     "avara-catalog.mjs",
+    "fix-format.mjs",
+    "fix-writer.mjs",
     "scanner-accuracy.mjs"
    ],
    "fixture": "fixture-proven",
@@ -425,6 +440,7 @@
     "sugam/duplicate-cta-label"
    ],
    "tests": [
+    "fix-writer.mjs",
     "scanner-accuracy.mjs"
    ],
    "fixture": "fixture-proven",
@@ -521,7 +537,8 @@
     "target-size"
    ],
    "tests": [
-    "avara-catalog.mjs"
+    "avara-catalog.mjs",
+    "scoring.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -677,6 +694,11 @@
    ],
    "tests": [
     "detector-pack-v3.mjs",
+    "fix-format.mjs",
+    "fix-writer-server.mjs",
+    "fix-writer.mjs",
+    "launch-integration.mjs",
+    "launch-pack.mjs",
     "scanner-accuracy.mjs",
     "workspace-evidence.mjs"
    ],
@@ -713,11 +735,20 @@
     "crawl.mjs",
     "detector-pack-v3.mjs",
     "detector-trace.mjs",
+    "fix-format.mjs",
+    "fix-writer.mjs",
     "fixpanel.mjs",
     "gating.mjs",
     "landing.mjs",
+    "launch-integration.mjs",
+    "launch-pack.mjs",
+    "not-run-reasons.mjs",
+    "phone-product.mjs",
+    "phone-widths.mjs",
     "rule-engine.mjs",
     "scanner-accuracy.mjs",
+    "scoring.mjs",
+    "security.mjs",
     "value-detectors.mjs",
     "workspace-evidence.mjs"
    ],
@@ -742,6 +773,7 @@
    ],
    "tests": [
     "avara-catalog.mjs",
+    "fix-format.mjs",
     "rule-engine.mjs"
    ],
    "fixture": "not exercised",
@@ -854,7 +886,8 @@
     "workflow/action-no-response"
    ],
    "tests": [
-    "avara-catalog.mjs"
+    "avara-catalog.mjs",
+    "fix-format.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -877,6 +910,7 @@
    ],
    "tests": [
     "detector-pack-v3.mjs",
+    "launch-integration.mjs",
     "value-detectors.mjs",
     "workspace-evidence.mjs"
    ],
@@ -995,7 +1029,8 @@
     "mobile/horizontal-scroll"
    ],
    "tests": [
-    "avara-catalog.mjs"
+    "avara-catalog.mjs",
+    "scoring.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1021,7 +1056,9 @@
    "tests": [
     "avara-catalog.mjs",
     "avara.mjs",
-    "cta-regression.mjs"
+    "code-evidence.mjs",
+    "cta-regression.mjs",
+    "fix-format.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1090,7 +1127,11 @@
    "tests": [
     "avara-catalog.mjs",
     "avara.mjs",
-    "rule-engine.mjs"
+    "fix-format.mjs",
+    "launch-pack.mjs",
+    "phone-widths.mjs",
+    "rule-engine.mjs",
+    "scoring.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1315,6 +1356,7 @@
    ],
    "tests": [
     "diff-002.mjs",
+    "launch-pack.mjs",
     "value-detectors.mjs"
    ],
    "fixture": "fixture-proven",
@@ -1372,7 +1414,9 @@
     "conv/generic-primary-action"
    ],
    "tests": [
-    "detector-pack.mjs"
+    "detector-pack.mjs",
+    "launch-integration.mjs",
+    "launch-pack.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1731,6 +1775,8 @@
    ],
    "tests": [
     "avara-catalog.mjs",
+    "fix-format.mjs",
+    "launch-pack.mjs",
     "rule-engine.mjs"
    ],
    "fixture": "not exercised",
@@ -1754,6 +1800,7 @@
    ],
    "tests": [
     "avara-catalog.mjs",
+    "fix-format.mjs",
     "rule-engine.mjs"
    ],
    "fixture": "not exercised",
@@ -1775,7 +1822,8 @@
     "perf/image-optimization"
    ],
    "tests": [
-    "detectors.mjs"
+    "detectors.mjs",
+    "launch-pack.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -2256,6 +2304,7 @@
    ],
    "tests": [
     "detector-pack-v3.mjs",
+    "launch-integration.mjs",
     "value-detectors.mjs",
     "workspace-evidence.mjs"
    ],
@@ -2307,6 +2356,11 @@
    ],
    "tests": [
     "detector-pack-v3.mjs",
+    "fix-format.mjs",
+    "fix-writer-server.mjs",
+    "fix-writer.mjs",
+    "launch-integration.mjs",
+    "launch-pack.mjs",
     "scanner-accuracy.mjs",
     "workspace-evidence.mjs"
    ],

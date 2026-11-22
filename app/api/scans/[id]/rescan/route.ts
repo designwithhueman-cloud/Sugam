@@ -1,3 +1,4 @@
+import { stripSecrets } from '@/lib/net/url-privacy.ts';
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { getDb, schema } from '@/lib/db/index.ts';
@@ -24,7 +25,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   const db = await getDb();
   const [prev] = await db.select().from(schema.scans).where(eq(schema.scans.id, id));
   if (!prev || prev.status !== 'completed') return NextResponse.json({ error: 'not_ready', message: 'The original scan has not finished.' }, { status: 409 });
-  const [scan] = await db.insert(schema.scans).values({ url: prev.url, standard: prev.standard, goal: prev.goal, productId: prev.productId, rescanOf: prev.id, projectId: prev.projectId, createdBy: user?.id ?? prev.createdBy ?? null }).returning({ id: schema.scans.id });
+  const [scan] = await db.insert(schema.scans).values({ url: stripSecrets(prev.url).toString(), standard: prev.standard, goal: prev.goal, productId: prev.productId, rescanOf: prev.id, projectId: prev.projectId, createdBy: user?.id ?? prev.createdBy ?? null }).returning({ id: schema.scans.id });
   await enqueueScan(scan.id);
   if (!user) await addClaim(scan.id);
   return NextResponse.json({ id: scan.id }, { status: 202 });

@@ -10,7 +10,7 @@ export type Execution = 'ran' | 'not_applicable' | 'skipped' | 'unknown';
 export type Scope = 'full' | 'measurable_part' | 'summary' | 'none';
 export type Bucket = 'passed' | 'passed_measurable_part' | 'failed' | 'needs_review' | 'inconclusive' | 'observed' | 'not_applicable' | 'not_run' | 'unknown';
 export const BUCKETS: Bucket[] = ['passed', 'passed_measurable_part', 'failed', 'needs_review', 'inconclusive', 'observed', 'not_applicable', 'not_run', 'unknown'];
-export const REASONS: SkipReason[] = ['missing_detector', 'ai_unavailable', 'missing_input', 'not_applicable', 'analyzer_error', 'needs_person', 'rollup_no_inputs', 'unknown_historical'];
+export const REASONS: SkipReason[] = ['missing_detector', 'ai_unavailable', 'ai_no_answer', 'ai_pending', 'missing_input', 'not_applicable', 'analyzer_error', 'needs_person', 'rollup_no_inputs', 'unknown_historical'];
 
 export interface RuleRecord {
   ruleId: string; ruleVersion: string; definitionHash: string | null; category: string; title: string; mode: string; weight: number; session: string | null;

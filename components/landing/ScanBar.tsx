@@ -40,8 +40,8 @@ export function ScanBar({ idPrefix, sampleHref = '#repair', sampleLabel = 'See a
           {[[FileText, 'One page free'], [Gift, 'First fix included'], [UserX, 'No account needed']].map(([I, t]) => { const Icon = I as typeof Gift; return <li key={t as string} className="inline-flex items-center gap-2"><span aria-hidden className="grid size-8 place-items-center rounded-full bg-[#e6f9b6] text-ink"><Icon className="size-4" /></span>{t as string}</li>; })}
         </ul>
         : <div id={`${idPrefix}-hint`} className="mx-auto mt-6 max-w-2xl space-y-1 text-center text-lg leading-snug text-neutral-700">
-            <p>One public page per scan, checked at desktop and 320px mobile widths. Pages behind a sign-in can’t be scanned.</p>
-            <p>No account needed: you get your score, severity counts, top issues and one finding with its fix.</p>
+            <p>One public page per scan, checked at desktop and 320px mobile widths. Pages behind a sign-in can’t be scanned. Screenshots of the page are saved with the results.</p>
+            <p>No account needed: you see how many issues we found, how serious they are, and one finding with its fix.</p>
           </div>}
       {extras && (
       <div className={`mt-3 flex flex-wrap items-start gap-x-10 gap-y-1 ${start ? '' : 'justify-center'}`}>

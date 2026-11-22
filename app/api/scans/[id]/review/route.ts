@@ -12,6 +12,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   const user = await currentUser();
   if (!((await canViewScan(user, id)) || (await isClaimed(id)))) return NextResponse.json({ error: 'not_found' }, { status: 404 });
-  const review = (await loadReport(id))?.review ?? null;
-  return review ? NextResponse.json(review) : NextResponse.json({ error: 'no_review', message: 'This scan has no rule review.' }, { status: 404 });
+  const report = await loadReport(id); const review = report?.review ?? null;
+  // The launch checks travel with the review for paid plans only; loadReport already returns null for them on the free plan.
+  return review ? NextResponse.json({ ...review, launch: report?.launch ?? null }) : NextResponse.json({ error: 'no_review', message: 'This scan has no rule review.' }, { status: 404 });
 }

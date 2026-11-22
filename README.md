@@ -2,6 +2,10 @@
 
 AI-powered accessibility review for public websites built with Lovable, Bolt.new, v0, Framer, Webflow or custom code. Paste a URL, pick a compliance target, and get a split-screen report: numbered pins on real screenshots, linked to prioritised findings with fixes in three formats.
 
+## Deploying
+
+See [docs/deploy.md](docs/deploy.md) for a one-server setup (Docker, Postgres, Caddy) with backups and a smoke test.
+
 ## Run it locally
 
 ```bash
@@ -29,20 +33,30 @@ Scanner without the web app: `node scanner/cli.ts <url> [standard] [outDir]` (ra
 |---|---|
 | `DATABASE_URL` | PostgreSQL server (migrations in `drizzle/` run on start) |
 | `REDIS_URL` | Queue scans with BullMQ; run `npm run worker` as a separate process (needs `DATABASE_URL` too) |
-| `SUGAM_AI=on` | Enable the AI fix writer (`analysis/claude.ts`). Uses the provider chosen by `AVARA_AI_PROVIDER`: Claude by default (billed per scan; credentials from `ANTHROPIC_API_KEY` or an `ant auth login` profile), or Gemini with `GEMINI_API_KEY`. If the model gives no usable result, the deterministic fixes are shown |
-| `SUGAM_AI_MODEL` | Claude model for the fix writer. Default `claude-opus-5-5` (Gemini uses `AVARA_GEMINI_MODEL`) |
-| `AVARA_AI=on` | Enable AI review of the rules that need judgement (clarity, trust, calls to action and the other `llm` rules in `src/rules`). Off by default. Separate from `SUGAM_AI`, which turns on the fix writer |
+| `AVARA_AI=on` (fix writer) | Also enables the AI fix writer (`analysis/claude.ts`). Uses the provider chosen by `AVARA_AI_PROVIDER`: Claude by default (billed per scan; credentials from `ANTHROPIC_API_KEY` or an `ant auth login` profile), or Gemini with `GEMINI_API_KEY`. If the model gives no usable result, the deterministic fixes are shown `SUGAM_AI=on` is still read as a deprecated alias. |
+| `AVARA_FIX_MODEL` | Claude model for the fix writer. Default `claude-opus-5-5` (`SUGAM_AI_MODEL` is still read as a fallback; Gemini uses `AVARA_GEMINI_MODEL`) |
+| `AVARA_AI=on` | Enable AI review of the rules that need judgement (clarity, trust, calls to action and the other `llm` rules in `src/rules`). Off by default. The same switch turns on the fix writer. |
 | `AVARA_AI_PROVIDER` | `claude` (default) or `gemini`, for both the rule review and the fix writer. Any other value turns both off rather than falling back to a paid provider |
 | `ANTHROPIC_API_KEY`, `AVARA_AI_MODEL` | Claude provider (billed per call). Model default `claude-sonnet-5-5` |
-| `GEMINI_API_KEY`, `AVARA_GEMINI_MODEL` | Gemini provider (Google AI Studio key, Developer API). Model default `gemini-2.5-flash`. **On the free tier Google may use submitted content to improve its products: use it only for scans of public demo pages.** A refusal, malformed output, a rate limit (429) or a Google server error marks that call's rules inconclusive, never passed or failed, and leaves the deterministic fixes in place |
+| `GEMINI_API_KEY`, `AVARA_GEMINI_MODEL` | Gemini provider (Google AI Studio key, Developer API). Model default `gemini-3.5-flash`. **On the free tier Google may use submitted content to improve its products: use it only for scans of public demo pages.** A refusal, malformed output, a rate limit (429) or a Google server error marks that call's rules inconclusive, never passed or failed, and leaves the deterministic fixes in place |
 | `SCAN_CONCURRENCY` | Scans run at once (default 2) |
 | `SCAN_RATE_LIMIT` | Scans per 10 minutes per visitor. Default 5 for anonymous visitors and 20 for signed-in users; setting it overrides both |
 | `TRUST_PROXY` | Set to `0` to ignore `x-forwarded-for` when rate limiting. Otherwise the last entry (added by your proxy) is used |
+| `ANON_SCAN_CEILING` | Most anonymous scans one server process accepts per 10 minutes, whatever address they claim (default `60`). Bounds load if `x-forwarded-for` is spoofable |
+| `ANON_RETENTION_DAYS` | Days before scans started without an account (and their screenshots) are deleted automatically (default `30`). Checked shortly after start and then hourly |
+| `AVARA_OPERATOR`, `AVARA_CONTACT_EMAIL` | Who runs the site and the contact address, shown on the privacy page. Read at request time, so one Docker image serves any deployment |
+| `AVARA_BACKGROUND=off` | Skip the start-up work (re-queue unfinished scans, retention) on this process. Use on every web server but one if you run several |
+| `AVARA_LAUNCH=off` | Skip the Avara Launch Scanner checks (vendor/avara-launch). The report then records why they are missing |
+| `AVARA_FIX_TIMEOUT_MS` | How long the AI fix writer may take before Avara's own fixes stand (default `20000`). It runs after the report is saved |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Turns on "Continue with Google". Create an OAuth client (type Web application) in Google Cloud and add `<your site>/api/auth/google/callback` as an authorised redirect URI |
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Turns on "Continue with GitHub". Create an OAuth app in GitHub developer settings with the callback `<your site>/api/auth/github/callback` |
 | `SUGAM_URL` | Public address of the site (for example `https://sugam.example`), used to build the callback address behind a proxy. Defaults to the address of the request |
 | `SUGAM_INSECURE_COOKIES=1` | Allow the session cookies over plain http when `NODE_ENV=production` (local testing only) |
 | `STORAGE_DIR`, `PGLITE_DIR` | Where screenshots (default `.data/objects`) and the embedded database (default `.data/pglite`) live |
+
+## Avara Launch Scanner
+
+`vendor/avara-launch` is the launch pack as delivered (nine DIFF reviews, seven launch adapters, seven skills), unchanged so its own tests keep testing the code that runs: `node --test vendor/avara-launch/test.mjs vendor/avara-launch/launch/test.mjs` and `node vendor/avara-launch/fixtures/browser.mjs`. The scanner runs it once per viewport on the settled page in its initial state (`scanner/launch.ts`), `lib/launch/registry.ts` maps each entry to the Avara rule that owns it, and `launch_checks` stores rule version, viewport, page state, target, outcome, reason and evidence. All of it is zero-weight: it never reaches rule counts or scores. Paid reports show it as "Launch checks"; the free plan never receives it. The AI fix writer uses two short rubrics from `src/rubrics/fix-rubrics.json` (copy and tone, visual hierarchy) and may only reword the Change line of those fixes.
 
 ## How a scan works
 
@@ -76,7 +90,7 @@ Scanner without the web app: `node scanner/cli.ts <url> [standard] [outDir]` (ra
 
 - **Free result:** score, severity counts, the top issues in plain language (`lib/plain.ts`), and **one finding opened completely**: its first three elements, a builder prompt and the code change (`lib/unlocked.ts`, `components/report/UnlockedFixCard.tsx`). A free account lists every issue type. Everything else needs a paid plan.
 - **Waiting list:** checkout is not connected, so `/upgrade` takes an email (`waitlist` table, `joinWaitlistAction`). Prices in `lib/plans.ts` are placeholders.
-- **Legal:** `/privacy` and `/terms` describe what the software does today. Set `NEXT_PUBLIC_CONTACT_EMAIL` to show a deletion contact. Have a lawyer review both before launch.
+- **Legal:** `/privacy` and `/terms` describe what the software does today. Set `AVARA_CONTACT_EMAIL` (and `AVARA_OPERATOR`) to show who runs the site and a contact address. Have a lawyer review both before launch.
 - **Motion:** the hero intro plays once and ends within 5 seconds, and small icons pop in as they scroll into view. The one looping animation is the "Fix it where you build" row, which has a visible Pause button, pauses on hover, and under `prefers-reduced-motion` does not move at all (the tools wrap into a static grid and the button is hidden).
 - **"Fix it where you build" row (`lib/platforms.ts`, a static list):** only platforms with a basis stay. Real sites on WordPress, Webflow, Framer, Shopify, Next.js, React, Astro, Vue and Svelte were scanned end to end; Wix, Squarespace and Replit were removed until a real site on each has been scanned.
 

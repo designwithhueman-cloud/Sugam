@@ -20,9 +20,16 @@ export function FixPanel({ fixes, id }: { fixes: AvaraFix[]; id: string }) {
   let text = f.content, body: React.ReactNode, how = ''; let label = 'prompt'; let intro = `Paste this into ${NAMES[tool]}`;
   if (f.kind === 'patch') {
     let code: { before: string; after: string; note?: string } = { before: '', after: '' }; try { code = JSON.parse(f.content); } catch { /* shown as text */ }
+    // No paste-ready patch: the captured code stays as a locator (it may carry the long selector) and the note says why there is no "after".
+    if (!code.after) {
+      text = code.before; label = 'locator'; intro = 'Find this in your code'; how = '';
+      body = <div className="space-y-3"><div><p className="text-sm font-semibold text-neutral-700">Where it is (locator, not a patch)</p><pre tabIndex={0} role="region" aria-label="Locator" className={`mt-1 max-h-52 overflow-y-auto whitespace-pre-wrap rounded-xl bg-white p-3 font-mono text-sm ${wrap}`}>{code.before}</pre></div>
+        <p className="rounded-xl bg-white p-3 text-base text-neutral-800" data-testid="no-patch">{code.note || 'No paste-ready patch for this one: follow the Change text in the prompt.'}</p></div>;
+    } else {
     text = `Before:\n${code.before}\n\nAfter:\n${code.after}`; label = 'patch'; intro = 'Change this in your code'; how = code.note ?? '';
     body = <div className="space-y-3"><div><p className="text-sm font-semibold text-neutral-700">Before</p><pre tabIndex={0} role="region" aria-label="Code before" className={`mt-1 max-h-52 overflow-y-auto whitespace-pre-wrap rounded-xl bg-white p-3 font-mono text-sm ${wrap}`}>{code.before}</pre></div>
       <div><p className="text-sm font-semibold text-neutral-700">After</p><pre tabIndex={0} role="region" aria-label="Code after" className={`mt-1 max-h-52 overflow-y-auto whitespace-pre-wrap rounded-xl bg-white p-3 font-mono text-sm ${wrap}`}>{code.after}</pre></div></div>;
+    }
   } else if (f.kind === 'steps') {
     const steps = bulletLines(f.content); label = 'steps'; intro = `Follow these steps in ${NAMES[tool]}`; how = steps[steps.length - 1] ?? '';
     body = <ol className="list-decimal space-y-1.5 rounded-xl bg-white p-4 pl-9 text-base">{steps.map((l, i) => <li key={i} className={wrap}>{l}</li>)}</ol>;

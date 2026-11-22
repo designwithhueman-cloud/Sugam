@@ -5,7 +5,7 @@ import type { Shot } from '@/lib/review-view.ts';
 
 const b0x = (s: Shot) => s.boxes[0].box.x - s.crop.x + s.boxes[0].box.width / 2;
 export function ScreenshotCrop({ shot, n = 1, callout = false }: { shot: Shot; n?: number; callout?: boolean }) {
-  const { crop: c, pageWidth } = shot; const phone = shot.viewport === 'mobile';
+  const { crop: c, pageWidth } = shot; const phone = shot.viewport !== 'desktop';   // the 390px phone or the 320px pass
   const pct = (v: number, of: number) => `${(v / of) * 100}%`;
   const b = shot.boxes[0]?.box; const side = callout && !!b;
   const midPct = b ? Math.min(92, Math.max(8, ((b.y + b.height / 2 - c.y) / c.height) * 100)) : 0;

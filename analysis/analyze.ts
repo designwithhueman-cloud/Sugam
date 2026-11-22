@@ -12,7 +12,9 @@ import { buildFixes } from './fixes.ts';
 
 export type Severity = 'critical' | 'serious' | 'moderate' | 'minor';
 export type Bucket = 'confirmed_failure' | 'needs_review' | 'verified_pass';
-export type DraftInstance = { selector: string; html: string; detail?: string; viewports: ViewportId[]; boxes: Partial<Record<ViewportId, Box>> };
+/** Where an instance was seen: the full passes (desktop, mobile = the 390px phone) or the focused 320px pass (narrow). */
+export type SeenAt = ViewportId | 'narrow';
+export type DraftInstance = { selector: string; html: string; detail?: string; viewports: SeenAt[]; boxes: Partial<Record<SeenAt, Box>> };
 export type DraftIssue = {
   ruleId: string; source: 'axe' | 'heuristic' | 'keyboard'; bucket: Bucket; severity: Severity; title: string;
   wcag: { sc: string; name: string; level: string }[]; impactGroups: ImpactGroup[]; roleTag: 'design' | 'no_code' | 'dev';
@@ -47,7 +49,7 @@ const axeData = (n: NodeResult) => { const c = [...n.any, ...n.all, ...n.none].f
 
 class Collector {
   issues = new Map<string, DraftIssue>();
-  add(base: Omit<DraftIssue, 'instances' | 'componentKey'> & { groupBy: string }, inst: { selector: string; html: string; detail?: string; viewport: ViewportId; box?: Box | null }) {
+  add(base: Omit<DraftIssue, 'instances' | 'componentKey'> & { groupBy: string }, inst: { selector: string; html: string; detail?: string; viewport: SeenAt; box?: Box | null }) {
     const key = `${base.bucket}|${base.ruleId}|${base.groupBy}`;
     let issue = this.issues.get(key);
     if (!issue) { const { groupBy, ...rest } = base; issue = { ...rest, componentKey: `${base.ruleId}|${groupBy}`, instances: [] }; this.issues.set(key, issue); }
@@ -161,12 +163,6 @@ export function analyze(scan: ScanOutput): Analysis {
         whatToChange: 'This tab set announces itself as tabs but does not behave like them: ' + problems.join(' ') },
       { selector: t.selector, html: t.html, detail: problems.join(' '), viewport: v.name, box: box(t.selector) });
     }
-    if (h.reflow && criterionInScope('1.4.10', std)) {
-      for (const o of h.reflow.offenders)
-        c.add({ ruleId: 'sugam/reflow-320', source: 'heuristic', bucket: o.exempt ? 'needs_review' : 'confirmed_failure', severity: 'serious', title: 'Content does not fit a 320px-wide screen', wcag: sc('1.4.10'), impactGroups: ['visual'], roleTag: 'design', groupBy: 'page',
-          whatToChange: `At 320 CSS pixels wide (the same as 400% zoom on a desktop) the page scrolls sideways by ${h.reflow.overflow}px. People who zoom in must scroll in two directions to read.${o.exempt ? ' This element is a table, image or code block, which WCAG allows to scroll, so a person should confirm.' : ''}` },
-        { ...o, viewport: v.name, box: box(o.selector) });
-    } else if (h.reflow) outOfScope += h.reflow.offenders.length;
     if (v.motion && v.motion.running.length)
       for (const m of v.motion.running)
         c.add({ ruleId: 'sugam/reduced-motion', source: 'heuristic', bucket: 'needs_review', severity: 'moderate', title: 'Animation ignores the reduced-motion setting', wcag: sc('2.2.2'), impactGroups: ['cognitive', 'visual'], roleTag: 'design', groupBy: signature(m.html),
@@ -289,14 +285,22 @@ export function analyze(scan: ScanOutput): Analysis {
   const steps = scan.viewports.flatMap((v) => v.keyboard.filter((s) => s.selector && s.inView));
   if (steps.length >= 5 && !failedRules.has('sugam/focus-not-visible'))
     passes.push({ ruleId: 'sugam/focus-not-visible', source: 'keyboard', bucket: 'verified_pass', severity: 'minor', title: 'Focus indicator visible', wcag: sc('2.4.7'), impactGroups: ['keyboard'], roleTag: 'design', componentKey: 'focus|pass', whatToChange: `Every one of the ${steps.length} elements reached with Tab showed a visible change when focused.`, instances: [] });
-  if (scan.viewports.some((v) => v.name === 'mobile') && !scan.viewports.some((v) => v.heuristics.reflow) && criterionInScope('1.4.10', std))
+  // WCAG 1.4.10 Reflow is defined at 320 CSS px: it comes from the focused 320px pass, never from the 390px phone.
+  const nr = scan.narrow?.reflow;
+  if (nr && criterionInScope('1.4.10', std)) {
+    for (const o of nr.offenders)
+      c.add({ ruleId: 'sugam/reflow-320', source: 'heuristic', bucket: o.exempt ? 'needs_review' : 'confirmed_failure', severity: 'serious', title: 'Content does not fit a 320px-wide screen', wcag: sc('1.4.10'), impactGroups: ['visual'], roleTag: 'design', groupBy: 'page',
+        whatToChange: `At 320 CSS pixels wide (the same as 400% zoom on a desktop) the page scrolls sideways by ${nr.overflow}px. People who zoom in must scroll in two directions to read.${o.exempt ? ' This element is a table, image or code block, which WCAG allows to scroll, so a person should confirm.' : ''}` },
+      { ...o, viewport: 'narrow', box: scan.narrow?.boxes[o.selector] ?? null });
+  } else if (nr) outOfScope += nr.offenders.length;
+  if (scan.narrow && !scan.narrow.reflow && criterionInScope('1.4.10', std))
     passes.push({ ruleId: 'sugam/reflow-320', source: 'heuristic', bucket: 'verified_pass', severity: 'minor', title: 'Reflows at 320 CSS pixels', wcag: sc('1.4.10'), impactGroups: ['visual'], roleTag: 'design', componentKey: 'reflow|pass', whatToChange: 'At 320px wide the page did not scroll sideways.', instances: [] });
 
   // ---- order, fixes, score ----
   const issues = [...c.issues.values()].sort((a, b) => BUCKET_RANK[a.bucket] - BUCKET_RANK[b.bucket] || SEV_RANK[a.severity] - SEV_RANK[b.severity] || b.instances.length - a.instances.length);
   for (const i of issues) {
     const first = i.instances[0];
-    i.fixes = buildFixes({ ruleId: i.ruleId, title: i.title, whatToChange: i.whatToChange, wcagText: i.wcag.map((w) => `WCAG ${w.sc} ${w.name}`).join(', ') || 'best practice', pageUrl: scan.finalUrl, selector: first.selector, html: first.html, instanceCount: i.instances.length, detail: first.detail, data: i.data });
+    i.fixes = buildFixes({ ruleId: i.ruleId, title: i.title, whatToChange: i.whatToChange, wcagText: i.wcag.map((w) => `WCAG ${w.sc} ${w.name}`).join(', ') || 'best practice', pageUrl: scan.finalUrl, selector: first.selector, html: first.html, instanceCount: i.instances.length, detail: first.detail, data: i.data, viewports: first.viewports, source: i.source, stable: stableFor(scan, first.selector, first.viewports), nameCheck: nameCheckAll(scan, i.instances) });
   }
   const W: Record<Severity, number> = { critical: 12, serious: 7, moderate: 3, minor: 1 };
   const penalty = issues.filter((i) => i.bucket === 'confirmed_failure').reduce((s, i) => s + W[i.severity] * Math.min(2, 1 + 0.15 * (i.instances.length - 1)), 0);
@@ -304,3 +308,25 @@ export function analyze(scan: ScanOutput): Analysis {
   return { issues: [...issues, ...passes], score: Math.round(100 * Math.exp(-penalty / 80)), outOfScope };
 }
 export { SC_NAMES, STANDARDS };
+
+// A short selector is usable only if every viewport that saw the element confirmed the same one (scanner/code-evidence.ts).
+function stableFor(scan: ScanOutput, selector: string, vps: string[]): string | null {
+  const found = vps.map((n) => scan.viewports.find((v) => v.name === n)?.stable?.[selector] ?? null);
+  return found.length && found.every((x) => x && x === found[0]) ? found[0] : null;
+}
+
+// aria-label removal is safe only if every viewport that saw the control tested it on a copy and found a name containing its visible text.
+function nameCheckFor(scan: ScanOutput, selector: string, vps: string[]): { safe: boolean; name: string; reason: string } | null {
+  const found = vps.map((n) => scan.viewports.find((v) => v.name === n)?.nameChecks?.[selector] ?? null);
+  if (!found.length || found.some((x) => !x)) return null;
+  const bad = found.find((x) => !x!.safe);
+  return bad ? { safe: false, name: bad.name, reason: bad.reason } : { safe: true, name: found[0]!.name, reason: found[0]!.reason };
+}
+
+// A grouped issue's patch applies to every instance, so removal is safe only if it was tested safe on every one of them.
+function nameCheckAll(scan: ScanOutput, instances: DraftInstance[]): { safe: boolean; name: string; reason: string } | null {
+  const all = instances.map((x) => nameCheckFor(scan, x.selector, x.viewports.filter((v) => v !== 'narrow')));
+  if (!all.length || all.some((x) => !x)) return null;
+  const bad = all.find((x) => !x!.safe);
+  return bad ? { ...bad!, reason: instances.length > 1 ? `${bad!.reason} (one of the ${instances.length} grouped controls)` : bad!.reason } : all[0];
+}

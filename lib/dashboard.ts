@@ -1,6 +1,7 @@
 // Per-site numbers for the dashboard: latest completed scan per environment, issue breakdowns,
 // and what changed since the scan before it.
 import { and, desc, eq } from 'drizzle-orm';
+import { strictScore } from './score-display.ts';
 import { getDb, schema } from './db/index.ts';
 import { compareScans } from './compare.ts';
 import { groupOf, pillarOf, PILLAR_KEYS } from './groups.ts';
@@ -19,12 +20,15 @@ export async function siteStats(projectId: string) {
   const count = <K extends string>(keys: readonly K[], pick: (i: typeof open[number]) => string) => Object.fromEntries(keys.map((k) => [k, open.filter((i) => pick(i) === k).length])) as Record<K, number>;
   const previous = scans.find((s) => s.environment === latest.environment && s.id !== latest.id) ?? null;
   const change = previous ? await compareScans(previous.id, latest.id) : null;
+  // Scores follow the strict policy only; a change is reported only when both scans have a number (never null counted as 0).
+  const score = await strictScore(latest.id, latest.status); const prevScore = previous ? await strictScore(previous.id, previous.status) : null;
   return {
     latest, previous, scans, fixFirst, undecided, decided: decisions.size,
     byPillar: count(PILLAR_KEYS, (i) => pillarOf(groupOf(i.ruleId, (i.wcag as { sc: string }[]).map((w) => w.sc)))),
     byFix: count(['design', 'no_code', 'dev'] as const, (i) => i.roleTag),
     bySeverity: count(['critical', 'serious', 'moderate', 'minor'] as const, (i) => i.severity),
     buckets: { confirmed: issues.filter((i) => i.bucket === 'confirmed_failure').length, review: issues.filter((i) => i.bucket === 'needs_review').length, passes: issues.filter((i) => i.bucket === 'verified_pass').length },
-    change: change ? { resolved: change.resolved.length, introduced: change.introduced.length, persisting: change.persisting.length, delta: (latest.score ?? 0) - (previous!.score ?? 0) } : null,
+    change: change ? { resolved: change.resolved.length, introduced: change.introduced.length, persisting: change.persisting.length, delta: score.score != null && prevScore?.score != null ? score.score - prevScore.score : null } : null,
+    score,
   };
 }

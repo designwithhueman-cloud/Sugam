@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Northwind Studio: book a call (overlap at 320px only)</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;color:#111;background:#fff}
+  header{padding:16px 24px;border-bottom:1px solid #ddd;font-weight:700}
+  main{max-width:720px;margin:0 auto;padding:24px}
+  h1{font-size:1.9rem;margin:0 0 12px} p{line-height:1.5;margin:0 0 16px}
+  .cta{display:block;width:100%;min-height:52px;font-size:18px;background:#5b2fd0;color:#fff;border:0;border-radius:10px;cursor:pointer;margin-top:200px}
+  .promo{position:fixed;left:0;right:0;bottom:0;height:230px;background:#ffe8a3;color:#111;padding:16px;box-sizing:border-box;z-index:20;border-top:2px solid #111}
+  .promo button{margin-top:8px;min-height:44px;padding:0 16px}
+  @media(min-width:768px){.cta{margin-top:24px}}
+  #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);place-items:center;z-index:30} #modal.open{display:grid}
+  .box{background:#fff;padding:24px;border-radius:12px;width:min(420px,90vw)} .box label{display:block;margin:12px 0} .box input{display:block;width:100%;padding:10px;font-size:16px;margin-top:6px;box-sizing:border-box}
+</style></head>
+<body>
+<header>Northwind Studio</header>
+<main>
+  <h1>Talk to a designer this week</h1>
+  <p>We review your launch page and tell you what to fix first. Book a call to get started.</p>
+  <button class="cta" type="button" id="book" >Book a call</button>
+</main>
+<div class="promo" role="region" aria-label="Offer"><strong>Free page audit this week only.</strong><p>Sign up before Friday and we review one extra page.</p><button type="button">Dismiss</button></div>
+<div id="modal" role="dialog" aria-modal="true" aria-label="Book a call"><div class="box"><h2>Book a call</h2><form><label>Email <input id="bk-email" type="email" autocomplete="email"></label><button type="submit">Send</button></form></div></div>
+<script>document.getElementById('book').addEventListener('click',function(){document.getElementById('modal').classList.add('open');document.getElementById('bk-email').focus();});</script>
+</body></html>

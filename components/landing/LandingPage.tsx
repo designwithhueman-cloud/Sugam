@@ -62,7 +62,7 @@ export function LandingPage() {
             <div className="grid items-center gap-8 rounded-[2.25rem] bg-[#e6f9b6] px-7 py-12 sm:px-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12 lg:py-14">
               <div>
                 <h2 id="try-h" className="text-3xl font-semibold leading-[1.08] tracking-[-0.025em] text-ink sm:text-4xl">Check <span className="text-vio-deep">your own page</span> before launch</h2>
-                <p className="mt-4 max-w-xl text-xl leading-relaxed text-ink">Paste your home page or sign-up page. You’ll get your score, the top issues and one fix to apply.</p>
+                <p className="mt-4 max-w-xl text-xl leading-relaxed text-ink">Paste your home page or sign-up page. You’ll see how many issues we found, the top ones and one fix to apply.</p>
               </div>
               <ScanBar idPrefix="mid" align="start" extras={false} terms={false} where="middle of page" />
             </div>

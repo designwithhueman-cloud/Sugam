@@ -91,10 +91,12 @@ export function ReportView({ report, readOnly = false, initialIssueId, filters }
 
       {/* 2. The numbers at a glance; the severity counts are also the pin colour key */}
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-stone-line px-5 py-3.5 sm:px-6">
-        {report.score !== null && (
+        {report.score !== null ? (
           <p className="flex items-baseline gap-1.5"><span className="text-2xl font-semibold tabular-nums text-ink">{report.score}</span><span className="text-sm text-pine-600">/ 100 Avara score</span></p>
+        ) : (
+          <p className="text-sm text-pine-700" data-testid="not-scored"><span className="font-semibold text-ink">Not scored.</span> {report.scoreReason}</p>
         )}
-        {report.score !== null && s && <span aria-hidden className="hidden h-6 w-px bg-stone-line sm:block" />}
+        {s && <span aria-hidden className="hidden h-6 w-px bg-stone-line sm:block" />}
         {s && (
           <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm" aria-label="Confirmed failures by severity">
             {SEVERITIES.map((k) => {

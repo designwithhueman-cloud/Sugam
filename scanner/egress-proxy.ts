@@ -33,7 +33,7 @@ export async function startEgressProxy({ maxRequests = 800 } = {}): Promise<{ ur
     if (++stats.requests > maxRequests) { stats.capped++; res.writeHead(429).end(); return; }
     const port = Number(target.port || 80);
     let ip: string;
-    try { ip = await resolveAllowed(target.hostname, port); } catch { deny(`${target.hostname}:${port}`); res.writeHead(403).end('blocked by Sugam egress policy'); return; }
+    try { ip = await resolveAllowed(target.hostname, port); } catch { deny(`${target.hostname}:${port}`); res.writeHead(403).end('blocked by Avara egress policy'); return; }
     const headers = { ...req.headers }; delete headers['proxy-connection']; delete headers['proxy-authorization'];
     const up = http.request({ host: ip, port, method: req.method, path: target.pathname + target.search, headers, setHost: false }, (r) => { res.writeHead(r.statusCode || 502, r.headers); r.pipe(res); });
     up.on('error', () => { if (!res.headersSent) res.writeHead(502); res.end(); });

@@ -152,7 +152,7 @@ export function ReportsTable({ data, projectBase, projectId, decisions, locked =
             <tbody>{data.map((d) => (
               <tr key={d.env} className="border-b border-slate-100">
                 <td className="max-w-sm px-3 py-3"><span className="block font-semibold text-slate-900">{d.report.pageTitle}</span><span className="break-all text-slate-600">{d.report.finalUrl || d.report.url}</span></td>
-                <td className="px-3 py-3 capitalize">{d.env}</td><td className="px-3 py-3 text-lg font-bold tabular-nums">{d.report.score}</td>
+                <td className="px-3 py-3 capitalize">{d.env}</td><td className="px-3 py-3">{d.report.score != null ? <span className="text-lg font-bold tabular-nums">{d.report.score}</span> : <span className="text-sm text-slate-600" title={d.report.scoreReason ?? undefined}>Not scored</span>}</td>
                 <td className="px-3 py-3 tabular-nums">{d.report.summary?.confirmedIssues}</td><td className="px-3 py-3 tabular-nums">{d.report.summary?.needsReview}</td>
                 <td className="px-3 py-3"><Link className="font-semibold text-pine-700 underline underline-offset-2" href={`/scans/${d.report.id}`}>Open visual report</Link></td>
               </tr>))}</tbody>

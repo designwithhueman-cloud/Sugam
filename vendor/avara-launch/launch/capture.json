@@ -1,0 +1,4 @@
+{
+  "cardSelector":"article,li,.card,[data-slot=card]",
+  "sectionWords":{"pricing":["pricing","plans"],"testimonials":["testimonials","customer stories"],"faq":["faq","frequently asked questions"],"features":["features","capabilities"],"workflow":["how it works"] }
+}

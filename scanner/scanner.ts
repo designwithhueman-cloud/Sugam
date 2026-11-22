@@ -15,15 +15,30 @@ import { startEgressProxy } from './egress-proxy.ts';
 import { BOXES, PAGE_METRICS, HEURISTICS, EXTRA, FOCUS_SNAPSHOT, MOTION } from './inpage.ts';
 import { STANDARDS, type StandardId } from '../lib/standards.ts';
 import { checkUrl, BlockedUrlError } from '../lib/net/guard.ts';
-import { probeActions, runWorkflow, type ActionProbe } from './avara.ts';
+import { probeActions, runWorkflow, type ActionProbe, type Candidate, type Classification, type Measurement } from './avara.ts';
+
+/** A blocker confirmed by the 320px main-action probe while the scan is still running: the action is unusable because a fixed or sticky
+ *  element that cannot be dismissed covers it. Passed to opts.onBlocker with the viewport screenshot exactly as measured. */
+/** Named stages of one viewport pass, in order. scanUrl turns them into a percent and a stage map for the scan page. */
+export const VIEWPORT_STAGES = ['loaded', 'action', 'screenshots', 'rules', 'keyboard', 'done'] as const;
+export type ViewportStage = typeof VIEWPORT_STAGES[number];
+export type ScanStages = { desktop: ViewportStage[]; mobile: ViewportStage[]; performance?: 'running' | 'done' | 'skipped' };
+export type EarlyBlocker = { viewport: 'mobile'; width: number; height: number; candidate: Candidate; measurement: Measurement; classification: Classification; shot: Buffer };
 import { PAGE_CONTEXT, MOBILE_PROBE, TEXT_RESIZE, STRUCTURE_CONTEXT, VALIDATION_PROBE, FRAGMENT_PROBE, SIGNALS_PROBE, HERO_LAYOUT } from './avara-inpage.ts';
 import { runLighthouse, type PerfResult } from './perf.ts';
+import { stripSecrets } from '../lib/net/url-privacy.ts';
+import { runLaunchPack, type LaunchResult } from './launch.ts';
+import { CODE_EVIDENCE, type CodeEvidence } from './code-evidence.ts';
+import { checkAriaLabelRemoval, type NameCheck } from './name-check.ts';
 
 export type ViewportId = 'desktop' | 'mobile';
 export const VIEWPORTS: { name: ViewportId; width: number; height: number }[] = [
   { name: 'desktop', width: 1280, height: 800 },
-  { name: 'mobile', width: 320, height: 640 },
+  { name: 'mobile', width: 390, height: 844 },   // the primary phone: full axe run, keyboard trace, screenshots and the report preview
 ];
+// The narrowest supported width (WCAG 1.4.10 Reflow): a focused pass for reflow, overflow, clipping and the main action only. Its own
+// screenshots are kept as evidence for what it finds; it adds no Gemini call and no Lighthouse run.
+export const NARROW = { name: 'narrow' as const, width: 320, height: 640 };
 const TAB_PRESSES = 25;
 const MAX_SHOT_HEIGHT = 12_000;
 
@@ -64,6 +79,9 @@ export type ViewportResult = {
   validation?: Record<string, unknown>[] | null;   // desktop: what the browser's own form validation did (never submits)
   mobileProbe?: Record<string, unknown> | null; orientation?: { docW: number; vw: number; action: { text: string; level: string; reasons: string[] } | null } | null; textResize?: Record<string, unknown> | null;   // 320px-only observations
   pageContext?: Record<string, unknown> | null;    // what a reviewer reads on the page (desktop pass), as data for the rule engine
+  nameChecks?: Record<string, NameCheck>;   // aria-label removal tested on a temporary copy (scanner/name-check.ts)
+  stable?: Record<string, string | null>;   // flagged element selector -> a short selector that matches only it, in the captured state (scanner/code-evidence.ts)
+  launch?: LaunchResult | null;   // the Avara Launch Scanner rows for this viewport (scanner/launch.ts); never scored
 };
 export type ScanOutput = {
   url: string; finalUrl: string; title: string; standard: StandardId;
@@ -72,6 +90,12 @@ export type ScanOutput = {
   // Avara: lab performance (null if it did not run) and how each analyzer fared, so one failure never costs the rest of the report.
   perf: PerfResult | null; analyzers: Record<string, { status: 'ok' | 'failed' | 'skipped'; message?: string; ms?: number }>;
   goal: string | null;
+  /** The 320px pass (null when it did not complete; absent on scans made before it existed). */
+  narrow?: NarrowResult | null;
+};
+export type NarrowResult = {
+  name: 'narrow'; width: number; height: number; pageWidth: number; pageHeight: number; screenshot: Buffer; viewportShot: Buffer; truncated: boolean;
+  avara: ActionProbe | null; avaraError?: string; reflow: Heuristics['reflow']; boxes: Record<string, Box | null>;
 };
 export class ScanError extends Error { code: string; constructor(code: string, message: string) { super(message); this.code = code; } }
 
@@ -130,7 +154,7 @@ async function tablistKeyboard(page: Page, h: Heuristics) {
   }
 }
 
-async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: typeof VIEWPORTS[number], std: StandardId, limitations: string[], goal: string | null): Promise<{ result: ViewportResult; finalUrl: string; title: string; axeVersion: string }> {
+async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: typeof VIEWPORTS[number], std: StandardId, limitations: string[], goal: string | null, onBlocker?: (b: EarlyBlocker) => void, onStage?: (s: ViewportStage) => void): Promise<{ result: ViewportResult; finalUrl: string; title: string; axeVersion: string }> {
   const context = await browser.newContext({
     viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: 1, isMobile: false,
     reducedMotion: 'no-preference', serviceWorkers: 'block', acceptDownloads: false, proxy: { server: proxyUrl },
@@ -142,13 +166,13 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     try { res = await page.goto(url, { waitUntil: 'load', timeout: 30_000 }); }
     catch (e) { throw new ScanError('navigation_failed', `The page did not load (${(e as Error).message.split('\n')[0].replace(/^page\.goto: /, '')}).`); }
     if (!res) throw new ScanError('navigation_failed', 'The page did not load.');
-    if (res.status() === 403 && (await res.text().catch(() => '')).includes('Sugam egress policy')) throw new ScanError('blocked', 'The page redirected to a private or internal address, which Sugam does not scan.');
+    if (res.status() === 403 && (await res.text().catch(() => '')).includes('egress policy')) throw new ScanError('blocked', 'The page redirected to a private or internal address, which Sugam does not scan.');
     if (res.status() >= 400) {
       const st = res.status();
       const hint = st === 401 || st === 403 || st === 429 ? ' Some sites refuse automated browsers or need a sign-in; Sugam can only scan pages that open for anyone.' : st >= 500 ? ' The site reported a server error; try again in a few minutes.' : ' Check the address.';
       throw new ScanError('http_error', `The page answered with HTTP ${st}.${hint}`);
     }
-    await settle(page);
+    await settle(page); onStage?.('loaded');
 
     // Measure the main action first, on the page exactly as a visitor first sees it: Tab and clicks would scroll hidden containers and hide the problem.
     let avara: ActionProbe | null = null; let avaraError: string | undefined;
@@ -156,6 +180,14 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
       if (process.env.AVARA_FAIL_ANALYZER === 'action') throw new Error('Main-action check disabled for this test.');
       avara = await probeActions(page, vp.name, vp.width, goal, false);
     } catch (e) { avaraError = (e as Error).message.split('\n')[0]; }
+    onStage?.('action');
+    // Early reveal: a covered main action at 320px is confirmed by this measurement alone, so it is handed over now, with the screen as measured.
+    if (onBlocker && vp.name === 'mobile') {
+      const c = avara?.candidates[0]; const cls = c?.classification, m = c?.measurement;
+      if (c && cls && m && cls.level === 'unusable' && !cls.unproven && cls.causes[0]?.kind === 'covered' && m.cover && !m.cover.dismissible && /^(fixed|sticky)$/.test(m.cover.position ?? '')) {
+        try { onBlocker({ viewport: 'mobile', width: vp.width, height: vp.height, candidate: c.candidate, measurement: m, classification: cls, shot: await page.screenshot({ type: 'jpeg', quality: 75 }) }); } catch { /* the full report still has it */ }
+      }
+    }
 
     let pageContext: Record<string, unknown> | null = null;
     if (vp.name === 'desktop') {
@@ -178,9 +210,12 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     const shotHeight = Math.min(metrics.height, MAX_SHOT_HEIGHT);
     await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); scrollTo(0, 0); });
     const screenshot = await page.screenshot({ type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: Math.max(vp.width, metrics.width), height: shotHeight } });
-    const viewportShot = await page.screenshot({ type: 'jpeg', quality: 70 });
+    const viewportShot = await page.screenshot({ type: 'jpeg', quality: 70 }); onStage?.('screenshots');
 
     const axe: AxeResults = await new AxeBuilder({ page }).withTags(STANDARDS[std].axeTags).analyze();
+    // Launch checks on the same navigation, viewport and axe run, while the page is still in its initial state (before the keyboard trace,
+    // the reflow resize and any click). Never fails the scan: a failure is kept as a reason.
+    const launch = await runLaunchPack(page, { axe, probe: avara, goal, pageId: (() => { try { const u = new URL(url); return u.origin + u.pathname; } catch { return url; } })() });
     const heuristics = await page.evaluate(`${HEURISTICS}(${JSON.stringify({ reflow: vp.name === 'mobile' })})`) as Heuristics;
     heuristics.extra = await page.evaluate(`${EXTRA}(${JSON.stringify({ textSpacing: vp.name === 'desktop' })})`).catch(() => undefined) as Extra | undefined;
 
@@ -194,8 +229,15 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     const ex = heuristics.extra;
     if (ex) for (const n of [...ex.nonTextContrast, ...ex.textSpacing, ...ex.dragging, ...ex.positiveTabindex, ...ex.smallText, ...ex.autofocus, ...ex.newTab, ...ex.vagueLinks, ...ex.placeholderOnly, ...ex.autoplayVideo, ...ex.voiceNameNotFirst, ...ex.forcedColorsOptOut, ...ex.imageOfText, ...ex.autocompleteMissing, ...ex.requiredNotMarked, ...ex.radioGroups, ...ex.invalidNoMessage, ...ex.labelNotVisible, ...ex.inputTypeMismatch, ...ex.headings, ...ex.authentication.pasteBlocked, ...ex.authentication.autocompleteOff, ...ex.authentication.captcha]) selectors.add(n.selector);
     const boxes = await page.evaluate(`${BOXES}(${JSON.stringify([...selectors])})`) as Record<string, Box | null>;
+    // aria-label removal, tested on a temporary copy of each control that has a voice-control name mismatch (scanner/name-check.ts).
+    const nameTargets = [...(heuristics.extra?.voiceNameNotFirst ?? []).map((n) => n.selector), ...[...axe.violations, ...axe.incomplete].filter((r) => r.id === 'label-content-name-mismatch').flatMap((r) => r.nodes.map((n) => axeTarget(n)).filter((x): x is string => !!x))];
+    const nameChecks = nameTargets.length ? await checkAriaLabelRemoval(page, nameTargets).catch(() => ({})) : {};
+    // Which of these elements a short selector picks out uniquely, before any keyboard input changes the page: only those get paste-ready CSS.
+    let stable: Record<string, string | null> = {};
+    try { const ev = (await page.evaluate(`(${CODE_EVIDENCE})(${JSON.stringify({ targets: [...selectors].slice(0, 200).map((sel) => ({ key: sel, selector: sel, props: [] })) })})`)) as Record<string, CodeEvidence>; stable = Object.fromEntries(Object.entries(ev).map(([k, v]) => [k, v.stable])); } catch { stable = {}; }
 
-    const keyboard = await keyboardTrace(page);
+    onStage?.('rules');
+    const keyboard = await keyboardTrace(page); onStage?.('keyboard');
     let motion: Motion | null = null;
     if (vp.name === 'desktop') {
       await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -247,9 +289,9 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     if (metrics.height > MAX_SHOT_HEIGHT) limitations.push(`The ${vp.name} page is ${metrics.height}px tall; the screenshot stops at ${MAX_SHOT_HEIGHT}px, so pins below that are listed without a highlight.`);
 
     return {
-      finalUrl: page.url(), title: metrics.title, axeVersion: axe.testEngine.version,
+      finalUrl: stripSecrets(page.url()).toString(), title: metrics.title, axeVersion: axe.testEngine.version,
       result: {
-        name: vp.name, width: vp.width, height: vp.height, pageWidth: Math.max(vp.width, metrics.width), pageHeight: shotHeight,
+        name: vp.name, width: vp.width, height: vp.height, pageWidth: Math.max(vp.width, metrics.width), pageHeight: shotHeight, launch, stable, nameChecks,
         screenshot, viewportShot, truncated: metrics.height > MAX_SHOT_HEIGHT,
         axe: { violations: axe.violations, incomplete: axe.incomplete, passes: axe.passes.map((p) => ({ id: p.id, help: p.help, tags: p.tags })) },
         heuristics, keyboard, motion, boxes, avara, avaraError, pageContext, mobileProbe, orientation, textResize, validation, fragments, signals,
@@ -258,7 +300,36 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
   } finally { await context.close(); }
 }
 
-export async function scanUrl(url: string, standard: StandardId, onProgress?: (step: string, percent: number) => void, opts: { goal?: string | null; perfRuns?: number; perf?: boolean } = {}): Promise<ScanOutput> {
+/** The focused 320px pass: open the page, measure the main action (covered, clipped, off-screen, too small), and read reflow and sideways
+ *  overflow, all in the page's first-load state. No axe run, keyboard trace, workflow or launch checks: those belong to the 390px phone. */
+async function runNarrow(browser: Browser, proxyUrl: string, url: string, goal: string | null, onBlocker?: (b: EarlyBlocker) => void): Promise<NarrowResult> {
+  const vp = NARROW;
+  const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: 1, isMobile: false, reducedMotion: 'no-preference', serviceWorkers: 'block', acceptDownloads: false, proxy: { server: proxyUrl } });
+  try {
+    const page = await context.newPage(); page.setDefaultTimeout(20_000);
+    const res = await page.goto(url, { waitUntil: 'load', timeout: 30_000 });
+    if (!res || res.status() >= 400) throw new Error(`the page answered ${res ? `HTTP ${res.status()}` : 'nothing'}`);
+    await settle(page);
+    let avara: ActionProbe | null = null; let avaraError: string | undefined;
+    try { avara = await probeActions(page, 'mobile', vp.width, goal, false); } catch (e) { avaraError = (e as Error).message.split('\n')[0]; }
+    const c = avara?.candidates[0]; const cls = c?.classification, m = c?.measurement;
+    if (onBlocker && c && cls && m && cls.level === 'unusable' && !cls.unproven && cls.causes[0]?.kind === 'covered' && m.cover && !m.cover.dismissible && /^(fixed|sticky)$/.test(m.cover.position ?? '')) {
+      try { onBlocker({ viewport: 'mobile', width: vp.width, height: vp.height, candidate: c.candidate, measurement: m, classification: cls, shot: await page.screenshot({ type: 'jpeg', quality: 75 }) }); } catch { /* the full report still has it */ }
+    }
+    const h = await page.evaluate(`${HEURISTICS}(${JSON.stringify({ reflow: true })})`) as Heuristics;
+    const metrics = await page.evaluate(`${PAGE_METRICS}()`) as { width: number; height: number; title: string };
+    const shotHeight = Math.min(metrics.height, MAX_SHOT_HEIGHT);
+    await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); scrollTo(0, 0); });
+    const screenshot = await page.screenshot({ type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: Math.max(vp.width, metrics.width), height: shotHeight } });
+    const viewportShot = await page.screenshot({ type: 'jpeg', quality: 70 });
+    const sels = (h.reflow?.offenders ?? []).map((o) => o.selector).slice(0, 50);
+    const boxes = sels.length ? await page.evaluate(`${BOXES}(${JSON.stringify(sels)})`) as Record<string, Box | null> : {};
+    for (const b of Object.values(boxes)) if (b && b.y + b.height > shotHeight) b.visible = false;
+    return { name: 'narrow', width: vp.width, height: vp.height, pageWidth: Math.max(vp.width, metrics.width), pageHeight: shotHeight, screenshot, viewportShot, truncated: metrics.height > MAX_SHOT_HEIGHT, avara, avaraError, reflow: h.reflow, boxes };
+  } finally { await context.close().catch(() => {}); }
+}
+
+export async function scanUrl(url: string, standard: StandardId, onProgress?: (step: string, percent: number, stages?: ScanStages) => void, opts: { goal?: string | null; perfRuns?: number; perf?: boolean; onBlocker?: (b: EarlyBlocker) => void } = {}): Promise<ScanOutput> {
   await checkUrl(url);
   const proxy = await startEgressProxy();
   const browser = await chromium.launch({
@@ -271,9 +342,21 @@ export async function scanUrl(url: string, standard: StandardId, onProgress?: (s
     const out: ViewportResult[] = [];
     let finalUrl = url, title = '', axeVersion = '';
     // The two passes use separate browser contexts, so they run side by side (about 40% faster).
-    onProgress?.('Scanning desktop and mobile', 10);
-    const settled = await Promise.allSettled(VIEWPORTS.map((vp) => runViewport(browser, proxy.url, url, vp, standard, limitations, opts.goal ?? null)));
-    onProgress?.('Collecting results', 80);
+    // Both passes run at once; each named stage moves the bar (10% to 80%) and says what is happening on which screen.
+    const stages: ScanStages = { desktop: [], mobile: [] };
+    const SAY: Record<ViewportStage, (n: string) => string> = { loaded: (n) => `Page opened on ${n}`, action: (n) => `Checking the main button on ${n}`, screenshots: (n) => `Took ${n} screenshots`, rules: (n) => `Ran the accessibility rules on ${n}`, keyboard: (n) => `Pressed Tab through the page on ${n}`, done: (n) => `Finished ${n}` };
+    const stageOf = (vp: typeof VIEWPORTS[number]) => (s: ViewportStage) => {
+      const list = stages[vp.name as 'desktop' | 'mobile']; if (!list || list.includes(s)) return; list.push(s);
+      const done = stages.desktop.length + stages.mobile.length; const total = VIEWPORT_STAGES.length * 2;
+      onProgress?.(SAY[s](vp.name === 'mobile' ? `a phone (${vp.width}px)` : `desktop (${vp.width}px)`), 10 + Math.round((70 * done) / total), { ...stages, desktop: [...stages.desktop], mobile: [...stages.mobile] });
+    };
+    onProgress?.('Opening your page on desktop and a phone', 10, stages);
+    // The first confirmed blocker wins, whichever phone width finds it first.
+    let blockerSent = false; const once = opts.onBlocker ? (b: EarlyBlocker) => { if (blockerSent) return; blockerSent = true; opts.onBlocker!(b); } : undefined;
+    const narrowRun = runNarrow(browser, proxy.url, url, opts.goal ?? null, once).then((n) => n, (e: Error) => { limitations.push(`The 320px pass did not complete: ${e.message.split('\n')[0]}`); return null; });
+    const settled = await Promise.allSettled(VIEWPORTS.map(async (vp) => { const r = await runViewport(browser, proxy.url, url, vp, standard, limitations, opts.goal ?? null, once, stageOf(vp)); stageOf(vp)('done'); return r; }));
+    const narrow = await narrowRun;
+    onProgress?.('Collecting results', 80, stages);
     settled.forEach((r, i) => {
       const vp = VIEWPORTS[i];
       if (r.status === 'fulfilled') {
@@ -282,7 +365,7 @@ export async function scanUrl(url: string, standard: StandardId, onProgress?: (s
       } else if (vp.name === 'desktop') throw r.reason;
       else limitations.push(`The ${vp.name} pass did not complete: ${(r.reason as Error).message}`);
     });
-    if (proxy.stats.blocked.length) limitations.push(`Sugam blocked ${proxy.stats.blocked.length} request destination(s) on private or internal networks (${proxy.stats.blocked.slice(0, 3).join(', ')}${proxy.stats.blocked.length > 3 ? ', …' : ''}).`);
+    if (proxy.stats.blocked.length) limitations.push(`Avara blocked ${proxy.stats.blocked.length} request destination(s) on private or internal networks (${proxy.stats.blocked.slice(0, 3).join(', ')}${proxy.stats.blocked.length > 3 ? ', …' : ''}).`);
     if (proxy.stats.capped) limitations.push(`The page made more than 800 network requests; ${proxy.stats.capped} were not loaded.`);
     const analyzers: ScanOutput['analyzers'] = {};
     const probes = out.map((v) => v.avara).filter(Boolean);
@@ -292,11 +375,11 @@ export async function scanUrl(url: string, standard: StandardId, onProgress?: (s
     let perf: PerfResult | null = null;
     if (opts.perf === false || process.env.AVARA_PERF === 'off') analyzers.performance = { status: 'skipped', message: 'Performance was not requested for this scan.' };
     else {
-      onProgress?.('Measuring mobile performance with Lighthouse', 88); const t0 = Date.now();
+      onProgress?.('Measuring loading speed on a phone (Lighthouse)', 84, { ...stages, performance: 'running' }); const t0 = Date.now();
       try { perf = await runLighthouse(finalUrl, opts.perfRuns ?? 1); analyzers.performance = { status: 'ok', ms: Date.now() - t0 }; }
       catch (e) { analyzers.performance = { status: 'failed', message: `Lighthouse did not complete: ${(e as Error).message.split('\n')[0].slice(0, 160)}` }; limitations.push('The performance check did not complete, so this report has no performance findings.'); }
     }
-    return { url, finalUrl, title, standard, engine: { axe: axeVersion, browser: `Chrome ${browser.version()}`, viewports: VIEWPORTS.map((v) => `${v.name} ${v.width}x${v.height}`) }, viewports: out, limitations, perf, analyzers, goal: opts.goal ?? null };
+    return { url, finalUrl, title, standard, engine: { axe: axeVersion, browser: `Chrome ${browser.version()}`, viewports: [...VIEWPORTS.map((v) => `${v.name} ${v.width}x${v.height}`), ...(narrow ? [`narrow ${NARROW.width}x${NARROW.height}`] : [])] }, viewports: out, limitations, perf, analyzers, goal: opts.goal ?? null, narrow };
   } finally {
     await browser.close().catch(() => {});
     await proxy.close();

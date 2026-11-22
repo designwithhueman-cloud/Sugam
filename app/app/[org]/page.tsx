@@ -87,7 +87,7 @@ function NeedsAttention({ root, attention: f, rows }: { root: string; attention:
       </section>
     );
   }
-  const phone = f.shot?.viewport === 'mobile';
+  const phone = !!f.shot && f.shot.viewport !== 'desktop';
   return (
     <section aria-labelledby="attention-h" className="overflow-hidden rounded-2xl border border-[#ddd2ff] bg-[linear-gradient(135deg,#f3efff_0%,#ebe4ff_100%)]">
       <div className={cn('grid gap-6 p-5 sm:p-7', f.shot && (phone ? 'md:grid-cols-[minmax(0,1fr)_17rem] md:items-center' : 'lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-center'))}>

@@ -5,6 +5,7 @@ import { getDb, schema } from './db/index.ts';
 import { STANDARDS } from './standards.ts';
 import type { Report, AvaraReport } from './report-types.ts';
 import { planForScan, redactReport } from './entitlements.ts';
+import { loadLaunch } from './launch/view.ts';
 import { hasFeature } from './plans.ts';
 import { BY_ID, CATALOG, CATEGORIES, LENSES, HEURISTICS, RELATED, SOURCES, canonicalFor, coverage as libCoverage } from './avara/catalog.ts';
 import { buildCoverage, loadRecords, EMPTY_LOADED } from './avara/coverage.ts';
@@ -41,6 +42,10 @@ function recMeta(r: typeof schema.recommendations.$inferSelect, fs: (typeof sche
     deductions: { groups: 1, points: pts, applied: !!top?.scoreEligible, why: top?.scoreEligible ? 'Counted once for this repair group.' : 'This repair counts once when scoring is enabled. No rule is score-eligible yet, so nothing is deducted today.' },
   };
 }
+/** The AI half of a report-first scan is still running: flagged pending and finished less than 15 minutes ago (older means it never finished). */
+export const AI_PENDING_MS = 15 * 60_000;
+export const aiStillRunning = (scan: { ai?: { pending?: boolean } | null; completedAt?: Date | null }) => !!scan.ai?.pending && !!scan.completedAt && Date.now() - scan.completedAt.getTime() < AI_PENDING_MS;
+
 async function loadAvara(scanId: string, scan: typeof schema.scans.$inferSelect): Promise<AvaraReport | null> {
   const db = await getDb();
   const stored = await db.select().from(schema.findings).where(eq(schema.findings.scanId, scanId));
@@ -68,11 +73,15 @@ async function loadAvara(scanId: string, scan: typeof schema.scans.$inferSelect)
   const cov = libCoverage(ranRecs.map((r) => r.ruleId));
   return {
     library: { ran: ranRecs.map((r) => ({ id: r.ruleId, title: BY_ID.get(r.ruleId)?.title ?? r.title })),
+      notRunRules: cv.records.filter((r) => r.outcome === 'not_run' || r.outcome === 'unimplemented').sort((a, b) => a.ruleId.localeCompare(b.ruleId, 'en', { numeric: true }))
+        .map((r) => ({ id: r.ruleId, title: BY_ID.get(r.ruleId)?.title ?? r.title, category: r.category, outcome: r.outcome,
+          // A pending AI check whose run ended without replacing it (server restart, crash) is shown as unanswered, never as still checking.
+          reason: r.reason === 'ai_pending' && !aiStillRunning(scan) ? 'ai_no_answer' : r.reason && r.reason !== 'unknown_historical' ? r.reason : null })),
       notRun: { total: t.buckets.not_run + t.buckets.not_applicable, reasons: Object.fromEntries(Object.entries(t.reasons).filter(([, n]) => n > 0)), unknown: t.buckets.unknown },
       needsPerson: { ...cv.human, ids: cv.records.filter((r) => r.implementation === 'person_only' || r.outcome === 'needs_human_review').map((r) => r.ruleId) },
       unverifiedSources: Object.values(SOURCES).map((src) => ({ key: src.key, name: src.name, url: src.url, topics: CATALOG.filter((r) => r.sourceKey === src.key).length })).filter((x) => x.topics > 0),
       catalogued: cov.catalogued, implemented: cov.implemented, exercisedOnFixtures: cov.exercisedOnFixtures, executedOnUrl: ranRecs.length, scoreEligible: t.scoreEligible, policy: sc.policy, coverageProfile: sc.coverageProfile, overall: sc.overall, overallWithheld: sc.overallWithheld, headline: sc.headline, advisoryCount: sc.advisory.length,
-      strict: sc.categories.map((c) => ({ label: CATEGORIES[c.category].label, assessed: c.assessed, score: c.score, missing: c.missing.length, observationsOnly: CATEGORIES[c.category].weight === 0 })),
+      strict: sc.categories.map((c) => ({ label: CATEGORIES[c.category].label, assessed: c.assessed, score: c.score, missing: c.missing.length, note: c.note, observationsOnly: CATEGORIES[c.category].weight === 0 })),
       coverage: { origin: loaded.records.length ? cv.summary.origin : 'none', snapshotSize: cv.summary.snapshotSize, records: cv.records.length, reconciles: cv.summary.reconciles, problems: cv.summary.problems, buckets: t.buckets, implementation: t.implementation,
         byCategory: cv.summary.byCategory.map(({ category, rules, ran, buckets, reasons }) => ({ category, rules, ran, buckets, reasons })), cannotProve: cv.cannotProve } },
     goal: scan.goal ?? null, analyzers: scan.analyzers ?? {}, coverage: scan.summary?.coverage ?? [],
@@ -105,7 +114,7 @@ export async function loadReport(scanId: string, opts: { shareToken?: string } =
   const std = STANDARDS[scan.standard];
   const report: Report = {
     id: scan.id, url: scan.url, finalUrl: scan.finalUrl, pageTitle: scan.pageTitle, standard: scan.standard, standardLabel: std.label, standardNote: std.note,
-    score: scan.score, summary: scan.summary ?? null, engine: scan.engine ?? null, ai: scan.ai ?? null, completedAt: scan.completedAt ? scan.completedAt.toISOString() : null,
+    score: null, scoreReason: 'The rule review did not run on this scan.', summary: scan.summary ?? null, engine: scan.engine ?? null, ai: scan.ai ?? null, aiPending: aiStillRunning(scan), completedAt: scan.completedAt ? scan.completedAt.toISOString() : null,
     viewports: vps.sort((a, b) => (a.viewport === 'desktop' ? -1 : 1) - (b.viewport === 'desktop' ? -1 : 1)).map((v) => ({ viewport: v.viewport, viewportWidth: v.viewportWidth, viewportHeight: v.viewportHeight, pageWidth: v.pageWidth, pageHeight: v.pageHeight, truncated: v.screenshotTruncated, screenshotUrl: shot(v.viewport) })),
     issues: issues.map((i) => ({
       id: i.id, position: i.position, ruleId: i.ruleId, componentKey: i.componentKey, source: i.source, bucket: i.bucket, severity: i.severity, title: i.title, wcag: i.wcag, impactGroups: i.impactGroups, roleTag: i.roleTag,
@@ -118,12 +127,15 @@ export async function loadReport(scanId: string, opts: { shareToken?: string } =
   };
   const planFull = hasFeature(await planForScan(scanId), 'full_report');
   report.review = await loadReview(scanId, { full: planFull });
+  report.launch = planFull ? await loadLaunch(scanId) : null;   // evidence: paid plans only
   // The engine saved provisional averages; every reader (page, board, API) gets the strict scores and record-based counts instead, so none can disagree.
   if (report.review && report.avara) {
     const lib = report.avara.library; const st = new Map(lib.strict.map((c) => [c.label, c])); const bc = new Map(lib.coverage.byCategory.map((c) => [c.category, c]));
     report.review.overall = { ...report.review.overall, score: lib.overall, assessedCategories: lib.strict.filter((c) => c.assessed && !c.observationsOnly).length, note: lib.overall == null ? `No overall score under the strict policy: ${lib.overallWithheld ?? 'scoring is not enabled.'}` : `Strict policy ${lib.policy}.` };
-    report.review.categories = report.review.categories.map((c) => { const x = st.get(c.category); return { ...c, score: x?.assessed ? x.score : null, counts: bc.get(c.category)?.buckets ?? {}, note: x?.assessed ? c.note : x?.observationsOnly ? 'Observations only: this category carries no weight.' : `${x?.missing ?? 0} required rules have no saved execution evidence.` }; });
+    report.review.categories = report.review.categories.map((c) => { const x = st.get(c.category); return { ...c, score: x?.assessed ? x.score : null, counts: bc.get(c.category)?.buckets ?? {}, note: x?.assessed ? c.note : x?.observationsOnly ? 'Observations only: this category carries no weight.' : x?.note?.startsWith('Not scored') ? x.note : `${x?.missing ?? 0} required rules have no saved execution evidence.` }; });
   }
+  // One score everywhere: the strict overall, or null with the reason. scans.score (the legacy accessibility number) is kept in the row, unread.
+  if (report.avara) { report.score = report.avara.library.overall; report.scoreReason = report.score == null ? (report.avara.library.overallWithheld ?? 'Scoring is not enabled yet.') : null; }
   // Entitlements are applied here so no caller can hand a locked report to the browser by accident.
   return hasFeature(await planForScan(scanId), 'full_report') ? report : redactReport(report);
 }

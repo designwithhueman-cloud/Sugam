@@ -79,6 +79,7 @@ const CARDS = [
   { q: 'Does the page feel ready?', tags: ['Performance', 'Design'], text: 'A slow, jumpy or unfinished-looking page makes visitors doubt you and leave.', Scene: Ready, tint: 'bg-[#efe9ff]' },
 ] as const;
 
+export const SCENES = { Offer, Action, Everyone, Ready };
 export function Pillars() {
   return (
     <div>

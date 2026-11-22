@@ -1053,7 +1053,8 @@
       "implementation": {
         "status": "partial",
         "detectors": [
-          "ux/error-recovery"
+          "ux/error-recovery",
+          "ux/generic-error-message"
         ],
         "exercisedOnFixtures": true,
         "engineEvaluator": "detector",

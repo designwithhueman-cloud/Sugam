@@ -7,11 +7,19 @@
 // Anything a model says is checked: a failure must quote text that exists in the context, or it is downgraded to inconclusive.
 import type { LlmClient, Rule, RuleOutcome, WebsiteContext } from './RuleTypes.ts';
 import type { ScorerOptions } from './RuleScorer.ts';
+import { aiProvider } from './llm/index.ts';
 
 export const SYSTEM_PROMPT = 'You are a careful website reviewer. You are given a JSON list of review rules and a JSON page context. For each rule, apply ONLY the rule\'s evaluationPrompt to the page context. Answer "pass", "fail", "inconclusive" or "not_applicable". For "fail" you must quote exact words or elements from the context in "evidence"; if you cannot, answer "inconclusive". Never use knowledge about the website that is not in the context. Return one verdict per rule.';
 export const BATCH = Number(process.env.AVARA_RULE_BATCH || 25);   // rules per model call, so 1000 rules is 40 calls, not one giant prompt
 
 const specOf = (r: Rule) => r.evaluator ?? (r.mode === 'H' ? { type: 'llm' as const } : r.mode === 'U' ? { type: 'human' as const } : r.mode === 'R' ? { type: 'rollup' as const } : { type: 'detector' as const });
+export const AI_PENDING_NOTE = 'AI checks are still running for this scan; this report updates when they finish.';
+/** Why judgement rules did not run, naming the switch and the key for the configured provider. */
+export function aiOffNote(): string {
+  if (process.env.AVARA_AI !== 'on') return 'No AI model is configured: AVARA_AI is not "on", so rules that need judgement did not run.';
+  const p = aiProvider(); const key = p === 'gemini' ? 'GEMINI_API_KEY' : 'ANTHROPIC_API_KEY';
+  return p ? `No AI model is configured: AVARA_AI is on but ${key} is not set for the ${p === 'gemini' ? 'Gemini' : 'Claude'} provider, so rules that need judgement did not run.` : `No AI model is configured: AVARA_AI_PROVIDER is not "claude" or "gemini", so rules that need judgement did not run.`;
+}
 const flat = (v: unknown) => JSON.stringify(v ?? '').toLowerCase().replace(/\s+/g, ' ');
 
 export abstract class CategoryEvaluator {
@@ -37,10 +45,13 @@ export abstract class CategoryEvaluator {
       if (first && (first.result === 'observed_failure' || first.result === 'needs_human_review')) { outcomes.push(first); continue; }
       // Hybrid rule whose measurement passed or does not apply: with no model, that measured answer stands; with one, the model judges the rest.
       if (first && !llm && (first.result === 'observed_pass' || first.result === 'not_applicable')) { outcomes.push(first); continue; }
+      // Hybrid rule whose measurement did not run, with no model: keep the detector's own skip reason (missing input, analyzer error). Filing it
+      // under "AI unavailable" would hide that the implemented detector itself was skipped.
+      if (first && !llm && (first.result === 'not_run' || first.result === 'unimplemented')) { outcomes.push({ ...first, observation: `${first.observation} ${ctx.aiPending ? AI_PENDING_NOTE : aiOffNote()}` }); continue; }
       forAi.push(r);
     }
     if (forAi.length) {
-      if (!llm) { aiNote = 'No AI model is configured (set AVARA_AI=on and ANTHROPIC_API_KEY), so rules that need judgement did not run.'; for (const r of forAi) outcomes.push({ ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: 'ai_unavailable' }); }
+      if (!llm) { aiNote = ctx.aiPending ? AI_PENDING_NOTE : aiOffNote(); for (const r of forAi) outcomes.push({ ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: ctx.aiPending ? 'ai_pending' : 'ai_unavailable' }); }
       else {
         const context = this.slice(ctx); const haystack = flat(context);
         for (let i = 0; i < forAi.length; i += BATCH) {
@@ -50,9 +61,11 @@ export abstract class CategoryEvaluator {
             for (const r of chunk) {
               const v = verdicts.find((x) => x.ruleId === r.ruleId);
               if (!v) { outcomes.push(this.out(r, 'inconclusive', 'ai_assisted', 'The model returned no verdict for this rule.', [], 0.3)); continue; }
+              // An unanswered call (rate limit, overload, refusal) is not a judgement: the rule did not run, and says why.
+              if (v.undecided) { const why = v.observation.replace(/^Not decided: /, 'The model gave no answer: ').replace(/ This says nothing about the page\.$/, ''); aiNote ??= why; outcomes.push(this.measuredOr(r, ctx, why) ?? { ...this.out(r, 'not_run', 'none', `${why}. This says nothing about the page.`, [], 0), skip: 'ai_no_answer' }); continue; }
               judged++; outcomes.push(this.fromVerdict(r, v, haystack));
             }
-          } catch (e) { aiNote = `The model call failed (${(e as Error).message.split('\n')[0].slice(0, 100)}).`; for (const r of chunk) outcomes.push({ ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: 'ai_unavailable' }); }
+          } catch (e) { aiNote = `The model call failed (${(e as Error).message.split('\n')[0].slice(0, 100)}).`; for (const r of chunk) outcomes.push(this.measuredOr(r, ctx, aiNote) ?? { ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: 'ai_unavailable' }); }
         }
       }
     }
@@ -60,6 +73,12 @@ export abstract class CategoryEvaluator {
     return { outcomes, judged, aiNote };
   }
 
+  /** A hybrid rule whose measurement already answered (pass or not applicable) keeps that answer when the model does not; null otherwise. */
+  private measuredOr(r: Rule, ctx: WebsiteContext, why: string): RuleOutcome | null {
+    const spec = specOf(r); const det = 'detectors' in spec ? spec.detectors ?? [] : []; if (!det.length) return null;
+    const m = this.byDetectors(r, det, ctx);
+    return m.result === 'observed_pass' || m.result === 'not_applicable' ? { ...m, observation: `${m.observation} The judgement part did not run: ${why.replace(/\.$/, '')}.` } : null;
+  }
   private out(r: Rule, result: RuleOutcome['result'], method: RuleOutcome['method'], observation: string, evidence: string[], confidence: number, reason?: string): RuleOutcome {
     return { ruleId: r.ruleId, result, method, observation, evidence, confidence, reason };
   }
@@ -74,7 +93,7 @@ export abstract class CategoryEvaluator {
       // Why nothing ran: no report at all means the scanner has no such detector; a report that did not run is missing input, unless its analyzer failed.
       const known = ids.map((id) => ctx.detectors[id]).filter(Boolean);
       const skip = !known.length ? 'missing_detector' : known.some((x) => x.analyzerError) ? 'analyzer_error' : 'missing_input';
-      return { ...this.out(r, 'not_run', 'none', `The measurement for this rule did not run (${ids.slice(0, 3).join(', ')})${known[0]?.note ? `: ${known[0].note}` : ''}.`, [], 0), skip };
+      return { ...this.out(r, 'not_run', 'none', `The measurement for this rule did not run (${ids.slice(0, 3).join(', ')})${known[0]?.note ? `: ${known[0].note.replace(/\.$/, '')}` : ''}.`, [], 0), skip };
     }
     const hits = reps.flatMap((id) => ctx.detectors[id].hits);
     const fails = hits.filter((h) => h.bucket === 'confirmed_failure'); const review = hits.filter((h) => h.bucket === 'needs_review');

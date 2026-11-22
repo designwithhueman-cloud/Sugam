@@ -526,7 +526,7 @@
     },
     {
       "ruleId": "UX-017",
-      "version": "1.0.0-draft",
+      "version": "1.1.0-draft",
       "category": "UX & Workflow Quality",
       "title": "Error Recovery",
       "description": "Mistakes in a form are reported where the visitor can act on them. Objective check (client-side only): ask the browser to validate each form without submitting it, then check focus moved to the invalid field and a message exists. Forms that validate only in script, or have no constraints, are reported as needing a person: recovery cannot be tested without submitting, and Avara never submits.",
@@ -564,6 +564,11 @@
           "error",
           "invalid input",
           "invalid value"
+        ],
+        "blamePhrases": [
+          "your fault",
+          "you failed to",
+          "obviously you"
         ]
       },
       "requiredEvidence": [

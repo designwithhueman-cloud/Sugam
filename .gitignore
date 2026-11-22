@@ -8,3 +8,4 @@ next-env.d.ts
 audit-output/
 test-account.txt
 --help/
+deploy/production.env

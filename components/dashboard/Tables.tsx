@@ -5,6 +5,13 @@ import type { scans } from '@/lib/db/schema.ts';
 import type { ProjectRow } from '@/lib/overview.ts';
 import { pageLabel } from '@/lib/overview.ts';
 import { DayDate, Initials, OpenLink, fullDate, shortDate } from '@/components/dashboard/bits.tsx';
+import type { ShownScore } from '@/lib/score-display.ts';
+
+/** A strict-policy score, or "Not scored" with its reason (never a dash that could be read as 0). */
+export function ScoreCell({ v }: { v?: ShownScore }) {
+  if (!v) return <span className="text-pine-600">–</span>;
+  return v.score != null ? <span className="font-semibold tabular-nums">{v.score}</span> : <span className="text-sm text-pine-600" title={v.reason ?? undefined}>Not scored<span className="sr-only">: {v.reason}</span></span>;
+}
 
 const th = 'px-2 pb-2.5 pt-1 text-left text-[13px] font-medium text-pine-600 sm:px-3';
 const td = 'px-2 py-3 align-middle sm:px-3';
@@ -55,13 +62,14 @@ export function ProjectTable({ org, rows, caption }: { org: string; rows: Projec
 type Scan = InferSelectModel<typeof scans>;
 const statusText: Record<Scan['status'], string> = { queued: 'Waiting to start', running: 'Scanning…', analyzing: 'Analysing…', completed: '', failed: 'Scan failed' };
 
-export function QuickScanTable({ rows, caption, withScore = false }: { rows: Scan[]; caption: string; withScore?: boolean }) {
+export function QuickScanTable({ rows, caption, scores }: { rows: Scan[]; caption: string; scores?: Record<string, ShownScore> }) {
+  const withScore = !!scores;
   return (
     <table className="w-full table-fixed border-collapse text-[15px]">
       <caption className="sr-only">{caption}</caption>
       <thead><tr className="border-b border-stone-line">
         <th scope="col" className={th}>Page</th>
-        {withScore && <th scope="col" className={`${th} hidden w-[4.5rem] xl:table-cell`}>Score</th>}
+        {withScore && <th scope="col" className={`${th} hidden w-[6.5rem] xl:table-cell`}>Score</th>}
         <th scope="col" className={`${th} w-[5.25rem] sm:w-[7.5rem]`}>Confirmed<span className="max-sm:sr-only"> issues</span></th>
         <th scope="col" className={`${th} hidden w-[9.5rem] xl:table-cell`}>Scanned</th>
         <th scope="col" className={`${th} w-[3.75rem] md:w-[10rem]`}><span className="sr-only">Open</span></th>
@@ -80,7 +88,7 @@ export function QuickScanTable({ rows, caption, withScore = false }: { rows: Sca
                   </div>
                 </div>
               </th>
-              {withScore && <td className={`${td} hidden xl:table-cell`}>{s.score ?? <span className="text-pine-600">–</span>}</td>}
+              {withScore && <td className={`${td} hidden xl:table-cell`}><ScoreCell v={scores![s.id]} /></td>}
               <td className={td}>{s.status === 'completed' ? <Count n={s.summary ? s.summary.confirmedIssues : null} none="Not counted" /> : <span className={`text-sm ${s.status === 'failed' ? 'font-semibold text-[#9e2a12]' : 'text-pine-600'}`}>{statusText[s.status]}</span>}</td>
               <td className={`${td} hidden text-pine-700 xl:table-cell`}><time dateTime={when.toISOString()} title={fullDate(when)}>{shortDate(when)}</time></td>
               <td className={`${td} text-right`}><OpenLink href={`/scans/${s.id}`} name={name} /></td>

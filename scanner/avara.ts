@@ -4,12 +4,15 @@
 import type { Page } from 'playwright';
 import { FIND_ACTIONS, MEASURE_ACTION, FIELDS_SNAPSHOT, REACH_FIELD } from './avara-inpage.ts';
 import { collapsedContainer, collapsedNote } from '../lib/avara/evidence-check.ts';
+import { CODE_EVIDENCE } from './code-evidence.ts';
 
 export type Measurement = {
   found: boolean; selector: string; text: string; html: string; tag: string; rendered: boolean; pointerEventsNone: boolean; disabled: boolean;
   box: { x: number; y: number; width: number; height: number }; width: number; height: number; belowFirstScreen: boolean; outsideX: boolean;
   sidewaysScrollPossible: boolean; xOverflowHidden: boolean; pageWidth: number; viewportWidth: number; visibleRatio: number; clippedBy: string | null;
   covered: boolean; cover: { selector: string; position: string; text: string; dismissible?: boolean; box?: { x: number; y: number; width: number; height: number } } | null; centerPoint: { x: number; y: number };
+  /** Code evidence for the fix, read in the same state (scanner/code-evidence.ts): keys action, cover, clippedBy. */
+  code?: Record<string, import('./code-evidence.ts').CodeEvidence> | null;
 };
 export type Classification = { level: 'ok' | 'inconvenient' | 'unusable'; unproven?: string; reasons: string[]; causes: { kind: 'hidden' | 'clipped' | 'covered' | 'offscreen' | 'small' | 'sideways' | 'ignored'; detail: string }[] };
 export type Candidate = { selector: string; text: string; how: 'goal' | 'inferred'; score: number; tag: string; html: string; submits: boolean; formSelector: string | null; href: string; external: boolean; mail: boolean };
@@ -44,14 +47,14 @@ const reachFailure = (r: Awaited<ReturnType<typeof reach>>) => (!r.found ? 'The 
 
 // Activate the action and watch what a visitor would see. Never submits a form: a submit button is not clicked, the form's first field is checked instead.
 export async function runWorkflow(page: Page, cand: Candidate, cls: Classification | null): Promise<Workflow> {
-  const steps: string[] = [`Found the main action: “${cand.text}” (${cand.how === 'goal' ? 'matches the goal you confirmed' : 'chosen by Sugam from the page'}).`];
-  if (cls?.unproven) return { outcome: 'not_activated', reason: cls.unproven, steps: [...steps, `Not activated: ${cls.unproven}`], coverage: 'Ends before activation: the action was inside a collapsed container that Sugam did not open.' };
+  const steps: string[] = [`Found the main action: “${cand.text}” (${cand.how === 'goal' ? 'matches the goal you confirmed' : 'chosen by Avara from the page'}).`];
+  if (cls?.unproven) return { outcome: 'not_activated', reason: cls.unproven, steps: [...steps, `Not activated: ${cls.unproven}`], coverage: 'Ends before activation: the action was inside a collapsed container that Avara did not open.' };
   if (cls?.level === 'unusable') return { outcome: 'could_not_activate', reason: cls.reasons[0], steps: [...steps, `A visitor could not activate it: ${cls.reasons[0]}`], coverage: 'Ends before activation: the action cannot be used at this width.' };
-  if (cand.mail) return { outcome: 'not_activated', reason: 'The action opens an email or phone app.', steps: [...steps, 'It is a mailto or tel link, so Sugam did not activate it.'], coverage: 'Ends at the link: Sugam does not open email or phone apps.' };
-  if (cand.external) return { outcome: 'not_activated', reason: 'The action goes to another website.', steps: [...steps, `It links to another site (${new URL(cand.href).host}), so Sugam did not follow it.`], coverage: 'Ends at the link: Sugam reviews one site at a time.' };
+  if (cand.mail) return { outcome: 'not_activated', reason: 'The action opens an email or phone app.', steps: [...steps, 'It is a mailto or tel link, so Avara did not activate it.'], coverage: 'Ends at the link: Sugam does not open email or phone apps.' };
+  if (cand.external) return { outcome: 'not_activated', reason: 'The action goes to another website.', steps: [...steps, `It links to another site (${new URL(cand.href).host}), so Avara did not follow it.`], coverage: 'Ends at the link: Sugam reviews one site at a time.' };
   const before = (await page.evaluate(`(${FIELDS_SNAPSHOT})(${JSON.stringify(cand.submits ? cand.formSelector : null)})`)) as { url: string; fields: { selector: string; name: string }[]; dialogs: { label: string }[] };
   if (cand.submits) {
-    steps.push('The action submits a form on the page, so Sugam did not click it.');
+    steps.push('The action submits a form on the page, so Avara did not click it.');
     const first = before.fields[0];
     if (!first) return { outcome: 'no_visible_change', reason: 'The form has no visible field.', steps: [...steps, 'The form has no visible field to fill in.'], coverage: REACH_LIMIT };
     const r = await reach(page, first.selector); const why = reachFailure(r);
@@ -92,6 +95,7 @@ export async function probeActions(page: Page, vp: 'desktop' | 'mobile', width: 
   // The action the builder named comes first, however prominent other buttons are; the rest keep their order.
   const ordered = [...found.candidates.filter((c) => c.how === 'goal'), ...found.candidates.filter((c) => c.how !== 'goal')];
   for (const c of ordered) {
+    await page.evaluate(`window.__avaraCodeEvidence = ${CODE_EVIDENCE}`).catch(() => {});   // read by MEASURE_ACTION on the elements it measures
     const m = (await page.evaluate(`(${MEASURE_ACTION})(${JSON.stringify(c.selector)}, ${JSON.stringify(c.text)})`).catch(() => null)) as Measurement | { found: false } | null;
     const measurement = m && m.found ? (m as Measurement) : null;
     candidates.push({ candidate: c, measurement, classification: measurement ? classify(measurement) : null });

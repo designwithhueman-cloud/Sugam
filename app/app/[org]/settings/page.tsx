@@ -3,9 +3,10 @@ import { asc, eq } from 'drizzle-orm';
 import { getDb, schema } from '@/lib/db/index.ts';
 import { requireUser } from '@/lib/auth.ts';
 import { orgForSlug, canManage } from '@/lib/access.ts';
-import { createClientAction, updateBrandingAction, addMemberAction } from '@/app/actions.ts';
+import { createClientAction, updateBrandingAction, addMemberAction, deleteAccountAction } from '@/app/actions.ts';
 import { ActionForm } from '@/components/forms/ActionForm.tsx';
 import { Field, inputCls } from '@/components/forms/Field.tsx';
+import { DangerDelete } from '@/components/forms/DangerDelete.tsx';
 import Link from 'next/link';
 import { hasFeature, planName } from '@/lib/plans.ts';
 
@@ -64,6 +65,11 @@ export default async function Settings({ params }: { params: Promise<{ org: stri
           <input type="hidden" name="org" value={org} />
           <Field label="Client name" htmlFor="c-name"><input id="c-name" name="name" className={inputCls} /></Field>
         </ActionForm>
+      </section>
+      <section className={card} aria-labelledby="acct-h">
+        <h2 id="acct-h" className="text-lg font-semibold">Your account</h2>
+        <p className="mt-1 text-sm text-slate-700">Signed in as {user.email}.</p>
+        <div className="mt-4"><DangerDelete id="del-acct" summary="Delete my account" explain="Deletes your account, the scans you ran yourself, and every workspace where you are the only member, with its projects, scans, screenshots and share links. Workspaces you share with others stay; you are removed from them. This cannot be undone." action={deleteAccountAction} hidden={{}} confirmLabel="Type your email address to confirm" submit="Delete my account permanently" /></div>
       </section>
     </main>
   );

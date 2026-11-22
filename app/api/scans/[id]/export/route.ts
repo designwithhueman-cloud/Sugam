@@ -10,8 +10,9 @@ const csvCell = (v: unknown) => { const s = String(v ?? ''); return /[",\n]/.tes
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return new Response('Not found', { status: 404 });
-  if (!(await scanHas(id, 'full_report'))) return new Response('This needs a paid plan.', { status: 402 });
+  // Access first: someone who cannot see the scan learns nothing about it (not even its plan).
   if (!(await canViewScan(await currentUser(), id))) return new Response('Not found', { status: 404 });
+  if (!(await scanHas(id, 'full_report'))) return new Response('This needs a paid plan.', { status: 402 });
   const r = await loadReport(id);
   if (!r || !r.completedAt) return new Response('Not found', { status: 404 });
   const format = new URL(req.url).searchParams.get('format');
@@ -19,7 +20,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (format === 'sarif') {
     const rules = [...new Map(issues.map((i) => [i.ruleId, { id: i.ruleId, shortDescription: { text: i.title }, helpUri: i.helpUrl, properties: { tags: i.wcag.map((w) => `WCAG ${w.sc}`) } }])).values()];
     const level = (i: typeof issues[number]) => (i.bucket === 'needs_review' ? 'note' : i.severity === 'critical' || i.severity === 'serious' ? 'error' : 'warning');
-    const sarif = { $schema: 'https://json.schemastore.org/sarif-2.1.0.json', version: '2.1.0', runs: [{ tool: { driver: { name: 'Avara', informationUri: 'https://avara.local', rules } }, results: issues.flatMap((i) => i.instances.map((x) => ({ ruleId: i.ruleId, level: level(i), message: { text: `${i.title}. ${i.whatToChange}` }, locations: [{ physicalLocation: { artifactLocation: { uri: r.finalUrl || r.url } }, logicalLocations: [{ fullyQualifiedName: x.selector }] }], properties: { bucket: i.bucket, severity: i.severity, html: x.html } }))) }] };
+    const sarif = { $schema: 'https://json.schemastore.org/sarif-2.1.0.json', version: '2.1.0', runs: [{ tool: { driver: { name: 'Avara', informationUri: process.env.SUGAM_URL || new URL(req.url).origin, rules } }, results: issues.flatMap((i) => i.instances.map((x) => ({ ruleId: i.ruleId, level: level(i), message: { text: `${i.title}. ${i.whatToChange}` }, locations: [{ physicalLocation: { artifactLocation: { uri: r.finalUrl || r.url } }, logicalLocations: [{ fullyQualifiedName: x.selector }] }], properties: { bucket: i.bucket, severity: i.severity, html: x.html } }))) }] };
     return new Response(JSON.stringify(sarif, null, 2), { headers: { 'content-type': 'application/sarif+json', 'content-disposition': `attachment; filename="avara-${id.slice(0, 8)}.sarif"` } });
   }
   const rows = [['issue_number', 'bucket', 'severity', 'rule', 'title', 'wcag', 'role', 'page', 'selector', 'html', 'detail', 'what_to_change'].join(',')];

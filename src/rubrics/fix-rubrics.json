@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "version": "2026-11-21.1",
+  "note": "Short guidance the AI fix writer may use to reword the Change line of a fix. Only the rubric mapped to an issue's rule is sent. Derived from the Avara Launch Scanner skills review-launch-copy and review-hierarchy-and-trust (vendor/avara-launch/skills). Every other rule keeps Avara's deterministic fix text.",
+  "rubrics": [
+    {
+      "id": "copy-tone",
+      "version": "1",
+      "title": "Copy and tone",
+      "source": "vendor/avara-launch/skills/review-launch-copy",
+      "ruleIds": ["button-name", "input-button-name", "link-name", "sugam/vague-link-text", "sugam/duplicate-cta-label", "sugam/voice-name-not-first", "label-content-name-mismatch"],
+      "hostRules": ["A11Y-015", "CONV-001", "PC-009", "UX-017"],
+      "guidance": [
+        "Suggest one concrete replacement label or sentence, in plain words, that names what happens next.",
+        "Keep the original meaning and the site's own voice; do not add claims, numbers or urgency the page does not support.",
+        "Quote the existing wording only from the evidence given; never invent page content.",
+        "If the visitor goal is given, name the action in terms of that goal.",
+        "Do not promise more sign-ups or conversions; wording changes are a hypothesis."
+      ]
+    },
+    {
+      "id": "visual-hierarchy",
+      "version": "1",
+      "title": "Visual hierarchy",
+      "source": "vendor/avara-launch/skills/review-hierarchy-and-trust",
+      "ruleIds": ["sugam/looks-clickable", "sugam/heading-structure", "sugam/small-text", "sugam/non-text-contrast"],
+      "hostRules": ["DIFF-007", "DESIGN-001"],
+      "guidance": [
+        "Describe the smallest visual change that makes the intended element read as what it is (an action, a heading, a field).",
+        "State the measured observation first; describe any effect on attention as a hypothesis.",
+        "Do not change brand colours, fonts or layout beyond the element named.",
+        "Prefer one change over several."
+      ]
+    }
+  ]
+}

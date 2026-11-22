@@ -1,0 +1,19 @@
+{
+  "ruleId": "DIFF-002",
+  "version": "prototype-1",
+  "category": "Differentiation & Design Maturity",
+  "title": "Visual distinctiveness",
+  "sourceType": "avara",
+  "source": "Avara editorial comparison of hero layouts",
+  "weight": 0,
+  "publish": false,
+  "parameters": {
+    "positionTolerance": 0.08,
+    "minimumGroups": 3,
+    "groups": {
+      "heading position": ["headingX", "headingY"],
+      "action position": ["actionX", "actionY"],
+      "visual composition": ["visualX", "visualY", "visualWidth", "visualHeight"]
+    }
+  }
+}

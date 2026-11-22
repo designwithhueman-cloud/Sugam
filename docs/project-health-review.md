@@ -13,7 +13,7 @@ Next.js app (Sugam/Avara): URL → Playwright scan (desktop + 320px, axe, keyboa
 
 ## Inconsistent
 1. Two report UIs: `ReviewPage` (new) on `/scans/[id]`, but `/share/[token]` still renders the old `ReportView`. Shared links look different from the owner's page.
-2. Two AI switches: `SUGAM_AI` (analysis/claude.ts, README) vs `AVARA_AI` (rule engine). Documented as a gap, still unresolved. README only mentions one.
+2. Two AI switches: `SUGAM_AI` (analysis/claude.ts, README) vs `AVARA_AI` (rule engine). Resolved 2026-11-21: one switch, `AVARA_AI=on`, for both; `SUGAM_AI` is read only as a deprecated alias. README only mentions one.
 3. Stale numbers in docs: `AVARA-CURRENT-STATE-AUDIT.md` and `docs/detector-coverage-report.md` say 77 detectors; the registry now says 81 (matrix is correct). `docs/product-owner-report.md` and `rule-value-audit.md` predate the new tracks.
 4. Audit file still lists "no version control" and failing landing tests as open; both are done.
 5. Two analysis stacks: legacy `analysis/` (analyze, fixes, claude, meta) and `src/` rule engine. `scanner/cli-analyze.ts` and `lib/jobs.ts` still bridge into `analysis/`.

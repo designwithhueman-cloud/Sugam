@@ -4,7 +4,7 @@
   "rules": [
     {
       "ruleId": "CONV-001",
-      "version": "1.0.0-draft",
+      "version": "1.1.0-draft",
       "category": "Conversion Readiness",
       "title": "Primary CTA Clarity",
       "description": "Inspect what the button label promises and its actual destination.",
@@ -42,7 +42,9 @@
           "go",
           "here",
           "click",
-          "continue"
+          "continue",
+          "learn more",
+          "go here"
         ]
       }
     },

@@ -43,24 +43,24 @@ function primaryTaskVisible(out: ScanOutput): DetectorReport {
   if (!vs.length) return off('The main-action check did not run.');
   const hits: DetectorHit[] = []; let seen = 0;
   for (const [n, v] of vs) { const a = mainAction(v); if (!a?.m) continue; seen++; if (a.m.belowFirstScreen) hits.push(fail(`“${a.text}” is below the first screen on ${n}`, `On ${n}, the main action “${a.text}” starts ${Math.round(a.m.box.y)}px down, below the first screen.`, [`${a.selector}  top ${Math.round(a.m.box.y)}px, screen ${n === 'mobile' ? 640 : 800}px tall`])); }
-  return seen ? ran(hits) : ran([review('No main action found', 'Sugam could not identify a main action to check. Confirm the goal when you scan.', ['looked for buttons and links that look like the main action; none scored high enough'])]);
+  return seen ? ran(hits) : ran([review('No main action found', 'Avara could not identify a main action to check. Confirm the goal when you scan.', ['looked for buttons and links that look like the main action; none scored high enough'])]);
 }
 function ctaVisible(out: ScanOutput): DetectorReport {
   const v = vp(out, 'desktop'); if (!v?.avara) return off('The main-action check did not run.');
-  const a = mainAction(v); if (!a?.m || !a.cls) return ran([review('No main action found', 'Sugam could not identify the conversion entry point on desktop.', ['looked for buttons and links that look like the main action; none scored high enough'])]);
+  const a = mainAction(v); if (!a?.m || !a.cls) return ran([review('No main action found', 'Avara could not identify the conversion entry point on desktop.', ['looked for buttons and links that look like the main action; none scored high enough'])]);
   return ran(a.cls.level === 'ok' ? [] : [fail(`“${a.text}” is not available on desktop`, `On desktop, “${a.text}” ${a.cls.reasons[0] ?? 'cannot be used'}`.trim(), [`${a.selector}  visible ${Math.round(a.m.visibleRatio * 100)}%, ${a.m.width} by ${a.m.height} px`])]);
 }
 
-// ---- 320px page observations ----
+// ---- phone page observations (the 390px phone pass) ----
 type MP = { images: { selector: string; nw: number; nh: number; rw: number; rh: number; fit: string; right: number; svg: boolean; loaded: boolean }[]; viewportMeta: string | null; innerWidth: number; textCount: number; smallCount: number; smallSamples: { selector: string; px: number; text: string }[]; inputs: { selector: string; px: number; right: number }[] };
 type TR = { baselineClipped: { selector: string; kind: string; by: number; text: string }[]; newlyClipped: { selector: string; kind: string; by: number; text: string }[]; scaled: number };
 function contentScaling(out: ScanOutput): DetectorReport {
   const tr = vp(out, 'mobile')?.textResize as TR | null | undefined; if (!tr) return off('The text-size check did not run.');
-  return ran(tr.newlyClipped.length ? [fail('Text clips when it is made 200% larger', `${tr.newlyClipped.length} element${tr.newlyClipped.length === 1 ? '' : 's'} lose text or controls when text is doubled at 320px wide.`, tr.newlyClipped.map((x) => `${x.selector}  clipped by ${x.by}px (${x.kind})  "${x.text}"`))] : []);
+  return ran(tr.newlyClipped.length ? [fail('Text clips when it is made 200% larger', `${tr.newlyClipped.length} element${tr.newlyClipped.length === 1 ? '' : 's'} lose text or controls when text is doubled on the phone (${vp(out, 'mobile')?.width ?? 390}px wide).`, tr.newlyClipped.map((x) => `${x.selector}  clipped by ${x.by}px (${x.kind})  "${x.text}"`))] : []);
 }
 function layoutIntegrity(out: ScanOutput): DetectorReport {
-  const tr = vp(out, 'mobile')?.textResize as TR | null | undefined; if (!tr) return off('The 320px layout check did not run.');
-  return ran(tr.baselineClipped.length ? [review('Content is clipped at 320px wide', `${tr.baselineClipped.length} element${tr.baselineClipped.length === 1 ? ' is' : 's are'} clipped by their container at 320px. It may be intended (a carousel); a person should confirm.`, tr.baselineClipped.map((x) => `${x.selector}  clipped by ${x.by}px (${x.kind})  "${x.text}"`))] : []);
+  const tr = vp(out, 'mobile')?.textResize as TR | null | undefined; if (!tr) return off('The phone layout check did not run.');
+  return ran(tr.baselineClipped.length ? [review('Content is clipped on a phone', `${tr.baselineClipped.length} element${tr.baselineClipped.length === 1 ? ' is' : 's are'} clipped by their container on the phone (${vp(out, 'mobile')?.width ?? 390}px wide). It may be intended (a carousel); a person should confirm.`, tr.baselineClipped.map((x) => `${x.selector}  clipped by ${x.by}px (${x.kind})  "${x.text}"`))] : []);
 }
 function orientation(out: ScanOutput): DetectorReport {
   const m = vp(out, 'mobile'); const o = m?.orientation; const mp = m?.mobileProbe as MP | null | undefined;
@@ -74,11 +74,11 @@ function orientation(out: ScanOutput): DetectorReport {
   return ran(hits);
 }
 function mobileTypography(out: ScanOutput): DetectorReport {
-  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The 320px text check did not run.');
+  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The phone text check did not run.');
   return ran(mp.smallCount ? [review('Some text is smaller than 12px on a phone', `${mp.smallCount} of ${mp.textCount} text elements are under 12px at 320px. Whether that hurts reading is a judgement.`, mp.smallSamples.map((s) => `${s.selector}  ${s.px}px  "${s.text}"`))] : []);
 }
 function mobileForm(out: ScanOutput): DetectorReport {
-  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The 320px form check did not run.');
+  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The phone form check did not run.');
   if (!mp.inputs.length) return na('No form fields on this page.');
   const hits: DetectorHit[] = []; const out_ = mp.inputs.filter((i) => i.right > mp.innerWidth + 1); const small = mp.inputs.filter((i) => i.px < 16);
   if (out_.length) hits.push(fail('A form field runs past the edge of the phone screen', `${out_.length} field${out_.length === 1 ? '' : 's'} extend beyond 320px.`, out_.map((i) => `${i.selector}  right edge ${i.right}px`)));
@@ -86,7 +86,7 @@ function mobileForm(out: ScanOutput): DetectorReport {
   return ran(hits);
 }
 function imageResponsiveness(out: ScanOutput): DetectorReport {
-  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The 320px image check did not run.');
+  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The phone image check did not run.');
   const imgs = mp.images.filter((i) => i.loaded); if (!imgs.length) return na('No loaded images on this page.');
   const hits: DetectorHit[] = []; const over = imgs.filter((i) => i.rw > mp.innerWidth + 1 || i.right > mp.innerWidth + 1);
   const bent = imgs.filter((i) => !i.svg && (i.fit === 'fill' || i.fit === '') && i.nw > 0 && i.nh > 0 && i.rw > 40 && i.rh > 40 && Math.abs((i.rw / i.rh) / (i.nw / i.nh) - 1) > 0.08);
@@ -100,7 +100,7 @@ function statusHit(pc: PageCtx, what: string, l: Link | undefined, mustHave: boo
   const st = linkState(pc, l);
   if (st === 'missing') return mustHave ? fail(`${what} link is missing`, `${what} is needed here and no link to it was found on the page.`, [`looked for a link whose text or address mentions ${what.toLowerCase().split(' ')[0]}; none found`]) : null;
   if (st === 'broken') return fail(`${what} link does not open`, `The ${what.toLowerCase()} link “${l!.text}” did not open (${pc.linkChecks?.[l!.href ?? '']}).`, [linkEvidence(pc, l!)]);
-  if (st === 'unchecked') return review(`${what} link not checked`, `A ${what.toLowerCase()} link exists but Sugam could not confirm it opens.`, [linkEvidence(pc, l!)]);
+  if (st === 'unchecked') return review(`${what} link not checked`, `A ${what.toLowerCase()} link exists but Avara could not confirm it opens.`, [linkEvidence(pc, l!)]);
   return null;
 }
 function privacy(pc: PageCtx | undefined): DetectorReport {
@@ -458,7 +458,8 @@ function featureGridSaturation(pc: VPC | undefined): DetectorReport {
   const icon = grids.filter((g) => (g.sec.group?.icons ?? 0) >= Math.ceil((g.sec.group?.count ?? 0) / 2)).length; const cards = grids.reduce((n, g) => n + (g.sec.group?.count ?? 0), 0);
   const ev = grids.map((g) => `${g.sec.group!.selector}: ${g.sec.group!.count} cards${g.sec.group!.icons ? ` (${g.sec.group!.icons} with icons)` : ''}: ${g.sec.group!.titles.map((t) => quote(t, 28)).join(', ')}`);
   const summary = `${grids.length} grids of repeated cards (${cards} cards, ${icon} grids with icons)`;
-  if (grids.length >= param('DIFF-009', 'failGrids', 3)) return ran([fail('The page is made of repeated card grids', summary + ' make up the page.', ev)]);
+  // A count of grids is a pattern, not a defect: even many grids are a question for a person, never a confirmed failure (launch pack DIFF-009).
+  if (grids.length >= param('DIFF-009', 'failGrids', 3)) return ran([review('The page is made of repeated card grids', summary + ' make up the page. Check whether each group helps visitors make a different decision.', ev)]);
   if (grids.length >= param('DIFF-009', 'reviewGrids', 2)) return ran([review('The page leans on repeated card grids', summary + '.', ev)]);
   return ran([]);
 }
@@ -507,8 +508,14 @@ function genericErrorMessage(out: ScanOutput): DetectorReport {
   if (!x.invalidMessages.length) return na('No visible error to inspect: no field was shown as invalid with a linked error message when the page was captured. Avara never submits a form to produce one.');
   const terms = param<string[]>('UX-017', 'genericErrorPhrases', []);
   const generic = x.invalidMessages.filter((m) => terms.includes(m.message.toLowerCase().trim().replace(/[.!]+$/, '')));
+  // Blaming wording (launch pack UX-017), matched as whole words so "you failed to" never matches inside other words.
+  const words = (t: string) => ' ' + (t.normalize('NFKC').toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).join(' ') + ' ';
+  const blame = param<string[]>('UX-017', 'blamePhrases', []).map((p) => words(p)).filter((p) => p.trim());
+  const blaming = x.invalidMessages.filter((m) => blame.some((p) => words(m.message).includes(p)));
+  const blameHit = blaming.length ? [review('An error message blames the visitor', `${blaming.length} visible error message${blaming.length === 1 ? '' : 's'} put the fault on the visitor. Describe the problem and one step that fixes it, without blame.`, blaming.map((m) => `${m.selector}  “${m.message.slice(0, 120)}”`))] : [];
+  if (!generic.length && blameHit.length) return ran(blameHit);
   if (!generic.length) { const n = x.invalidMessages.length; return { ...ran([]), passNote: `${n} visible linked error message${n === 1 ? ' was' : 's were'} inspected and ${n === 1 ? 'is' : 'are'} more than a generic “invalid” or “error”.` }; }
-  return ran(generic.length ? [review('An error message does not say how to fix the field', `${generic.length} field${generic.length === 1 ? ' is' : 's are'} marked invalid with a message that only says it is wrong. Explain how to correct the value, using the format or limit for that field.`, generic.map((m) => `${m.selector}  error “${m.message}”`))] : []);
+  return ran([...blameHit, ...(generic.length ? [review('An error message does not say how to fix the field', `${generic.length} field${generic.length === 1 ? ' is' : 's are'} marked invalid with a message that only says it is wrong. Explain how to correct the value, using the format or limit for that field.`, generic.map((m) => `${m.selector}  error “${m.message}”`))] : [])]);
 }
 
 // ---- Detector pack: three advisory reads. Each says what was observed and asks a person; none can fail a page. ----

@@ -19,7 +19,9 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: 'bad_origin', message: 'Request refused.' }, { status: 403 });
   const user = await currentUser();
   const ip = user ? user.id : 'anon:' + clientIp(req.headers);
-  if (limited(ip, user ? 20 : 5)) return NextResponse.json({ error: 'rate_limited', message: 'Too many scans from your network. Please wait a few minutes.' }, { status: 429 });
+  // Per-caller limit, then one ceiling for all anonymous scans in this process: the caller's address comes from a header that can be
+  // spoofed when no trusted proxy sets it (see lib/ip.ts), so the ceiling bounds the load whatever the header says.
+  if (limited(ip, user ? 20 : 5) || (!user && limited('anon:*', Number(process.env.ANON_SCAN_CEILING || 60)))) return NextResponse.json({ error: 'rate_limited', message: 'Too many scans from your network. Please wait a few minutes.' }, { status: 429 });
   let body: { url?: unknown; standard?: unknown; goal?: unknown };
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'bad_json', message: 'Invalid request.' }, { status: 400 }); }
   let url = String(body.url || '').trim();

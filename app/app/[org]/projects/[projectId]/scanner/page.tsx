@@ -7,7 +7,9 @@ import { startProjectScanAction } from '@/app/actions.ts';
 import { ActionForm } from '@/components/forms/ActionForm.tsx';
 import { Field, inputCls } from '@/components/forms/Field.tsx';
 import { ScanRow } from '@/components/ScanRow.tsx';
+import { strictScores } from '@/lib/score-display.ts';
 import { STANDARDS } from '@/lib/standards.ts';
+import { ProjectHead, projectMain } from '@/components/dashboard/ProjectHead.tsx';
 
 export const dynamic = 'force-dynamic';
 export default async function Scanner({ params }: { params: Promise<{ org: string; projectId: string }> }) {
@@ -16,12 +18,12 @@ export default async function Scanner({ params }: { params: Promise<{ org: strin
   const pa = await projectAccess(user, projectId); if (!pa) notFound();
   const p = pa.project; const db = await getDb();
   const scans = await db.select().from(schema.scans).where(eq(schema.scans.projectId, p.id)).orderBy(desc(schema.scans.createdAt)).limit(50);
+  const scores = await strictScores(scans);
   return (
-    <main id="main" className="mx-auto max-w-6xl px-4 py-8 lg:px-8">
-      <h1 className="text-4xl font-bold text-[#111111]">Accessibility scanner</h1>
-      <p className="mt-2 text-slate-600">Scans a page at desktop and 320px mobile widths: axe-core rules, AI-builder heuristics, a 25-step keyboard trace and screenshots.</p>
-      <section className="mt-6 rounded-2xl border border-pine-100 bg-white p-6 shadow-sm" aria-labelledby="run-h">
-        <h2 id="run-h" className="text-lg font-semibold">Run a scan</h2>
+    <main id="main" className={projectMain}>
+      <ProjectHead org={org} project={p} current="Scanner" title="Scan this site" sub="Desktop (1280px) and a phone (390px), with reflow and the main button checked at 320px: axe-core rules, Avara’s checks, a keyboard trace and screenshots." />
+      <section className="rounded-2xl border border-stone-line bg-white p-5 sm:p-7" aria-labelledby="run-h">
+        <h2 id="run-h" className="text-[1.375rem] font-semibold tracking-tight text-ink">Run a scan</h2>
         <ActionForm action={startProjectScanAction} submit="Start scan" className="mt-3">
           <input type="hidden" name="projectId" value={p.id} />
           <div className="grid gap-3 sm:grid-cols-2">
@@ -32,7 +34,7 @@ export default async function Scanner({ params }: { params: Promise<{ org: strin
       </section>
       <section className="mt-8" aria-labelledby="hist-h">
         <h2 id="hist-h" className="text-lg font-semibold">Scan history</h2>
-        {scans.length ? <div className="mt-3 overflow-x-auto rounded-xl" tabIndex={0} role="region" aria-label="Scan history, scrolls sideways on small screens"><table className="w-full min-w-[34rem] overflow-hidden rounded-xl bg-white text-sm shadow-sm"><thead className="bg-pine-50 text-left text-xs uppercase tracking-wide text-slate-600"><tr><th className="p-3">Page</th><th className="p-3">Score</th><th className="p-3">Confirmed issues</th><th className="p-3">Status</th><th className="p-3">Date</th></tr></thead><tbody>{scans.map((s) => <ScanRow key={s.id} scan={s} showEnv />)}</tbody></table></div> : <p className="mt-2 text-sm text-slate-600">No scans yet.</p>}
+        {scans.length ? <div className="mt-3 overflow-x-auto rounded-xl" tabIndex={0} role="region" aria-label="Scan history, scrolls sideways on small screens"><table className="w-full min-w-[34rem] overflow-hidden rounded-xl bg-white text-sm shadow-sm"><thead className="bg-pine-50 text-left text-xs uppercase tracking-wide text-slate-600"><tr><th className="p-3">Page</th><th className="p-3">Score</th><th className="p-3">Confirmed issues</th><th className="p-3">Status</th><th className="p-3">Date</th></tr></thead><tbody>{scans.map((s) => <ScanRow key={s.id} score={scores[s.id]} scan={s} showEnv />)}</tbody></table></div> : <p className="mt-2 text-sm text-slate-600">No scans yet.</p>}
       </section>
     </main>
   );

@@ -9,9 +9,11 @@ import { getDb, schema } from '@/lib/db/index.ts';
 import { createSession, destroySession, currentUser, hashPassword, verifyPassword, DUMMY_HASH, tooManyAttempts } from '@/lib/auth.ts';
 import { orgForSlug, projectAccess, canManage, slugify } from '@/lib/access.ts';
 import { checkUrl, BlockedUrlError } from '@/lib/net/guard.ts';
+import { stripSecrets } from '@/lib/net/url-privacy.ts';
 import { isStandard } from '@/lib/standards.ts';
 import { enqueueScan } from '@/lib/queue.ts';
-import { claimForUser } from '@/lib/claims.ts';
+import { claimForUser, isClaimed } from '@/lib/claims.ts';
+import { canDeleteScan, deleteScan, deleteAccount } from '@/lib/deletion.ts';
 import { clientIp } from '@/lib/ip.ts';
 import { hasFeature, LIMITS, type PlanId } from '@/lib/plans.ts';
 async function orgPlan(orgId: string): Promise<PlanId> { const db = await getDb(); const [o] = await db.select({ plan: schema.organizations.plan }).from(schema.organizations).where(eq(schema.organizations.id, orgId)); return o?.plan ?? 'free'; }
@@ -151,10 +153,11 @@ export async function startProjectScanAction(_: FormState, f: FormData): Promise
   const env = f.get('environment') === 'staging' ? 'staging' : 'live';
   const url = env === 'staging' ? pa.project.stagingUrl : pa.project.liveUrl;
   if (!url) return { error: `This project has no ${env} URL.` };
+  if (tooManyAttempts('project-scan:' + u.id, Number(process.env.SCAN_RATE_LIMIT || 20))) return { error: 'Too many scans in the last few minutes. Please wait a little and try again.' };
   try { await checkUrl(url); } catch (e) { return { error: e instanceof BlockedUrlError ? e.message : 'That address cannot be scanned.' }; }
   const std = String(f.get('standard') || pa.project.defaultStandard);
   const db = await getDb();
-  const [s] = await db.insert(schema.scans).values({ url, projectId: pa.project.id, environment: env, standard: isStandard(std) ? std : pa.project.defaultStandard, createdBy: u.id }).returning({ id: schema.scans.id });
+  const [s] = await db.insert(schema.scans).values({ url: stripSecrets(url).toString(), projectId: pa.project.id, environment: env, standard: isStandard(std) ? std : pa.project.defaultStandard, createdBy: u.id }).returning({ id: schema.scans.id });
   await enqueueScan(s.id);
   redirect(`/scans/${s.id}`);
 }
@@ -187,4 +190,46 @@ export async function joinWaitlistAction(_: FormState, f: FormData): Promise<For
   const db = await getDb();
   await db.insert(schema.waitlist).values({ email, plan }).onConflictDoNothing();
   return { ok: `Thanks. We will email ${email} once when checkout opens, and nothing else.` };
+}
+
+// Stop a client link working. Any member of the workspace that owns the scan can revoke it; the link row stays (as Revoked) for the record.
+export async function revokeShareAction(_: FormState, f: FormData): Promise<FormState> {
+  const u = await need(); const a = await orgForSlug(u, String(f.get('org') || ''));
+  if (!a) return { error: 'Workspace not found.' };
+  const linkId = String(f.get('linkId') || '');
+  if (!/^[0-9a-f-]{36}$/i.test(linkId)) return { error: 'Link not found.' };
+  const db = await getDb();
+  const [row] = await db.select({ id: schema.shareLinks.id, org: schema.projects.organizationId }).from(schema.shareLinks)
+    .innerJoin(schema.scans, eq(schema.scans.id, schema.shareLinks.scanId)).innerJoin(schema.projects, eq(schema.projects.id, schema.scans.projectId))
+    .where(eq(schema.shareLinks.id, linkId));
+  if (!row || row.org !== a.org.id) return { error: 'Link not found.' };
+  await db.update(schema.shareLinks).set({ revokedAt: new Date() }).where(eq(schema.shareLinks.id, linkId));
+  revalidatePath(`/app/${a.org.slug}/shared`);
+  return { ok: 'Link stopped. Anyone who opens it now sees “not found”.' };
+}
+
+// Delete one scan: its findings, fixes, share links and screenshots. Asks for a typed confirmation because it cannot be undone.
+export async function deleteScanAction(_: FormState, f: FormData): Promise<FormState> {
+  const id = String(f.get('scanId') || '');
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return { error: 'Scan not found.' };
+  if (String(f.get('confirm') || '').trim().toLowerCase() !== 'delete') return { error: 'Type delete to confirm.' };
+  const db = await getDb();
+  const [s] = await db.select({ id: schema.scans.id, projectId: schema.scans.projectId, createdBy: schema.scans.createdBy }).from(schema.scans).where(eq(schema.scans.id, id));
+  const u = await currentUser();
+  if (!s || !(await canDeleteScan(u, s, await isClaimed(id)))) return { error: 'You cannot delete this scan.' };
+  let back = u ? '/app' : '/';
+  if (s.projectId) { const [p] = await db.select({ id: schema.projects.id, slug: schema.organizations.slug }).from(schema.projects).innerJoin(schema.organizations, eq(schema.organizations.id, schema.projects.organizationId)).where(eq(schema.projects.id, s.projectId)); if (p) back = `/app/${p.slug}/projects/${p.id}`; }
+  await deleteScan(id);
+  revalidatePath('/app', 'layout');
+  redirect(`${back}${back.includes('?') ? '&' : '?'}deleted=scan`);
+}
+
+// Delete the signed-in account. Confirmed by typing the account's email address.
+export async function deleteAccountAction(_: FormState, f: FormData): Promise<FormState> {
+  const u = await need();
+  if (String(f.get('confirm') || '').trim().toLowerCase() !== u.email.toLowerCase()) return { error: 'Type your email address exactly to confirm.' };
+  const r = await deleteAccount(u);
+  if (!r.ok) return { error: r.reason };
+  await destroySession();
+  redirect('/?deleted=account');
 }

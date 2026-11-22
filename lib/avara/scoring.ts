@@ -16,13 +16,16 @@ export type ScoreResult = {
   headline: string | null; advisory: { groupId: string; ownerRuleId: string; reason: string }[];
 };
 
-export function scoreGroups(groups: ScoredGroup[], executed: Set<string>, profile: CoverageProfile): ScoreResult {
+/** `eligibleRules`, when given, is the scan's own rule snapshot of score-eligible rule ids: a category none of whose required rules is eligible is
+ *  "Not scored" (nothing in it can deduct, so a number would only ever read 100). Omitted, the arithmetic runs as if every rule were eligible. */
+export function scoreGroups(groups: ScoredGroup[], executed: Set<string>, profile: CoverageProfile, eligibleRules?: Set<string>): ScoreResult {
   const sorted = [...groups].sort((a, b) => (a.ownerRuleId + a.groupId).localeCompare(b.ownerRuleId + b.groupId));
   const seen = new Set<string>(); const advisory: ScoreResult['advisory'] = [];
   const cats: CategoryResult[] = (Object.keys(CATEGORIES) as CatCode[]).map((category) => {
     const inapplicable = profile.inapplicable?.[category] ?? (CATEGORIES[category].weight === 0 ? 'observations only: this category carries no weight' : undefined);
     if (inapplicable) return { category, assessed: false, score: null, deductions: [], missing: [], note: `Not applicable: ${inapplicable}` };
     const missing = (profile.required[category] ?? []).filter((r) => !executed.has(r));
+    if (eligibleRules && !(profile.required[category] ?? []).some((r) => eligibleRules.has(r))) return { category, assessed: false, score: null, deductions: [], missing, note: 'Not scored: no rule in this category is score-eligible yet' };
     const deductions: CategoryResult['deductions'] = [];
     for (const g of sorted.filter((x) => x.category === category)) {
       if (seen.has(g.groupId)) continue; seen.add(g.groupId);          // a group is deducted once, by its single owner
@@ -33,10 +36,12 @@ export function scoreGroups(groups: ScoredGroup[], executed: Set<string>, profil
     return { category, assessed: missing.length === 0, score: missing.length === 0 ? score : null, deductions, missing, note: missing.length ? `Required checks did not run: ${missing.join(', ')}` : 'Covered' };
   });
   const applicable = cats.filter((c) => !profile.inapplicable?.[c.category] && CATEGORIES[c.category].weight > 0);
-  const incomplete = applicable.filter((c) => !c.assessed);
+  const incomplete = applicable.filter((c) => !c.assessed && !c.note.startsWith('Not scored'));
+  const ineligible = applicable.filter((c) => c.note.startsWith('Not scored'));
   const assessed = applicable.filter((c) => c.assessed);
   const den = assessed.reduce((n, c) => n + CATEGORIES[c.category].weight, 0);
-  const withheld = !assessed.length || den === 0 ? 'No category has the required coverage yet.' : incomplete.length ? `${incomplete.map((c) => CATEGORIES[c.category].label).join(', ')} ${incomplete.length === 1 ? 'has' : 'have'} incomplete required coverage.` : null;
+  const names = (cs: CategoryResult[]) => cs.map((c) => CATEGORIES[c.category].label).join(', ');
+  const withheld = ineligible.length === applicable.length ? 'No rule is score-eligible yet, so nothing is scored.' : ineligible.length ? `${names(ineligible)} ${ineligible.length === 1 ? 'has' : 'have'} no score-eligible rule yet.` : !assessed.length || den === 0 ? 'No category has the required coverage yet.' : incomplete.length ? `${incomplete.map((c) => CATEGORIES[c.category].label).join(', ')} ${incomplete.length === 1 ? 'has' : 'have'} incomplete required coverage.` : null;
   const overall = withheld ? null : Math.round(assessed.reduce((n, c) => n + (c.score as number) * CATEGORIES[c.category].weight, 0) / den);
   const blocker = sorted.find((g) => g.confirmed && g.blocksMainTask);
   return { policy: SCORING_POLICY.version, coverageProfile: profile.version, categories: cats, overall, overallWithheld: withheld, advisory, headline: blocker ? `A confirmed blocker on the main task (${blocker.ownerRuleId}) comes before any average.` : null };

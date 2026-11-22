@@ -1,0 +1,14 @@
+# HTTPS certificates come from Let's Encrypt automatically once the domain's DNS points at this server.
+# Caddy does not trust an X-Forwarded-For header sent by the visitor: it sends the app the real client address, which is what the
+# rate limits use (TRUST_PROXY can stay unset).
+www.{$AVARA_DOMAIN} {
+	redir https://{$AVARA_DOMAIN}{uri} permanent
+}
+
+{$AVARA_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+	request_body {
+		max_size 2MB
+	}
+}

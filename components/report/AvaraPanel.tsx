@@ -27,7 +27,7 @@ function Evidence({ f }: { f: AvaraFinding }) {
     <div className="mt-3 space-y-3 text-sm">
       {meas.map((e, i) => <p key={i} className={`rounded-xl bg-[#f6f5f1] p-3 ${wrap}`}><b>Measured{e.viewport ? ` (${e.viewport})` : ''}:</b> {Object.entries(e.data).filter(([, v]) => v != null && typeof v !== 'object').map(([k, v]) => `${k} ${v}`).join(', ')}</p>)}
       {steps.map((e, i) => { const d = e.data as { steps?: string[]; coverage?: string }; return (
-        <div key={i} className="rounded-xl bg-[#f6f5f1] p-3"><p className="font-semibold">Steps Sugam took{e.viewport ? ` (${e.viewport})` : ''}</p><ol className="mt-1 list-decimal space-y-0.5 pl-5">{nonEmpty(d.steps).map((s, j) => <li key={j} className={wrap}>{s}</li>)}</ol>{d.coverage && <p className="mt-2 font-semibold">{d.coverage}</p>}</div>); })}
+        <div key={i} className="rounded-xl bg-[#f6f5f1] p-3"><p className="font-semibold">Steps Avara took{e.viewport ? ` (${e.viewport})` : ''}</p><ol className="mt-1 list-decimal space-y-0.5 pl-5">{nonEmpty(d.steps).map((s, j) => <li key={j} className={wrap}>{s}</li>)}</ol>{d.coverage && <p className="mt-2 font-semibold">{d.coverage}</p>}</div>); })}
       {metrics.map((e, i) => { const d = e.data as { metric?: string; value?: number; runs?: number[]; conditions?: Record<string, unknown>; field?: string }; return (
         <div key={i} className="rounded-xl bg-[#f6f5f1] p-3"><p className="font-semibold">Lab measurement, {String(d.metric).toUpperCase()}: {d.metric === 'lcp' ? `${Math.round((d.value ?? 0) / 100) / 10} s` : d.value} (runs: {(d.runs ?? []).map((r) => (d.metric === 'lcp' ? `${Math.round(r / 100) / 10} s` : r)).join(', ')})</p>
           <p className={`mt-1 ${wrap}`}>Conditions: {Object.entries(d.conditions ?? {}).map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join('; ')}</p>{d.field && <p className="mt-1">{d.field}</p>}</div>); })}
@@ -83,7 +83,7 @@ export function AvaraPanel({ report, readOnly = false, hideFirstFix = false }: {
       <section aria-labelledby="first-h" className="rounded-[2rem] border border-black/10 bg-white p-5 sm:p-8">
         <h2 id="first-h" className="text-3xl font-semibold tracking-tight text-ink">What to fix first</h2>
         {first ? <p className="mt-3 text-xl leading-relaxed text-ink" data-testid="first-sentence">{first.sentence}</p>
-          : <p className="mt-3 text-xl leading-relaxed text-ink">Sugam did not find a confirmed problem to rank on this page.</p>}
+          : <p className="mt-3 text-xl leading-relaxed text-ink">Avara did not find a confirmed problem to rank on this page.</p>}
         {av.goal && <p className="mt-2 text-base text-neutral-700">Goal you confirmed: {av.goal}</p>}
         <ol className="mt-6 space-y-4">
           {av.recommendations.map((r: AvaraRecommendation) => { const [tl, tc] = TIER[r.tier]; const members = r.findingIds.map((id) => byId.get(id)).filter(Boolean) as AvaraFinding[]; return (
@@ -103,12 +103,12 @@ export function AvaraPanel({ report, readOnly = false, hideFirstFix = false }: {
                   {r.lenses.length > 0 && <><dt className="font-semibold">Heuristic lenses</dt><dd className={wrap} data-testid="lenses">{r.lenses.map((l) => `${l.lens} ${l.name}`).join(' · ')} <span className="text-neutral-700">(a lens adds observations, never a penalty)</span></dd></>}
                   <dt className="font-semibold">Deductions</dt><dd className={wrap} data-testid="deductions"><b>{r.deductions.groups} repair group</b>, {r.deductions.points} points once scoring is enabled. {r.deductions.why}</dd>
                 </dl>)}
-              <details className="mt-3 rounded-xl border border-black/15 p-3"><summary className="min-h-11 cursor-pointer text-base font-semibold">Why Sugam thinks so ({members.length} finding{members.length === 1 ? '' : 's'})</summary>
+              <details className="mt-3 rounded-xl border border-black/15 p-3"><summary className="min-h-11 cursor-pointer text-base font-semibold">Why Avara thinks so ({members.length} finding{members.length === 1 ? '' : 's'})</summary>
                 <ul className="mt-3 space-y-3">{members.map((f) => <Finding key={f.id} f={f} />)}</ul></details>
             </li>); })}
         </ol>
         {!readOnly && first && (
-          <div className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl bg-[#f3fbd9] p-4"><RescanButton scanId={report.id} label={av.rescanOf ? 'Rescan again' : 'Rescan to verify'} /><p className="max-w-xl text-base text-neutral-800">Applied the fix? Rescan the same page. Sugam marks a finding fixed only when a comparable check confirms it.</p></div>)}
+          <div className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl bg-[#f3fbd9] p-4"><RescanButton scanId={report.id} label={av.rescanOf ? 'Rescan again' : 'Rescan to verify'} /><p className="max-w-xl text-base text-neutral-800">Applied the fix? Rescan the same page. Avara marks a finding fixed only when a comparable check confirms it.</p></div>)}
         {av.latestRescanId && !av.rescanOf && <p className="mt-4 text-base"><Link className="font-semibold underline" href={`/scans/${av.latestRescanId}`}>See the latest rescan of this page</Link></p>}
       </section>
       {report.review && <CategoryReviews review={report.review} />}

@@ -1,0 +1,11 @@
+node_modules
+.next
+.data
+.env
+.env.*
+deploy/production.env
+audit-output
+*.tsbuildinfo
+.git
+.claude
+_d2.mjs

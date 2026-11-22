@@ -5,22 +5,20 @@
 import * as React from 'react';
 import { MapPin } from 'lucide-react';
 import type { Board, Level } from '@/lib/review-view.ts';
+import type { ViewportId } from '@/lib/report-types.ts';
+import { reasonLabel, remedyFor } from '@/lib/coverage-copy.ts';
 
 export type BoardItem = {
   id: string; n: number; level: Level; categories: string[]; title: string;
-  pin: { viewport: 'desktop' | 'mobile'; x: number; y: number; w: number; h: number } | null;
+  pin: { viewport: ViewportId; x: number; y: number; w: number; h: number } | null;
   /** One plain sentence on why it matters, where it is, the cropped screenshot (paid plans only) and the fix body. The lead issue has no fix here: it lives above. */
   sentence: string; where: string; review: boolean; visual: React.ReactNode | null; fix: React.ReactNode | null;
   node: React.ReactNode;
 };
-type Shot = { viewport: 'desktop' | 'mobile'; src: string; w: number; h: number; vw: number };
+type Shot = { viewport: ViewportId; src: string; w: number; h: number; vw: number };
 
-export const LEVELS: Record<Level, { label: string; chip: string; pin: string }> = {
-  critical: { label: 'Critical', chip: 'bg-[#fde7e1] text-[#7a1f0b]', pin: '#c2200c' },
-  high: { label: 'Before launch', chip: 'bg-[#ffecc7] text-[#6b3b00]', pin: '#c26a00' },
-  medium: { label: 'Improve', chip: 'bg-[#e8f0ff] text-[#1c3f8a]', pin: '#2f5fd0' },
-  review: { label: 'Worth a look', chip: 'bg-[#efe9ff] text-[#432099]', pin: '#6d4fd6' },
-};
+export { LEVELS } from '@/lib/levels.ts';
+import { LEVELS } from '@/lib/levels.ts';
 const band = (n: number) => (n >= 80 ? { c: '#2f7d1f', t: 'text-[#245f17]' } : n >= 50 ? { c: '#c26a00', t: 'text-[#8a4b00]' } : { c: '#c2200c', t: 'text-[#9a1a09]' });
 
 function Ring({ score }: { score: number | null }) {
@@ -55,6 +53,39 @@ function Tab({ label, score, issues, critical, active, onClick, id, panel, onKey
   );
 }
 
+/** "No issues" only means something next to how many checks ran: a category where most checks did not run says so instead. */
+function emptyLine(cat: Board['cats'][number] | undefined, cats: Board['cats'], filtered: boolean): string {
+  if (filtered) return 'No issues at this level in what was checked.';
+  const scope = cat ? [cat] : cats; const skipped = scope.reduce((n, c) => n + c.notRun.length, 0); const ran = scope.reduce((n, c) => n + c.ran, 0);
+  if (!skipped) return `No issues in ${cat ? 'this category' : 'any category'} in what was checked.`;
+  return `No issues found in the ${ran} check${ran === 1 ? '' : 's'} that ran. ${skipped} check${skipped === 1 ? '' : 's'} didn’t run, so this is not a clean result; see why below.`;
+}
+
+/** Each rule of the scan's snapshot that did not run: its id, the skip reason saved with the scan, and what would let it run. */
+function WhyNotRun({ cats }: { cats: Board['cats'] }) {
+  const rows = cats.flatMap((c) => c.notRun.map((r) => ({ ...r, cat: c.label })));
+  if (!rows.length) return null;
+  const many = cats.length > 1;
+  return (
+    <details className="mt-8 rounded-2xl ring-1 ring-black/10" data-testid="why-not-run">
+      <summary className="min-h-11 cursor-pointer px-5 py-3 text-lg font-semibold text-ink">Why checks didn’t run ({rows.length})</summary>
+      <div className="overflow-x-auto px-5 pb-5" tabIndex={0} role="region" aria-label="Checks that didn’t run, scrolls sideways on small screens">
+        <table className="w-full min-w-[40rem] text-left text-base">
+          <caption className="sr-only">Checks that didn’t run on this scan, with the saved reason and what would let each one run</caption>
+          <thead><tr className="border-b border-black/10 text-sm text-neutral-600"><th scope="col" className="py-2 pr-3">Rule</th>{many && <th scope="col" className="py-2 pr-3">Category</th>}<th scope="col" className="py-2 pr-3">Saved reason</th><th scope="col" className="py-2">What would let it run</th></tr></thead>
+          <tbody>{rows.map((r) => (
+            <tr key={r.id} className="border-b border-black/5 align-top" data-testid="not-run-row" data-rule={r.id} data-reason={r.reason ?? 'unavailable'}>
+              <th scope="row" className="py-2 pr-3 font-normal"><span className="font-mono text-sm font-semibold">{r.id}</span><span className="block text-neutral-700">{r.title}</span></th>
+              {many && <td className="py-2 pr-3">{r.cat}</td>}
+              <td className="py-2 pr-3">{reasonLabel(r.reason)}</td>
+              <td className="py-2">{remedyFor(r.reason)}</td>
+            </tr>))}</tbody>
+        </table>
+      </div>
+    </details>
+  );
+}
+
 function Num({ it }: { it: BoardItem }) {
   return <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: LEVELS[it.level].pin }} aria-label={`Issue ${it.n}`}>{it.n}</span>;
 }
@@ -63,19 +94,19 @@ function Chip({ it }: { it: BoardItem }) {
 }
 
 /** One line that tells the reader what this category's score is about before they read any issue. */
-function story(pool: BoardItem[], cat: string | null): string {
+function story(pool: BoardItem[], cat: string | null, skipped = 0): string {
   const c = pool.filter((i) => i.level === 'critical').length, fix = pool.filter((i) => !i.review).length, look = pool.length - fix; const s = (n: number) => (n === 1 ? '' : 's');
   const where = cat ? `in ${cat}` : 'on this page';
   if (c) return `${c} critical issue${s(c)} ${c === 1 ? 'is' : 'are'} holding this score down${fix > c ? `, with ${fix - c} more to fix` : ''}. Start with the first one.`;
   if (fix) return `Nothing critical ${where}. ${fix} thing${s(fix)} to fix${look ? ` and ${look} worth a look` : ''}, most important first.`;
   if (look) return `Nothing to fix ${where}. ${look} thing${s(look)} ${look === 1 ? 'is' : 'are'} worth a look by a person, because a check could not decide.`;
-  return `No problems found ${where} in what was checked.`;
+  return skipped ? `Nothing found ${where} so far, but ${skipped} check${s(skipped)} didn’t run.` : `No problems found ${where} in what was checked.`;
 }
 
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? '' : 's'}`;
 /** Why a category (or the whole page) has no number, in one short line. */
 function unscoredLine(cat: Board['cats'][number] | undefined, ov: Board['overall']): string {
-  if (cat) return cat.observationsOnly ? 'Observations only: this category is never scored.' : `No score: ${plural(cat.missing, 'required check')} didn’t run.`;
+  if (cat) return cat.observationsOnly ? 'Observations only: this category is never scored.' : cat.unscored ? `${cat.unscored}.` : `No score: ${plural(cat.missing, 'required check')} didn’t run.`;
   return ov ? `No overall score: ${ov.total - ov.assessed} of ${ov.total} categories are missing required checks.` : 'No score for this scan.';
 }
 
@@ -142,13 +173,13 @@ function Thumb({ it, shot }: { it: BoardItem; shot: Shot }) {
 
 function Preview({ shots, items, activeId, onPick, locked }: { shots: Shot[]; items: BoardItem[]; activeId: string | null; onPick: (id: string) => void; locked: boolean }) {
   const have = shots.filter((s) => items.some((i) => i.pin?.viewport === s.viewport));
-  const [vp, setVp] = React.useState<'desktop' | 'mobile'>(have[0]?.viewport ?? 'desktop');
+  const [vp, setVp] = React.useState<ViewportId>(have[0]?.viewport ?? 'desktop');
   const box = React.useRef<HTMLDivElement>(null); const [w, setW] = React.useState(520);
   React.useEffect(() => { const el = box.current; if (!el) return; const ro = new ResizeObserver(([e]) => setW(e.contentRect.width)); ro.observe(el); return () => ro.disconnect(); }, [have.length]);
   const active = items.find((i) => i.id === activeId);
   React.useEffect(() => { if (active?.pin && active.pin.viewport !== vp && have.some((s) => s.viewport === active.pin!.viewport)) setVp(active.pin.viewport); }, [activeId]); // eslint-disable-line react-hooks/exhaustive-deps
   const shot = shots.find((s) => s.viewport === vp) ?? have[0];
-  const scale = shot ? Math.min(shot.viewport === 'mobile' ? 1.1 : 1, Math.max(0.15, (w - 24) / shot.w)) : 1;
+  const scale = shot ? Math.min(shot.viewport !== 'desktop' ? 1.1 : 1, Math.max(0.15, (w - 24) / shot.w)) : 1;
   React.useEffect(() => {
     if (!active?.pin || !shot || active.pin.viewport !== shot.viewport || !box.current) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -166,7 +197,7 @@ function Preview({ shots, items, activeId, onPick, locked }: { shots: Shot[]; it
         <p className="text-base font-semibold text-ink">Page preview <span className="font-normal text-neutral-700">· {pins.length} pinned</span></p>
         {have.length > 1 && (
           <div role="group" aria-label="Preview size" className="inline-flex rounded-full bg-[#f1f0ec] p-1 text-sm font-semibold">
-            {have.map((s) => <button key={s.viewport} type="button" aria-pressed={s.viewport === shot.viewport} onClick={() => setVp(s.viewport)} className={`min-h-9 rounded-full px-4 ${s.viewport === shot.viewport ? 'bg-ink text-white' : 'text-ink'}`}>{s.viewport === 'mobile' ? 'Phone' : 'Desktop'}</button>)}
+            {have.map((s) => <button key={s.viewport} type="button" aria-pressed={s.viewport === shot.viewport} onClick={() => setVp(s.viewport)} className={`min-h-9 rounded-full px-4 ${s.viewport === shot.viewport ? 'bg-ink text-white' : 'text-ink'}`}>{s.viewport === 'desktop' ? 'Desktop' : `Phone ${s.vw}px`}</button>)}
           </div>)}
       </div>
       <div ref={box} tabIndex={0} role="region" aria-label={`Screenshot at ${shot.vw}px with numbered pins`} className="relative h-[22rem] overflow-auto sm:h-[26rem] rounded-xl bg-[#ece9e2] p-3 lg:h-[calc(100vh-13rem)]">
@@ -201,7 +232,8 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
   const toggle = (id: string) => setOpen((o) => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const showPreview = !locked && shots.length > 0;
   const ov = board.overall; const t = board.totals;
-  const tabs = board.cats.filter((c) => !c.observationsOnly).slice(0, 8).sort((x, y) => y.critical - x.critical || y.issues - x.issues || (x.score ?? 101) - (y.score ?? 101)); const curCat = board.cats.find((c) => c.label === cat);
+  // Every category gets a tab (observation-only ones too), so the per-category counts add up to the All total.
+  const tabs = [...board.cats].sort((x, y) => y.critical - x.critical || y.issues - x.issues || (x.score ?? 101) - (y.score ?? 101)); const curCat = board.cats.find((c) => c.label === cat);
   const onTabKey = (e: React.KeyboardEvent) => { const order: (string | null)[] = [null, ...tabs.map((c) => c.label)]; const k = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0; if (!k) return; e.preventDefault(); const nx = order[(order.indexOf(cat) + k + order.length) % order.length]; setCat(nx); document.getElementById(`tab-${nx ?? 'all'}`)?.focus(); };
   const verdict = t.critical ? `${t.critical} critical issue${t.critical === 1 ? '' : 's'} to fix before launch` : t.high ? `${t.high} issue${t.high === 1 ? '' : 's'} to fix before launch` : 'No blocking issues in what was checked';
   const pick = (id: string, fromPin: boolean) => { setActive(id); setOpen((o) => new Set(o).add(id)); if (fromPin) document.getElementById(`issue-${id}`)?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
@@ -233,8 +265,8 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
       <section aria-labelledby="issues-h" className="mt-12" data-testid="others">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 id="issues-h" className="text-3xl font-semibold tracking-tight text-ink">Scores and issues by category</h2>
-            <p className="mt-1 text-base text-neutral-700">Pick a category to see its score and only its issues. Each issue says what is wrong, why it matters and where it is.</p>
+            <h2 id="issues-h" className="text-3xl font-semibold tracking-tight text-ink">{board.cats.some((c) => c.score != null) ? 'Scores and issues by category' : 'Issues by category'}</h2>
+            <p className="mt-1 text-base text-neutral-700">{board.cats.some((c) => c.score != null) ? 'Pick a category to see its score and only its issues.' : 'Pick a category to see only its issues.'} Each issue says what is wrong, why it matters and where it is.</p>
           </div>
           {lvl && <button type="button" onClick={() => setLvl(null)} className="min-h-11 rounded-full border border-black/25 bg-white px-4 text-base font-semibold text-ink hover:bg-black/5">Clear severity filter</button>}
         </div>
@@ -243,14 +275,14 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
           <p className="hidden px-3 pb-2 text-xl font-semibold text-ink md:block">Categories</p>
           <div role="tablist" aria-label="Categories" aria-orientation="vertical" className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
             <Tab id="tab-all" panel="issues-panel" label="All categories" score={ov?.score ?? null} issues={t.critical + t.high + t.medium + t.review} critical={t.critical} active={cat === null} onClick={() => setCat(null)} onKey={onTabKey} />
-            {tabs.map((c) => <Tab key={c.label} id={`tab-${c.label}`} panel="issues-panel" label={c.label} score={c.score} issues={c.issues} critical={c.critical} active={cat === c.label} onClick={() => setCat(c.label)} onKey={onTabKey} />)}
+            {tabs.map((c) => <Tab key={c.label} id={`tab-${c.label}`} panel="issues-panel" label={c.label} score={c.score} issues={c.issues + c.review} critical={c.critical} active={cat === c.label} onClick={() => setCat(c.label)} onKey={onTabKey} />)}
           </div>
         </div>
         <div role="tabpanel" id="issues-panel" aria-labelledby={`tab-${cat ?? 'all'}`} className="min-w-0 p-5 sm:p-8">
-          <CatHeader name={curCat ? curCat.label : 'All categories'} sub={[curCat?.label === 'Mobile' ? 'Phone · 320px wide' : null, `${total} issue${total === 1 ? '' : 's'}${lvl ? ` (${LEVELS[lvl].label} only)` : ''}`].filter(Boolean).join(' · ')}
-            score={curCat ? curCat.score : ov?.score ?? null} final={(curCat ? curCat.status : ov?.status) === 'final'} story={story(pool, cat)} unscored={unscoredLine(curCat, ov)} />
+          <CatHeader name={curCat ? curCat.label : 'All categories'} sub={[curCat?.label === 'Mobile' ? `Phone · ${[...new Set(shots.filter((x) => x.viewport !== 'desktop').map((x) => x.vw))].sort((a, b) => b - a).join(' and ') || 390}px wide` : null, `${total} issue${total === 1 ? '' : 's'}${lvl ? ` (${LEVELS[lvl].label} only)` : ''}`].filter(Boolean).join(' · ')}
+            score={curCat ? curCat.score : ov?.score ?? null} final={(curCat ? curCat.status : ov?.status) === 'final'} story={story(pool, cat, (curCat ? [curCat] : board.cats).reduce((n, c) => n + c.notRun.length, 0))} unscored={unscoredLine(curCat, ov)} />
           {hero && <Hero it={hero} cat={cat} isLead={hero === lead} open={heroOpen} onToggle={() => setHeroOpen((o) => !o)} />}
-          {total === 0 && <p className="mt-8 rounded-2xl bg-[#f3fbd9] p-5 text-lg text-ink" data-testid="cat-empty">No issues in this category in what was checked.</p>}
+          {total === 0 && <p className="mt-8 rounded-2xl bg-[#f3fbd9] p-5 text-lg text-ink" data-testid="cat-empty">{emptyLine(curCat, board.cats, !!lvl)}</p>}
           {(rest.length > 0 || leadRow) && (
             <div className={`mt-10 grid items-start gap-6 ${showPreview ? 'xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]' : ''}`}>
               <div className="min-w-0">
@@ -277,6 +309,7 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
               </div>
               {showPreview && <div id="page-preview" className="scroll-mt-4 xl:sticky xl:top-4"><Preview shots={shots} items={withPin} activeId={activeId} onPick={(id) => pick(id, true)} locked={locked} /></div>}
             </div>)}
+          <WhyNotRun cats={curCat ? [curCat] : board.cats} />
           <ScoreDetails cat={curCat} ov={ov} pool={pool} />
         </div>
         </div>

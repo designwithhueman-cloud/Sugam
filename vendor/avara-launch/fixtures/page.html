@@ -1,0 +1,6 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>*{box-sizing:border-box}body{margin:0;font:16px Arial}header,section{padding:10px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}.card,[data-slot=card]{background:#eee;padding:4px}button{padding:8px}.ghost{display:none}#overlay{display:none}@media(max-width:480px){.wide{display:none}body.flags #overlay{display:block;position:absolute;inset:0;background:gray}.wrap{position:relative;display:inline-block}}</style>
+<main><section id="hero"><h1>Book a workspace</h1><p>Teams get a dedicated desk.</p><button class="ghost action">Book a desk</button><span class="wrap"><button class="action" id="book">Book a desk</button><span id="overlay"></span></span></section>
+<section id="features"><h2>Features</h2><div class="grid"><article class="card">Desk</article><article class="card">Room</article><article class="card">Lounge</article></div></section>
+<section id="more"><h2>Plans</h2><div class="grid"><div data-slot="card">Solo</div><div data-slot="card">Team</div><div data-slot="card">Agency</div></div></section>
+<p id="error">Enter a date to continue.</p></main></html>

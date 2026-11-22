@@ -7,6 +7,8 @@ import { hasFeature } from '@/lib/plans.ts';
 import { Panel, Initials, OpenLink, fullDate, shortDate } from '@/components/dashboard/bits.tsx';
 import { PageHead } from '@/components/dashboard/PageHead.tsx';
 import { EmptyNote } from '@/components/dashboard/Tables.tsx';
+import { ActionForm } from '@/components/forms/ActionForm.tsx';
+import { revokeShareAction } from '@/app/actions.ts';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Shared reports | Avara' };
@@ -23,18 +25,19 @@ export default async function Shared({ params }: { params: Promise<{ org: string
       <PageHead crumbs={[{ label: a.org.name, href: `/app/${org}` }]} current="Shared reports" title="Shared reports" />
       <Panel aria-labelledby="sh-h" className="px-4 pb-2 pt-5 sm:px-6">
         <h2 id="sh-h" className="text-[1.375rem] font-semibold tracking-tight text-ink">Read-only links sent to clients</h2>
-        <p className="mb-3 text-sm text-pine-600">Create a link from a project&rsquo;s Reports page. For safety the link itself is shown only once, when you create it.</p>
+        <p className="mb-3 text-sm text-pine-600">Create a link from a project&rsquo;s Reports page. For safety the link itself is shown only once, when you create it. Links last 90 days; stop one at any time.</p>
         {!can ? <div className="pb-4"><EmptyNote>Sharing read-only reports with clients is part of the Agency Pro plan. <Link href="/upgrade" className="font-semibold text-ink underline underline-offset-4">See plans</Link></EmptyNote></div>
           : !rows.length ? <div className="pb-4"><EmptyNote>No reports shared yet.</EmptyNote></div>
           : <table className="w-full table-fixed border-collapse text-[15px]">
               <caption className="sr-only">Shared report links, newest first</caption>
-              <thead><tr className="border-b border-stone-line"><th scope="col" className={th}>Report</th><th scope="col" className={`${th} w-[6rem]`}>Link</th><th scope="col" className={`${th} hidden w-[9.5rem] sm:table-cell`}>Shared</th><th scope="col" className={`${th} w-[3.75rem] md:w-[10rem]`}><span className="sr-only">Open</span></th></tr></thead>
+              <thead><tr className="border-b border-stone-line"><th scope="col" className={th}>Report</th><th scope="col" className={`${th} w-[6rem]`}>Link</th><th scope="col" className={`${th} hidden w-[9.5rem] sm:table-cell`}>Shared</th><th scope="col" className={`${th} w-[8.5rem] md:w-[16rem]`}><span className="sr-only">Open</span></th></tr></thead>
               <tbody>{rows.map((r) => (
                 <tr key={r.link.id} className="border-b border-stone-line last:border-0">
                   <th scope="row" className="px-3 py-3 text-left font-normal"><div className="flex items-center gap-3"><Initials name={r.project} className="size-9 rounded-lg text-[13px] max-sm:hidden" /><div className="min-w-0"><p className="truncate font-semibold text-ink">{r.project}</p><p className="truncate text-sm text-pine-600">{pageLabel(r.scan)}</p></div></div></th>
                   <td className="px-3 py-3"><span className={`rounded-full px-2.5 py-1 text-[13px] font-semibold ${STATE[r.state]}`}>{r.state}</span></td>
                   <td className="hidden px-3 py-3 text-pine-700 sm:table-cell"><time dateTime={r.link.createdAt.toISOString()} title={fullDate(r.link.createdAt)}>{shortDate(r.link.createdAt)}</time></td>
-                  <td className="px-3 py-3 text-right"><OpenLink href={`/scans/${r.scan.id}`} name={`${r.project}, ${pageLabel(r.scan)}`} /></td>
+                  <td className="px-3 py-3 text-right"><div className="flex flex-col items-end gap-1 md:flex-row md:items-center md:justify-end md:gap-3"><OpenLink href={`/scans/${r.scan.id}`} name={`${r.project}, ${pageLabel(r.scan)}`} />
+                    {r.state === 'Active' && <ActionForm action={revokeShareAction} submit="Stop sharing" submitLabel={`Stop sharing ${r.project}, ${pageLabel(r.scan)}`} refreshOnOk className="space-y-1 text-left [&_button]:min-h-11"><input type="hidden" name="org" value={org} /><input type="hidden" name="linkId" value={r.link.id} /></ActionForm>}</div></td>
                 </tr>))}</tbody>
             </table>}
       </Panel>

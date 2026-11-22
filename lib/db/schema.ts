@@ -5,7 +5,7 @@ import { pgTable, pgEnum, uuid, text, integer, real, boolean, jsonb, timestamp, 
 export const complianceStandard = pgEnum('compliance_standard', ['wcag22aa', 'ada_title_ii', 'en_301_549', 'aoda']);
 export const scanStatus = pgEnum('scan_status', ['queued', 'running', 'analyzing', 'completed', 'failed']);
 export const scanEnvironment = pgEnum('scan_environment', ['adhoc', 'staging', 'live']);
-export const viewportName = pgEnum('viewport_name', ['desktop', 'mobile']);
+export const viewportName = pgEnum('viewport_name', ['desktop', 'mobile', 'narrow']);   // narrow: the focused 320px pass (0009)
 export const severity = pgEnum('severity', ['critical', 'serious', 'moderate', 'minor']);
 export const findingBucket = pgEnum('finding_bucket', ['confirmed_failure', 'needs_review', 'verified_pass']);
 export const findingSource = pgEnum('finding_source', ['axe', 'heuristic', 'keyboard']);
@@ -91,13 +91,13 @@ export const scans = pgTable('scans', {
   pageTitle: text('page_title'),
   standard: complianceStandard('standard').notNull().default('wcag22aa'),
   status: scanStatus('status').notNull().default('queued'),
-  progress: jsonb('progress').$type<{ step: string; percent: number }>(),
+  progress: jsonb('progress').$type<{ step: string; percent: number; stages?: import('../../scanner/scanner.ts').ScanStages }>(),
   error: jsonb('error').$type<{ code: string; message: string }>(),
   // Sugam score: severity-weighted, for comparing scans of the same site. Not a compliance grade.
   score: integer('score'),
   summary: jsonb('summary').$type<ScanSummary>(),
   engine: jsonb('engine').$type<{ axe: string; browser: string; viewports: string[] }>(),
-  ai: jsonb('ai').$type<{ used: boolean; model?: string; reason?: string }>(),
+  ai: jsonb('ai').$type<{ used: boolean; model?: string | null; reason?: string | null; pending?: boolean; fixes?: { state: 'pending' | 'done'; changed?: number; refused?: number; rubrics?: string[]; ms?: number | null } }>(),   // pending: the AI review runs after the report is shown
   // Avara: the product this scan belongs to, the goal the builder confirmed (optional), the scan this one re-checks, and how each analyzer fared.
   productId: uuid('product_id'),
   goal: text('goal'),
@@ -405,7 +405,7 @@ export const ruleExecutions = pgTable('rule_executions', {
   session: text('session'),
   implementation: text('implementation').notNull(),   // detector | detector_and_ai | ai_only | person_only | rollup | not_built
   execution: text('execution').notNull(),             // ran | not_applicable | skipped | unknown
-  reason: text('reason'),                             // missing_detector | ai_unavailable | missing_input | not_applicable | analyzer_error | needs_person | rollup_no_inputs
+  reason: text('reason'),                             // missing_detector | ai_unavailable | ai_no_answer | ai_pending | missing_input | not_applicable | analyzer_error | needs_person | rollup_no_inputs
   evidence: jsonb('evidence').$type<string[]>().notNull(),
   outcome: text('outcome').notNull(),
   method: text('method').notNull(),
@@ -439,3 +439,26 @@ export const patterns = pgTable('patterns', {
   status: text('status').notNull(),              // emerging (too few scans) | established
   updatedAt: ts('updated_at').notNull().defaultNow(),
 });
+
+// ---------- Avara Launch Scanner (vendor/avara-launch, lib/launch) ----------
+// One row per pack entry per viewport: the pack rule and its version, the Avara rule that owns it, the viewport and page state it was read
+// in, the element it is about, what happened (outcome and reason) and the evidence. Zero weight: these rows never reach rule counts or scores.
+export const launchChecks = pgTable('launch_checks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  scanId: uuid('scan_id').notNull().references(() => scans.id, { onDelete: 'cascade' }),
+  entry: text('entry').notNull(),                  // the pack's id: DIFF-007, launch/cta, ...
+  packRuleId: text('pack_rule_id').notNull(),      // the id the pack used (A11Y-003 for button-name)
+  hostRuleId: text('host_rule_id').notNull(),      // the Avara rule that owns it (A11Y-015)
+  ruleVersion: text('rule_version').notNull(),     // pack rule version
+  packVersion: text('pack_version').notNull(),
+  decision: text('decision').notNull(),            // reused | improved | added | blocked
+  viewport: text('viewport').notNull(),            // desktop | mobile
+  viewportSize: jsonb('viewport_size').$type<[number, number] | null>(),
+  pageState: text('page_state').notNull(),         // initial: read before any keyboard input, resize or click
+  target: text('target'),                          // the element it is about, when there is one
+  outcome: text('outcome').notNull(),              // observed | needs-review | needs-person | not-applicable | not-run | analyzer-finding
+  reason: text('reason').notNull(),
+  needs: text('needs'),                            // owner input that would let it decide
+  evidence: jsonb('evidence').$type<unknown[]>().notNull(),
+  createdAt: ts('created_at').notNull().defaultNow(),
+}, (t) => [index('launch_checks_scan_idx').on(t.scanId)]);

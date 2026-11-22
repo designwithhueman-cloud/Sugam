@@ -41,7 +41,7 @@ try {
     const ft = await prim().getByTestId('finding').allInnerTexts();
     check('each finding names a versioned rule, its source section and link, who is affected, what they were trying to do and the consequence as a hypothesis', ft.length >= 3 && ft.every((t) => /v1\.0\.0/.test(t) && /Who is affected/.test(t) && /Trying to/.test(t) && /Likely consequence \(hypothesis\)|Consequence \(observed\)/.test(t)) && (await prim().getByTestId('finding').first().locator('a[href^="https://"]').count()) === 1);
     check('source type is shown separately from per-finding confidence', /Standard|Usability heuristic/.test(ft[0]) && /confidence/.test(ft[0]) && (await prim().getByTestId('source-type').count()) >= 3);
-    check('the workflow shows the observed steps, and "What was checked" says where coverage ends', /Steps Sugam took/.test(ft.join('\n')) && /Stopped before submission/.test(await checkedText()));
+    check('the workflow shows the observed steps, and "What was checked" says where coverage ends', /Steps Avara took/.test(ft.join('\n')) && /Stopped before submission/.test(await checkedText()));
     // The exact generated fix, opened on demand (free plan: the recommended first fix is the available fix)
     check('the fix is closed until asked for, then offered for AI builders, Framer, Webflow and code', (await prim().getByTestId('fix-primary').isHidden()) && (await (async () => { await p.getByTestId('see-fix').click(); return prim().getByTestId('fix-primary').isVisible(); })()));
     const fixBox = prim().getByTestId('fix-primary'); const tools = await fixBox.locator('option').allInnerTexts();

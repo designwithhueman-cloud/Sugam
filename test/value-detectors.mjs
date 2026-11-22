@@ -36,7 +36,7 @@ const want = {   // detector -> [ai-saas, distinct]
   'pc/headline-form': ['pass', 'pass'], 'pc/subheadline': ['pass', 'pass'], 'pc/problem-signal': ['needs_person', 'pass'], 'pc/outcome-language': ['needs_person', 'pass'], 'pc/buzzwords': ['needs_person', 'pass'],
   'pc/first-screen': ['pass', 'pass'], 'pc/offer-before-action': ['pass', 'pass'], 'pc/cta-context': ['pass', 'pass'], 'pc/claim-consistency': ['fail', 'n/a'], 'conv/cta-saturation': ['needs_person', 'pass'],
   'diff/template-sequence': ['fail', 'pass'], 'diff/default-styling': ['needs_person', 'pass'], 'diff/brand-assets': ['needs_person', 'pass'], 'diff/layout-archetypes': ['needs_person', 'pass'], 'diff/shape-and-icon-language': ['needs_person', 'n/a'],
-  'diff/trust-pattern': ['needs_person', 'n/a'], 'diff/feature-grid-saturation': ['fail', 'pass'],
+  'diff/trust-pattern': ['needs_person', 'n/a'], 'diff/feature-grid-saturation': ['needs_person', 'pass'],   // launch pack DIFF-009: a count of grids is never a confirmed failure
 };
 const seen = {};   // detector -> set of states across all runs
 for (const [p, { d }] of Object.entries(pages)) for (const [id, r] of Object.entries(d)) (seen[id] ??= new Set()).add(state(r));
@@ -54,7 +54,7 @@ const rep = pages.repetitive.d, dg = pages['dashboard-generic'].d, dc = pages['d
 const pw = pages['pc-weak'].d, pl = pages['pc-late'].d;
 check('weak-copy page: a 26-word headline fails, a supporting line that repeats it fails, a button above the h1 fails, a bare button is flagged, conflicting customer counts fail', state(pw['pc/headline-form']) === 'fail' && state(pw['pc/subheadline']) === 'fail' && state(pw['pc/offer-before-action']) === 'fail' && state(pw['pc/cta-context']) === 'needs_person' && state(pw['pc/claim-consistency']) === 'fail', ['pc/headline-form', 'pc/subheadline', 'pc/offer-before-action', 'pc/cta-context', 'pc/claim-consistency'].map((i) => state(pw[i])).join(' '));
 check('late-heading page: the h1 below the first screen fails', state(pl['pc/first-screen']) === 'fail', pl['pc/first-screen'].hits[0]?.summary);
-check('repetitive page: identical sections are flagged for rhythm and layout, and the card grids fail', state(rep['diff/section-rhythm']) === 'needs_person' && state(rep['diff/layout-archetypes']) === 'needs_person' && state(rep['diff/feature-grid-saturation']) === 'fail');
+check('repetitive page: identical sections are flagged for rhythm and layout, and the card grids go to a person (never a confirmed failure)', state(rep['diff/section-rhythm']) === 'needs_person' && state(rep['diff/layout-archetypes']) === 'needs_person' && state(rep['diff/feature-grid-saturation']) === 'needs_person');
 check('DIFF-004: the stock dashboard (sidebar + stat cards + chart) fails; a single-number page is not a dashboard', state(dg['diff/dashboard-pattern']) === 'fail' && state(dc['diff/dashboard-pattern']) === 'n/a', dg['diff/dashboard-pattern'].hits[0]?.evidence?.join(' | '));
 check('the template finding names the section order it found', /Hero → .*Testimonials → Pricing/.test(pages['ai-saas'].d['diff/template-sequence'].hits[0].summary) || /Hero → .*Pricing/.test(pages['ai-saas'].d['diff/template-sequence'].hits[0].summary), pages['ai-saas'].d['diff/template-sequence'].hits[0].summary.slice(0, 140));
 const noEv = Object.entries(pages).flatMap(([pg, p]) => Object.entries(p.d).flatMap(([id, r]) => r.hits.filter((h) => !h.evidence.length && !/no h1|no main heading/i.test(h.title)).map(() => `${pg}:${id}`)));

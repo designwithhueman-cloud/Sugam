@@ -10,6 +10,7 @@ import type { Report } from '@/lib/report-types.ts';
 import { buildView, type Item, type View } from '@/lib/review-view.ts';
 import { CopyButton } from '@/components/CopyButton.tsx';
 import { ScreenshotCrop } from './ScreenshotCrop.tsx';
+import { AiPending } from './AiPending.tsx';
 import { SeeFix } from './SeeFix.tsx';
 import { FixPanel } from './FixPanel.tsx';
 import { ReviewBoard, LEVELS, type BoardItem } from './ReviewBoard.tsx';
@@ -94,6 +95,8 @@ export function ReviewPage({ report, access, mode = 'owner' }: { report: Report;
           <p className={`mt-3 text-balance text-5xl font-semibold leading-[1.02] tracking-[-0.035em] text-ink sm:text-7xl ${wrap}`}>{v.domain}</p>
           <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-lg text-neutral-800"><span>Desktop and phone</span>{date && <><span aria-hidden>·</span><span>Scanned {date}</span></>}<span aria-hidden>·</span><span>{v.board.totals.critical + v.board.totals.high + v.board.totals.medium} recommended fixes</span><span aria-hidden>·</span><span>{v.board.totals.review} observations</span></p>
         </header>
+
+        {report.aiPending && <AiPending scanId={report.id} />}
 
         {v.latestRescanId && !v.changes && <p className="mt-4 text-base"><Link className="font-semibold underline underline-offset-4" href={`/scans/${v.latestRescanId}`}>See the latest rescan of this page</Link></p>}
 
