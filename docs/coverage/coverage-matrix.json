@@ -25,7 +25,7 @@
   },
   "derivedDetectors": 62,
   "categories": 9,
-  "scoreEligible": 10,
+  "scoreEligible": 42,
   "trackChecks": 21,
   "loaderIssues": 0
  },
@@ -340,7 +340,7 @@
    "note": "",
    "rule": "A11Y-004",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "sugam/keyboard-trap",
     "sugam/non-semantic-clickable",
@@ -446,8 +446,7 @@
    ],
    "tests": [
     "fix-writer.mjs",
-    "scanner-accuracy.mjs",
-    "scoring.mjs"
+    "scanner-accuracy.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -463,7 +462,7 @@
    "note": "nav/fragment-target added in the Detector-Pack batch",
    "rule": "A11Y-019",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "bypass",
     "sugam/focus-context-change",
@@ -500,9 +499,7 @@
     "td-headers-attr",
     "th-has-data-cells"
    ],
-   "tests": [
-    "scoring.mjs"
-   ],
+   "tests": [],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
    "status": "reused",
@@ -540,7 +537,7 @@
    "note": "axe target-size",
    "rule": "MOB-003",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "target-size"
    ],
@@ -561,7 +558,7 @@
    "note": "sugam/forced-colors-optout",
    "rule": "A11Y-019",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "bypass",
     "sugam/focus-context-change",
@@ -598,8 +595,7 @@
     "a11y/reading-order"
    ],
    "tests": [
-    "batch-detectors.mjs",
-    "scoring.mjs"
+    "batch-detectors.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -619,7 +615,9 @@
    "ruleStatus": "catalogued",
    "scoreEligible": false,
    "detectors": [],
-   "tests": [],
+   "tests": [
+    "scoring.mjs"
+   ],
    "fixture": "no detector",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
    "status": "blocked",
@@ -636,7 +634,9 @@
    "ruleStatus": "catalogued",
    "scoreEligible": false,
    "detectors": [],
-   "tests": [],
+   "tests": [
+    "scoring.mjs"
+   ],
    "fixture": "no detector",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
    "status": "blocked",
@@ -653,7 +653,9 @@
    "ruleStatus": "catalogued",
    "scoreEligible": false,
    "detectors": [],
-   "tests": [],
+   "tests": [
+    "scoring.mjs"
+   ],
    "fixture": "no detector",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
    "status": "advisory",
@@ -708,7 +710,6 @@
     "launch-integration.mjs",
     "launch-pack.mjs",
     "scanner-accuracy.mjs",
-    "scoring.mjs",
     "workspace-evidence.mjs"
    ],
    "fixture": "fixture-proven",
@@ -782,8 +783,7 @@
    ],
    "tests": [
     "fix-format.mjs",
-    "rule-engine.mjs",
-    "scoring.mjs"
+    "rule-engine.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -823,7 +823,7 @@
    "note": "INP needs field data or scripted interaction; recorded as couldn't verify",
    "rule": "PERF-003",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "perf/interaction-latency"
    ],
@@ -848,7 +848,7 @@
    "note": "",
    "rule": "UX-002",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "ux/primary-task-visible"
    ],
@@ -895,7 +895,7 @@
    "note": "workflow/action-no-response",
    "rule": "UX-011",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "workflow/action-no-response"
    ],
@@ -1038,7 +1038,7 @@
    "note": "",
    "rule": "MOB-002",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "mobile/horizontal-scroll"
    ],
@@ -1060,7 +1060,7 @@
    "note": "test/cta-regression.mjs",
    "rule": "MOB-010",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "mobile/primary-action-missing",
     "mobile/primary-action-unusable",
@@ -1111,7 +1111,7 @@
    "note": "",
    "rule": "MOB-006",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "mobile/content-scaling"
    ],
@@ -1134,7 +1134,7 @@
    "note": "",
    "rule": "MOB-013",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "mobile/sticky-ui-interference"
    ],
@@ -1161,7 +1161,7 @@
    "note": "",
    "rule": "MOB-009",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "mobile/form-usability"
    ],
@@ -1184,7 +1184,7 @@
    "note": "",
    "rule": "MOB-011",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "mobile/orientation"
    ],
@@ -1207,7 +1207,7 @@
    "note": "needs scripted menu interaction per site; needs a person",
    "rule": "MOB-008",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "mobile/navigation-accessibility"
    ],
@@ -1230,7 +1230,7 @@
    "note": "",
    "rule": "DESIGN-001",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "design/typography-hierarchy"
    ],
@@ -1370,7 +1370,7 @@
    "note": "observation only",
    "rule": "DIFF-001",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "diff/template-sequence"
    ],
@@ -1454,7 +1454,7 @@
    "note": "test/cta-regression.mjs",
    "rule": "CONV-002",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "conv/cta-visible"
    ],
@@ -1608,13 +1608,14 @@
    "note": "",
    "rule": "TRUST-002",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "trust/privacy-link"
    ],
    "tests": [
     "detectors.mjs",
-    "rule-engine.mjs"
+    "rule-engine.mjs",
+    "scoring.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1632,12 +1633,13 @@
    "note": "",
    "rule": "TRUST-003",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "trust/terms-link"
    ],
    "tests": [
-    "detectors.mjs"
+    "detectors.mjs",
+    "scoring.mjs"
    ],
    "fixture": "fixture-proven",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1718,7 +1720,7 @@
    "note": "",
    "rule": "PC-001",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "pc/hero-statement"
    ],
@@ -1764,7 +1766,7 @@
    "note": "",
    "rule": "PC-005",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "pc/headline-form"
    ],
@@ -1787,7 +1789,7 @@
    "note": "",
    "rule": "PERF-001",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "perf/lcp",
     "perf/lcp-image-lazy",
@@ -1821,8 +1823,7 @@
    ],
    "tests": [
     "fix-format.mjs",
-    "rule-engine.mjs",
-    "scoring.mjs"
+    "rule-engine.mjs"
    ],
    "fixture": "not exercised",
    "realSite": "not run: needs independent review (test/audit-real-sites.mjs)",
@@ -1838,7 +1839,7 @@
    "note": "PERF-004 to PERF-009",
    "rule": "PERF-004",
    "ruleStatus": "partial",
-   "scoreEligible": false,
+   "scoreEligible": true,
    "detectors": [
     "perf/image-optimization"
    ],
@@ -2383,7 +2384,6 @@
     "launch-integration.mjs",
     "launch-pack.mjs",
     "scanner-accuracy.mjs",
-    "scoring.mjs",
     "workspace-evidence.mjs"
    ],
    "fixture": "fixture-proven",

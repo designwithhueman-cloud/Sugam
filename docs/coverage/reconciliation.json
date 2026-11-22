@@ -1,15 +1,15 @@
 {
- "generated": "2026-11-22T17:26:49.744Z",
+ "generated": "2026-11-22T21:16:50.168Z",
  "url": "http://127.0.0.1:4200/detectors/good.html",
  "input": {
-  "sha256_16": "e4aa2e88d1de89d2",
-  "bytes": 76866,
+  "sha256_16": "b5965a25c17c7784",
+  "bytes": 76855,
   "note": "scan output as JSON, screenshots dropped; both reviews read this same object"
  },
  "timings": {
-  "scanMs": 11086,
+  "scanMs": 9438,
   "scanLabel": "fixture page on localhost (not a live site)",
-  "reviewOffMs": 14,
+  "reviewOffMs": 11,
   "reviewStubMs": 6,
   "stubLabel": "simulated AI: a local stub answered; no model call, no network latency"
  },

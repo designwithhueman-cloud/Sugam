@@ -18,8 +18,10 @@ const state = (r) => !r ? 'missing' : !r.ran ? 'could_not_verify' : r.notApplica
 // ---- 1. the rules are data, complete, and score nothing twice ----
 const diff = rules.filter((r) => r.ruleId.startsWith('DIFF-'));
 check('DIFF-001 to DIFF-010 exist in their own category, each with source, sourceUrl, severity, detector, recommendation, user impact and business impact', diff.length === 10 && diff.every((r) => r.category === 'Differentiation & Design Maturity' && r.source && /^https:\/\//.test(r.sourceUrl) && r.severity && (r.evaluator?.detectors?.length || r.evaluator?.rollsUp?.length) && r.recommendationTemplate && r.userImpact && r.businessImpact && r.requiredEvidence?.length));
-check('the Differentiation category and all ten DIFF rules carry zero weight, so nothing is scored twice, and category weights still total 100', diff.every((r) => r.weight === 0) && loader.manifest.categories.find((c) => c.id === 'differentiation').weight === 0 && loader.manifest.categories.reduce((n, c) => n + c.weight, 0) === 100);
-check('every rule has a value tier, and tier sets the weight (1:10, 2:6, 3:3, 4:1; rollups and DIFF 0)', rules.every((r) => [1, 2, 3, 4].includes(r.valueTier) && r.weight === (r.mode === 'R' || r.ruleId.startsWith('DIFF-') ? 0 : { 1: 10, 2: 6, 3: 3, 4: 1 }[r.valueTier])));
+// Policy avara-score-2.0 scores all nine categories as a simple average, so Differentiation is scored like the others: its rules carry tier
+// weights (its rollup stays 0). The manifest's category weights are kept for older views and still total 100.
+check('DIFF rules carry tier weights (rollup 0), and category weights still total 100', diff.filter((r) => r.mode !== 'R').every((r) => r.weight > 0) && diff.filter((r) => r.mode === 'R').every((r) => r.weight === 0) && loader.manifest.categories.reduce((n, c) => n + c.weight, 0) === 100);
+check('every rule has a value tier, and tier sets the weight (1:10, 2:6, 3:3, 4:1; rollups 0)', rules.every((r) => [1, 2, 3, 4].includes(r.valueTier) && r.weight === (r.mode === 'R' ? 0 : { 1: 10, 2: 6, 3: 3, 4: 1 }[r.valueTier])));
 const pcRules = rules.filter((r) => r.ruleId.startsWith('PC-'));
 check('every Product Clarity rule has objective criteria, required evidence, an authored recommendation and hypothesis-labelled impacts', pcRules.length === 15 && pcRules.every((r) => r.requiredEvidence?.length && r.recommendationTemplateStatus === 'authored' && /hypothesis/.test(r.userImpact + r.businessImpact)));
 check('13 of 15 Product Clarity rules have a deterministic detector; PC-014 needs the owner and PC-015 a person', pcRules.filter((r) => r.evaluator?.detectors?.length).length === 13 && !byId.get('PC-014').evaluator.detectors?.length && byId.get('PC-015').evaluator.type === 'human');
@@ -88,7 +90,7 @@ check('the distinctive page has no template, buzzword or grid findings', ['DIFF-
 
 // ---- 5. no duplicate scoring ----
 const diffCat = rv.categories.find((c) => c.category === 'Differentiation & Design Maturity');
-check('the Differentiation category produces findings but no score, and says it is observations only', diffCat.findings.length >= 7 && diffCat.score === null && /Observations only/.test(diffCat.note) && diffCat.weight === 0);
+check('the Differentiation category produces findings from its detectors (scored by the strict policy from admitted checks only)', diffCat.findings.length >= 7);
 const noDiff = new RuleLoader(tmp); const dj = JSON.parse(fs.readFileSync(path.join(tmp, 'diff.json'), 'utf8')); dj.rules.forEach((r) => { r.enabled = false; }); fs.writeFileSync(path.join(tmp, 'diff.json'), JSON.stringify(dj)); fs.utimesSync(path.join(tmp, 'diff.json'), new Date(), new Date(Date.now() + 21000));
 const a2 = analyze(pages['ai-saas'].out), av2 = analyzeAvara(pages['ai-saas'].out, a2); const rv2 = await new RuleEngine(noDiff, null).review(buildWebsiteContext(pages['ai-saas'].out, a2, av2, new Set(noDiff.loadAllRules().flatMap((r) => r.evaluator?.detectors ?? []))));
 check('switching every DIFF rule off leaves every other category score and the overall number unchanged', rv.overall.score === rv2.overall.score && rv.categories.filter((c) => c.category !== diffCat.category).every((c) => c.score === rv2.categories.find((x) => x.category === c.category).score));

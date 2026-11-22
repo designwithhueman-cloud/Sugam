@@ -17,9 +17,9 @@
       "weight": 10,
       "mode": "H",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -304,9 +304,9 @@
       "weight": 6,
       "mode": "H",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -350,9 +350,9 @@
       "weight": 3,
       "mode": "H",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -617,9 +617,9 @@
       "weight": 10,
       "mode": "H",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -661,9 +661,9 @@
       "weight": 6,
       "mode": "H",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -744,9 +744,9 @@
       "weight": 6,
       "mode": "H",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [

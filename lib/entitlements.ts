@@ -29,24 +29,25 @@ export async function planForUser(userId: string): Promise<PlanId> {
 }
 export async function scanHas(scanId: string, f: Feature) { return hasFeature(await planForScan(scanId), f); }
 
-// Free view: issue types, severity, counts, WCAG and who may be affected, plus ONE finding left
-// fully open (the top confirmed failure: its first few elements and its fix). Everything else has
-// no elements, HTML, screenshots or repair instructions.
+// Free view: the score, the nine categories and the counts by category and severity (report.pageSummary, built before this runs), plus ONE
+// finding left fully open with its complete fix. Everything else is removed here, on the server: the other findings' titles, rules,
+// elements, evidence and fixes never reach a Free browser or the review API. The report draws them as locked rows from the counts.
 export function redactReport(r: Report): Report {
   // A scan with an Avara ranking opens the recommended first fix, whichever category it is in. Scans made before Avara keep the old rule:
   // the top confirmed accessibility failure.
   const first = r.avara?.recommendations[0];
   const top = first ? r.issues.find((i) => i.id === r.avara!.leadIssueId) : r.issues.filter((i) => i.bucket === 'confirmed_failure').sort((a, b) => a.position - b.position)[0];
-  const av = r.avara && first ? {
+  const av = r.avara ? {
     ...r.avara,
-    recommendations: r.avara.recommendations.map((x) => (x.rank === 1 ? x : { ...x, fixes: null, fixLocked: true })),
-    findings: r.avara.findings.map((f) => (first.findingIds.includes(f.id) ? f : { ...f, evidence: null })),
+    recommendations: first ? [first] : [],
+    findings: first ? r.avara.findings.filter((f) => first.findingIds.includes(f.id)) : [],
+    // A rescan keeps the outcome of the fix this plan opened (the previous scan's first fix): the free loop is fix one, rescan, see it Fixed.
+    outcomes: r.avara.outcomes ? r.avara.outcomes.filter((o) => o.firstFix) : null,
   } : r.avara;
   return {
     ...r, avara: av, locked: true, unlockedIssueId: top?.id ?? null,
     viewports: r.viewports.map((v) => ({ ...v, screenshotUrl: '' })),
-    issues: r.issues.map((i) => (i.id === top?.id
-      ? { ...i, instances: i.instances.slice(0, FREE_ELEMENTS).map((x) => ({ ...x, boxes: [] })) }
-      : { ...i, instances: [], fixes: null, whatToChange: '', helpUrl: undefined })),
+    issues: top ? [{ ...top, instances: top.instances.slice(0, FREE_ELEMENTS).map((x) => ({ ...x, boxes: [] })) }] : [],
+    review: r.review ? { ...r.review, categories: r.review.categories.map((c) => ({ ...c, findings: [] })) } : r.review,
   };
 }

@@ -63,6 +63,7 @@ async function loadAvara(scanId: string, scan: typeof schema.scans.$inferSelect)
   const fx = recs.length ? await db.select().from(schema.generatedFixes).where(inArray(schema.generatedFixes.recommendationId, recs.map((r) => r.id))) : [];
   const outs = scan.rescanOf ? await db.select().from(schema.rescanOutcomes).where(eq(schema.rescanOutcomes.scanId, scanId)) : null;
   const prevFs = outs?.length ? await db.select().from(schema.findings).where(eq(schema.findings.scanId, scan.rescanOf!)) : [];
+  const [prevFirst] = outs?.length ? await db.select({ id: schema.recommendations.id, findingIds: schema.recommendations.findingIds }).from(schema.recommendations).where(and(eq(schema.recommendations.scanId, scan.rescanOf!), eq(schema.recommendations.rank, 1))) : [];
   const [later] = await db.select({ id: schema.scans.id }).from(schema.scans).where(and(eq(schema.scans.rescanOf, scanId), eq(schema.scans.status, 'completed'))).orderBy(desc(schema.scans.createdAt)).limit(1);
   const rule = (f: typeof fs[number]) => rv.find((r) => r.ruleId === f.ruleId && r.version === f.ruleVersion);
   const rank1 = recs[0];
@@ -95,7 +96,7 @@ async function loadAvara(scanId: string, scan: typeof schema.scans.$inferSelect)
     })),
     recommendations: recs.map((r) => { const { ownerIssueId, ...meta } = recMeta(r, fs); void ownerIssueId; return { ...meta, id: r.id, rank: r.rank, tier: r.tier, title: r.title, sentence: r.sentence, categories: r.categories, findingIds: r.findingIds, fixLocked: false, fixes: fx.filter((x) => x.recommendationId === r.id).map((x) => ({ tool: x.tool, kind: x.kind, content: x.content })) }; }),
     rescanOf: scan.rescanOf ?? null, latestRescanId: later?.id ?? null, leadIssueId,
-    outcomes: outs ? outs.map((o) => { const pf = prevFs.find((f) => f.id === o.findingId); return { findingId: o.findingId, findingTitle: pf?.title ?? 'Earlier finding', category: pf?.category ?? 'accessibility', recommendationId: o.recommendationId, outcome: o.outcome, comparable: o.comparable, before: o.before, after: o.after, reason: o.reason }; }) : null,
+    outcomes: outs ? outs.map((o) => { const pf = prevFs.find((f) => f.id === o.findingId); return { firstFix: !!prevFirst && (o.recommendationId === prevFirst.id || (prevFirst.findingIds ?? []).includes(o.findingId)), findingId: o.findingId, findingTitle: pf?.title ?? 'Earlier finding', category: pf?.category ?? 'accessibility', recommendationId: o.recommendationId, outcome: o.outcome, comparable: o.comparable, before: o.before, after: o.after, reason: o.reason }; }) : null,
   };
 }
 

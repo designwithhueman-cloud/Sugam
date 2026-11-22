@@ -49,10 +49,10 @@ export function buildWebsiteContext(out: ScanOutput, a: Analysis | null, av: Ava
 }
 
 /** Runs the whole review. Never throws: a failure becomes a note and the rest of the report is unaffected. */
-export async function runReview(out: ScanOutput, a: Analysis | null, av: AvaraAnalysis | null, opts: { llm?: LlmClient | null; aiPending?: boolean } = {}): Promise<{ review: ReviewResult | null; error?: string }> {
+export async function runReview(out: ScanOutput, a: Analysis | null, av: AvaraAnalysis | null, opts: { llm?: LlmClient | null; aiPending?: boolean; aiExcluded?: boolean } = {}): Promise<{ review: ReviewResult | null; error?: string }> {
   try {
     const loader = ruleLoader(); const ids = new Set(loader.loadAllRules().flatMap((r) => (r.evaluator && 'detectors' in r.evaluator ? r.evaluator.detectors ?? [] : [])));
-    const ctx = { ...buildWebsiteContext(out, a, av, ids), aiPending: opts.aiPending };
+    const ctx = { ...buildWebsiteContext(out, a, av, ids), aiPending: opts.aiPending, aiExcluded: opts.aiExcluded };
     const llm = opts.llm === undefined ? createLlmClient() : opts.llm;
     const review = await new RuleEngine(loader, llm).review(ctx);
     const sig = out.viewports.find((v) => v.name === 'desktop')?.signals ?? null;

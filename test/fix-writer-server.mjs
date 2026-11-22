@@ -30,5 +30,17 @@ if (mode === 'ok') {
 }
 const rv = await (await ctx.request.get(`${base}/api/scans/${id}/review`)).json();
 check('the detector outcome is the same whatever the AI did: A11Y-015 is a measured failure', rv.categories.flatMap((x) => x.findings).find((f) => f.ruleId === 'A11Y-015')?.result === 'observed_failure');
+// Free (an anonymous scan): every built-in check runs, and not one model call is made, for the review or for fix writing.
+if (log) {
+  await new Promise((r) => setTimeout(r, 4000));   // let the paid scan's AI steps finish logging first
+  const n0 = fs.existsSync(log) ? fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).length : 0;
+  const anon = await b.newContext();
+  const { id: fid } = await (await anon.request.post(base + '/api/scans', { headers: { origin: base }, data: { url: F + '/launch/unnamed-button.html' } })).json();
+  for (let i = 0; i < 200; i++) { const st = await (await anon.request.get(`${base}/api/scans/${fid}`)).json(); if (st.status === 'completed' || st.status === 'failed') break; await new Promise((r) => setTimeout(r, 1000)); }
+  await new Promise((r) => setTimeout(r, 8000));   // longer than the stub's delay: any background AI step would have logged by now
+  const n1 = fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).length;
+  const frv = await (await anon.request.get(`${base}/api/scans/${fid}/review`)).json();
+  check('Free scan: zero model calls (review and fix writing), the review says AI is not in the Free plan, and the page still gets a score', n1 === n0 && /Not part of the Free plan/.test(frv.ai?.reason ?? '') && frv.pageSummary?.score != null, `${n1 - n0} new model calls; score ${frv.pageSummary?.score}`);
+}
 console.log(`TIMING ${mode} report=${(done / 1000).toFixed(1)}s fixSettled=${(fixDone / 1000).toFixed(1)}s`);
 await b.close(); const failed = results.filter((x) => !x).length; console.log(failed ? `\n${failed} FAILED` : '\nAll passed'); process.exit(failed ? 1 : 0);

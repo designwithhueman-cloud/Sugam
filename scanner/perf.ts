@@ -33,7 +33,15 @@ const freePort = () => new Promise<number>((res, rej) => { const s = net.createS
 type Audit = { numericValue?: number; score?: number | null; details?: { items?: Record<string, unknown>[] } };
 const node = (n: unknown) => { const o = n as { selector?: string; snippet?: string; nodeLabel?: string } | undefined; return o ? { selector: o.selector || '', snippet: (o.snippet || o.nodeLabel || '').slice(0, 220) } : null; };
 
-export async function runLighthouse(url: string, runsWanted = 1): Promise<PerfResult> {
+// Lighthouse runs one at a time per process: two concurrent runs share global state (performance marks, the trace) and one fails, which used
+// to cost a concurrent scan its Performance score. Later runs wait their turn; a failure never blocks the next one.
+let lighthouseTurn: Promise<unknown> = Promise.resolve();
+export function runLighthouse(url: string, runsWanted = 1): Promise<PerfResult> {
+  const mine = lighthouseTurn.catch(() => {}).then(() => runLighthouseNow(url, runsWanted));
+  lighthouseTurn = mine.catch(() => {});
+  return mine;
+}
+async function runLighthouseNow(url: string, runsWanted: number): Promise<PerfResult> {
   if (process.env.AVARA_FAIL_ANALYZER === 'perf') throw new Error('Performance check disabled for this test.');
   const proxy = await startEgressProxy(); const port = await freePort();
   const browser = await chromium.launch({ channel: process.env.SUGAM_CHROME_CHANNEL ?? 'chrome', headless: true, args: [`--remote-debugging-port=${port}`, `--proxy-server=${proxy.url}`, '--proxy-bypass-list=<-loopback>', '--disable-extensions'] });

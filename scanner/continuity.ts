@@ -105,7 +105,7 @@ export async function readInteractionTiming(page: Page): Promise<InteractionTimi
 
 // ---------- Journey continuity: the way back after the main action ----------
 export type Journey = { tested: boolean; why?: string; startUrl: string; kind?: 'page' | 'dialog'; backReturns?: boolean | null; backUrl?: string | null; actionAgain?: boolean | null;
-  escapeCloses?: boolean | null; closeControl?: string | null; steps: string[] };
+  escapeCloses?: boolean | null; closeControl?: string | null; backdropCloses?: boolean | null; steps: string[] };
 const DIALOG_STATE = `function () {
   const shown = (e) => { const r = e.getBoundingClientRect(), c = getComputedStyle(e); return r.width > 1 && r.height > 1 && c.visibility !== 'hidden' && c.display !== 'none'; };
   const d = [...document.querySelectorAll('[role=dialog],[aria-modal=true],dialog[open]')].filter(shown);
@@ -124,7 +124,14 @@ export async function journeyAfterAction(page: Page, o: { startUrl: string; dial
     const e = (await page.evaluate(`(${DIALOG_STATE})()`)) as { open: number };
     const escapeCloses = e.open <= o.dialogsBefore;
     steps.push(escapeCloses ? 'Escape closed it.' : 'Escape did not close it.');
-    return { tested: true, startUrl: o.startUrl, kind: 'dialog', escapeCloses, closeControl: d.close, steps };
+    let backdropCloses: boolean | null = null;
+    if (!escapeCloses && !d.close) {
+      // Some dialogs close only when the backdrop is tapped: a pointer-only way out. Recorded, so the finding says exactly what works.
+      await page.mouse.click(4, 4).catch(() => {}); await page.waitForTimeout(400);
+      backdropCloses = ((await page.evaluate(`(${DIALOG_STATE})()`)) as { open: number }).open <= o.dialogsBefore;
+      steps.push(backdropCloses ? 'Tapping outside it closed it (no keyboard way out).' : 'Tapping outside it did not close it either.');
+    }
+    return { tested: true, startUrl: o.startUrl, kind: 'dialog', escapeCloses, closeControl: d.close, backdropCloses, steps };
   }
   if (!sameDoc) {
     steps.push(`After “${o.actionText}”, the page is ${safePath(now)}.`);

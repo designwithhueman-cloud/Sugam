@@ -22,7 +22,7 @@ for (const [name, sample, rs] of [['missing capture', null, refs], ['no referenc
 
 // ---- rule data: extended in place, still diagnostic and unscored ----
 const rule = new RuleLoader().loadAllRules().find((r) => r.ruleId === 'DIFF-002'); const p = heroParams();
-check('DIFF-002 carries the pack parameters (prototype-1, tolerance 0.08, 3 groups) and stays weight 0, not score-eligible, advisory', p.version === 'prototype-1' && p.positionTolerance === 0.08 && p.minimumGroups === 3 && p.publish === false && rule.weight === 0 && rule.scoreEligible === false && rule.advisory === true);
+check('DIFF-002 carries the pack parameters (prototype-1, tolerance 0.08, 3 groups), carries its tier weight (6), is not admitted for scoring (no confirmed-failure fixture), and stays advisory', p.version === 'prototype-1' && p.positionTolerance === 0.08 && p.minimumGroups === 3 && p.publish === false && rule.weight === 6 && rule.scoreEligible === false && rule.advisory === true);
 check('DIFF-002 outcome still comes only from diff/default-styling (the comparison is not a detector of the rule)', JSON.stringify(rule.evaluator.detectors) === '["diff/default-styling"]');
 check('DIFF-001 still owns section order', new RuleLoader().loadAllRules().find((r) => r.ruleId === 'DIFF-001').evaluator.detectors.includes('diff/template-sequence'));
 

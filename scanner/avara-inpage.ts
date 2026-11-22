@@ -336,7 +336,9 @@ export const VALIDATION_PROBE = `function () {
   const label = (e) => (e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.classList.length ? '.' + [...e.classList].slice(0, 2).join('.') : '')).slice(0, 80);
   const out = [];
   for (const f of [...document.forms].slice(0, 4)) {
-    const fields = [...f.querySelectorAll('input,select,textarea')].filter((i) => !/^(hidden|submit|button|image|reset)$/.test(i.type) && !i.disabled);
+    // Only fields a visitor can see: a form inside a closed dialog or a collapsed panel cannot take focus, which says nothing about its errors.
+    const seen = (i) => { const r = i.getBoundingClientRect(), c = getComputedStyle(i); return r.width > 0 && r.height > 0 && c.visibility !== 'hidden'; };
+    const fields = [...f.querySelectorAll('input,select,textarea')].filter((i) => !/^(hidden|submit|button|image|reset)$/.test(i.type) && !i.disabled && seen(i));
     if (!fields.length || (fields.length === 1 && fields[0].type === 'search')) continue;
     const constrained = fields.filter((i) => i.required || /^(email|url|tel|number)$/.test(i.type) || i.pattern || i.minLength > 0).length;
     const prefilled = fields.some((i) => i.value && i.type !== 'checkbox' && i.type !== 'radio');

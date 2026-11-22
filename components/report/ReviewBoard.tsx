@@ -3,7 +3,7 @@
 // category, an issue or a pin updates all of them together. Rows arrive already rendered by the server (so plan gating and redaction are untouched); this file
 // only filters, numbers and positions them. Scores are the rule engine's own provisional numbers, shown with their coverage; nothing is calculated here.
 import * as React from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Lock } from 'lucide-react';
 import type { Board, Level } from '@/lib/review-view.ts';
 import type { ViewportId } from '@/lib/report-types.ts';
 import type { PageSummary } from '@/lib/page-summary.ts';
@@ -221,13 +221,40 @@ function Preview({ shots, items, activeId, onPick, locked }: { shots: Shot[]; it
   );
 }
 
-const STATUS: Record<string, string> = { insufficient: 'Insufficient coverage', observation: 'Observation only', not_applicable: 'Not applicable', unknown: 'Not reviewed' };
+const STATUS: Record<string, string> = { insufficient: 'Couldn’t score', observation: 'Observation only', not_applicable: 'Not applicable', unknown: 'Not reviewed' };
 /** All nine categories by confirmed issues, highest first: score or scoring status, issues, and how many admitted rules were scored here. */
-function CategorySummary({ summary, onPick }: { summary: PageSummary; onPick: (boardLabel: string) => void }) {
+/** Free: the findings after the first fix, as locked rows. The server sent only each row's severity and category; there is no text to reveal. */
+function LockedFindings({ summary }: { summary: PageSummary }) {
+  const label = new Map(summary.categories.map((c) => [c.code, c.label]));
+  const rows = summary.locked; if (!rows.length) return null;
+  const groups = [...new Set(rows.map((r) => r.category))].map((c) => ({ c, items: rows.filter((r) => r.category === c) })).sort((a, b) => b.items.length - a.items.length);
+  return (
+    <section aria-labelledby="locked-h" className="mt-10" data-testid="locked-findings">
+      <h2 id="locked-h" className="flex flex-wrap items-center gap-3 text-3xl font-semibold tracking-tight text-ink"><Lock aria-hidden className="size-7 text-[#432099]" />{rows.length} more finding{rows.length === 1 ? '' : 's'}, locked</h2>
+      <p className="mt-1 max-w-3xl text-base text-neutral-700">Each one has its exact element, evidence and a complete fix in Creator and Agency. Your first fix above is free.</p>
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        {groups.map((g) => (
+          <div key={g.c || 'other'} className="rounded-[1.5rem] bg-white p-5 ring-1 ring-black/10">
+            <p className="text-lg font-semibold text-ink">{label.get(g.c) ?? 'Other'} <span className="font-normal text-neutral-600">· {g.items.length}</span></p>
+            <ul className="mt-3 space-y-2" aria-label={`Locked findings in ${label.get(g.c) ?? 'other categories'}`}>
+              {g.items.map((r, i) => (
+                <li key={i} className="flex items-center gap-3 rounded-xl bg-[#f6f5f1] px-3 py-2.5" data-testid="locked-row">
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold ${LEVELS[r.level].chip}`}>{LEVELS[r.level].label}</span>
+                  <span aria-hidden className="h-3 flex-1 rounded-full bg-neutral-300/80 blur-[3px]" style={{ maxWidth: `${55 + ((i * 37) % 40)}%` }} />
+                  <Lock aria-hidden className="size-4 shrink-0 text-neutral-500" /><span className="sr-only">Locked finding</span>
+                </li>))}
+            </ul>
+          </div>))}
+      </div>
+    </section>
+  );
+}
+
+function CategorySummary({ summary, onPick, locked }: { summary: PageSummary; onPick: (boardLabel: string) => void; locked: boolean }) {
   return (
     <section aria-labelledby="catsum-h" className="mt-10" data-testid="category-summary">
       <h2 id="catsum-h" className="text-3xl font-semibold tracking-tight text-ink">Categories by confirmed issues</h2>
-      <p className="mt-1 max-w-3xl text-base text-neutral-700">Highest first. A score appears only where enough admitted rules were checked on this page; otherwise the reason is given.</p>
+      <p className="mt-1 max-w-3xl text-base text-neutral-700">Highest first. Each category is scored from its built-in checks; where the evidence is not enough, it says “Couldn’t score” and why.</p>
       <div aria-hidden className="mt-5 hidden grid-cols-[2rem_minmax(0,1fr)_8rem_7rem_7rem] gap-x-3 px-5 pb-2 text-sm font-semibold uppercase tracking-[0.1em] text-neutral-600 sm:grid"><span /><span>Category</span><span className="text-right">Score</span><span className="text-right">Issues</span><span className="text-right">Scored rules</span></div>
       <ol className="mt-2 divide-y divide-black/10 overflow-hidden rounded-[1.5rem] bg-white ring-1 ring-black/10 sm:mt-0">
         {summary.categories.map((c, i) => (
@@ -237,7 +264,8 @@ function CategorySummary({ summary, onPick }: { summary: PageSummary; onPick: (b
               <p className="text-lg font-semibold text-ink">{c.label}</p>
               {c.status !== 'scored' && <p className="text-sm text-neutral-700 [overflow-wrap:anywhere]" data-testid="catsum-reason">{c.note}</p>}
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-base">
-                {c.issues > 0 && <button type="button" onClick={() => onPick(c.boardLabel)} className="font-semibold text-[#5b2fd0] underline underline-offset-4 hover:text-[#432099]">Show {c.label} issues</button>}
+                {locked && (['critical', 'high', 'medium', 'review'] as Level[]).filter((k) => c.severity[k] > 0).map((k) => <span key={k} className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${LEVELS[k].chip}`}>{c.severity[k]} {LEVELS[k].label}</span>)}
+                {!locked && c.issues > 0 && <button type="button" onClick={() => onPick(c.boardLabel)} className="font-semibold text-[#5b2fd0] underline underline-offset-4 hover:text-[#432099]">Show {c.label} issues</button>}
                 {c.firstFix && <a href="#first-h" className="font-semibold text-[#3b5b00] underline underline-offset-4" data-testid="catsum-first">Fix this first is in this category ↑</a>}
               </div>
             </div>
@@ -263,7 +291,7 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
   React.useEffect(() => setHeroOpen(false), [cat, lvl]);
   const toggle = (id: string) => setOpen((o) => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   const showPreview = !locked && shots.length > 0;
-  const ov = board.overall; const t = board.totals;
+  const ov = board.overall; const t = summary ? summary.severity : board.totals;   // the summary counts every item, also on Free where the items are withheld
   // Every category gets a tab (observation-only ones too), so the per-category counts add up to the All total.
   const tabs = [...board.cats].sort((x, y) => y.critical - x.critical || y.issues - x.issues || (x.score ?? 101) - (y.score ?? 101)); const curCat = board.cats.find((c) => c.label === cat);
   const onTabKey = (e: React.KeyboardEvent) => { const order: (string | null)[] = [null, ...tabs.map((c) => c.label)]; const k = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0; if (!k) return; e.preventDefault(); const nx = order[(order.indexOf(cat) + k + order.length) % order.length]; setCat(nx); document.getElementById(`tab-${nx ?? 'all'}`)?.focus(); };
@@ -279,9 +307,9 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
         <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
           <Ring score={summary ? summary.score : ov?.score ?? null} />
           <div className="min-w-0 flex-1">
-            <h1 id="score-h" className="text-balance text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">{summary ? (summary.score == null ? <>Page score: <span className="text-neutral-600">not scored</span></> : <>Page score: <span className={band(summary.score).t}>{summary.score}</span><span className="text-neutral-500">/100</span></>) : ov?.score == null ? `Review of ${domain}` : <>Launch readiness: <span className={band(ov.score).t}>{ov.score}</span></>}</h1>
-            <p className="mt-2 flex flex-wrap items-center gap-2 text-lg font-semibold text-ink"><span data-testid="verdict">{verdict}</span>{ov?.score != null && ov.status !== 'final' && <span className="rounded-full bg-[#efe9ff] px-3 py-0.5 text-sm text-[#432099]">Provisional</span>}</p>
-            <p className="mt-1 max-w-2xl text-base text-neutral-700" data-testid="score-status">{summary ? (summary.score != null ? `Based on ${summary.contributing} of ${summary.scorable} scored categories; the others have insufficient coverage on this page. Differentiation is observation only.` : summary.reason) : !ov ? 'No score could be calculated for this scan.' : ov.score != null ? `Every required check ran. ${ov.coveragePct}% of all checks reached a decision.` : `No score yet: ${ov.assessed} of ${ov.total} categories had every required check run. ${ov.why.join(' ')}`}</p>
+            <h1 id="score-h" className="text-balance text-3xl font-semibold leading-tight tracking-tight text-ink sm:text-4xl">{summary ? (summary.score == null ? <>Page score: <span className="text-neutral-600">couldn’t score</span></> : <>Page score: <span className={band(summary.score).t}>{summary.score}</span><span className="text-neutral-500">/100</span></>) : ov?.score == null ? `Review of ${domain}` : <>Launch readiness: <span className={band(ov.score).t}>{ov.score}</span></>}</h1>
+            <p className="mt-2 flex flex-wrap items-center gap-2 text-lg font-semibold text-ink"><span data-testid="verdict">{verdict}</span>{!summary && ov?.score != null && ov.status !== 'final' && <span className="rounded-full bg-[#efe9ff] px-3 py-0.5 text-sm text-[#432099]">Provisional</span>}</p>
+            <p className="mt-1 max-w-2xl text-base text-neutral-700" data-testid="score-status">{summary ? (summary.score != null ? `${summary.contributing} of ${summary.scorable} categories scored. The page score is their simple average, from built-in checks only (never AI), so it is the same on every plan.` : summary.reason) : !ov ? 'No score could be calculated for this scan.' : ov.score != null ? `Every required check ran. ${ov.coveragePct}% of all checks reached a decision.` : `No score yet: ${ov.assessed} of ${ov.total} categories had every required check run. ${ov.why.join(' ')}`}</p>
             {summary && <dl className="mt-4 grid max-w-xl grid-cols-3 gap-2" data-testid="page-totals">
               <div className="rounded-2xl bg-[#fde7e1] px-4 py-3"><dt className="text-sm font-semibold text-[#7a1f0b]">Confirmed issues</dt><dd className="text-3xl font-semibold leading-tight text-ink" data-testid="total-issues">{summary.issues}</dd></div>
               <div className="rounded-2xl bg-[#efe9ff] px-4 py-3"><dt className="text-sm font-semibold text-[#432099]">Fixes</dt><dd className="text-3xl font-semibold leading-tight text-ink" data-testid="total-fixes">{summary.fixes}</dd></div>
@@ -300,7 +328,8 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
 
       <div className="mt-6">{primary}</div>
 
-      {summary && <CategorySummary summary={summary} onPick={(label) => { setCat(label); document.getElementById('issues-h')?.scrollIntoView({ block: 'start' }); }} />}
+      {summary && <CategorySummary summary={summary} locked={locked} onPick={(label) => { setCat(label); document.getElementById('issues-h')?.scrollIntoView({ block: 'start' }); }} />}
+      {locked && summary ? <LockedFindings summary={summary} /> : <>
 
       <section aria-labelledby="issues-h" className="mt-12" data-testid="others">
         <div className="flex flex-wrap items-end justify-between gap-3">
@@ -354,6 +383,7 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
         </div>
         </div>
       </section>
+      </>}
     </>
   );
 }

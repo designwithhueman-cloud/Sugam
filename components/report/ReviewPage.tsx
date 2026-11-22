@@ -93,7 +93,7 @@ export function ReviewPage({ report, access, mode = 'owner' }: { report: Report;
         <header className="relative" data-testid="page-header">
           <p className="inline-flex items-center gap-2 rounded-full bg-[#efe9ff] px-3 py-1 text-sm font-semibold uppercase tracking-[0.14em] text-vio-deep"><span aria-hidden className="size-2 rounded-full bg-[#5b2fd0]" />Page review</p>
           <p className={`mt-3 text-balance text-5xl font-semibold leading-[1.02] tracking-[-0.035em] text-ink sm:text-7xl ${wrap}`}>{v.domain}</p>
-          <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-lg text-neutral-800"><span>Desktop and phone</span>{date && <><span aria-hidden>·</span><span>Scanned {date}</span></>}<span aria-hidden>·</span><span>{v.board.totals.critical + v.board.totals.high + v.board.totals.medium} recommended fixes</span><span aria-hidden>·</span><span>{v.board.totals.review} observations</span></p>
+          <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-lg text-neutral-800"><span>Desktop and phone</span>{date && <><span aria-hidden>·</span><span>Scanned {date}</span></>}<span aria-hidden>·</span>{(() => { const ps = report.pageSummary; const fixes = ps ? ps.fixes : v.board.totals.critical + v.board.totals.high + v.board.totals.medium; const obs = ps ? ps.observations : v.board.totals.review; return <><span>{fixes} recommended fix{fixes === 1 ? '' : 'es'}</span><span aria-hidden>·</span><span>{obs} observation{obs === 1 ? '' : 's'}</span></>; })()}</p>
         </header>
 
         {report.aiPending && <AiPending scanId={report.id} />}
@@ -192,11 +192,12 @@ export function ReviewPage({ report, access, mode = 'owner' }: { report: Report;
 
         {access !== 'paid' && mode === 'owner' && (
           <section aria-labelledby="up-h" className="mt-14 rounded-[1.75rem] bg-[#e6f9b6] p-7 sm:p-9" data-testid="upgrade">
-            <h2 id="up-h" className="text-2xl font-semibold tracking-tight text-ink">{access === 'anonymous' ? 'Want every fix and the exact elements?' : 'Want every fix, with the elements pinned on screenshots?'}</h2>
-            <p className="mt-2 max-w-2xl text-lg text-ink">{access === 'anonymous' ? 'A free account lists every issue type on this page. A paid plan shows the exact elements on screenshots, every fix, and rescans that confirm each one. Whole-site scanning is planned.' : 'Whole-site scanning is planned. Join the Creator waitlist to hear when it opens.'}</p>
+            <h2 id="up-h" className="text-2xl font-semibold tracking-tight text-ink">Unlock every finding and fix</h2>
+            <p className="mt-2 max-w-2xl text-lg text-ink">This free scan ran every built-in check, with no AI, and gave you the score, the counts and your first fix. Creator adds AI-assisted checks for your site and opens every finding and fix. Agency does it across client projects, with shareable reports.</p>
             <div className="mt-5 flex flex-wrap gap-3">
-              {access === 'anonymous' && <><Link href={`/signup?next=${encodeURIComponent(`/scans/${report.id}`)}`} className="inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-lg font-semibold text-white hover:bg-neutral-800">Create a free account</Link><Link href={`/login?next=${encodeURIComponent(`/scans/${report.id}`)}`} className="inline-flex min-h-12 items-center rounded-full border border-ink px-6 text-lg font-semibold text-ink hover:bg-black/5">I have an account</Link></>}
-              {access === 'free' && <Link href="/upgrade?plan=site" className="inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-lg font-semibold text-white hover:bg-neutral-800">Join the Creator waitlist</Link>}
+              <Link href="/upgrade?plan=site" className="inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-lg font-semibold text-white hover:bg-neutral-800" data-testid="join-creator">Join Creator waitlist</Link>
+              <Link href="/upgrade?plan=agency" className="inline-flex min-h-12 items-center rounded-full border-2 border-ink px-6 text-lg font-semibold text-ink hover:bg-white/60" data-testid="join-agency">Join Agency waitlist</Link>
+              {access === 'anonymous' && <Link href={`/signup?next=${encodeURIComponent(`/scans/${report.id}`)}`} className="inline-flex min-h-12 items-center px-3 text-lg font-semibold text-ink underline underline-offset-4">Create a free account to keep this report</Link>}
               <Link href="/#pricing" className="inline-flex min-h-12 items-center px-3 text-lg font-semibold text-ink underline underline-offset-4">Compare plans</Link>
             </div>
           </section>

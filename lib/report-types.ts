@@ -21,7 +21,7 @@ export type AvaraFinding = {
 export type AvaraFix = { tool: string; kind: string; content: string };
 export type AvaraOwner = { id: string; title: string; why: string };
 export type AvaraRecommendation = { owner: AvaraOwner | null; related: { id: string; title: string }[]; lenses: { lens: string; name: string }[]; scoring: { ruleId: string | null; weight: number; admitted: boolean; why: string }; id: string; rank: number; tier: 'fix_immediately' | 'fix_before_launch' | 'improve_later'; title: string; sentence: string; categories: string[]; findingIds: string[]; fixes: AvaraFix[] | null; fixLocked: boolean };
-export type AvaraOutcome = { findingId: string; findingTitle: string; category: string; recommendationId: string | null; outcome: 'fixed' | 'still_present' | 'could_not_verify'; comparable: boolean; before: Record<string, unknown>; after: Record<string, unknown>; reason: string };
+export type AvaraOutcome = { /** this outcome re-checks the previous scan's first fix (the one a Free plan opens) */ firstFix?: boolean; findingId: string; findingTitle: string; category: string; recommendationId: string | null; outcome: 'fixed' | 'still_present' | 'could_not_verify'; comparable: boolean; before: Record<string, unknown>; after: Record<string, unknown>; reason: string };
 export type AvaraReport = {
   goal: string | null; analyzers: Record<string, { status: 'ok' | 'failed' | 'skipped'; message?: string; ms?: number }>; coverage: string[];
   recommendations: AvaraRecommendation[]; findings: AvaraFinding[];

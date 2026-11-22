@@ -410,6 +410,7 @@ export const ruleExecutions = pgTable('rule_executions', {
   outcome: text('outcome').notNull(),
   method: text('method').notNull(),
   scope: text('scope').notNull(),                     // full | measurable_part | summary | none
+  measured: text('measured'),                         // the detectors' own result (observed_pass | observed_failure | …), independent of any AI; null when no detector decided
   scoreEligible: boolean('score_eligible').notNull(),
   observationOnly: boolean('observation_only').notNull(),
   createdAt: ts('created_at').notNull().defaultNow(),

@@ -1,8 +1,8 @@
 // Server-rendered sections: how it works, audiences, pricing, footer. Spacing is generous on
 // purpose: large gaps between sections and between the elements inside them.
 import Link from 'next/link';
-import { Check, CircleCheck, ArrowRight, Building2, Crown, Info, ListChecks, RefreshCw, Rocket, Wrench, Zap } from 'lucide-react';
-import { PLANS } from '@/lib/plans.ts';
+import { Check, CircleCheck, ArrowRight, Building2, Crown, Info, ListChecks, RefreshCw, Rocket, Wrench, Zap, Sparkles } from 'lucide-react';
+import { PLANS, PLAN_ROWS } from '@/lib/plans.ts';
 import { Wordmark } from './Header.tsx';
 import { NAV, type NavLinks } from './nav.ts';
 import { SHOW_FAQ, SHOW_TOOLS } from './flags.ts';
@@ -10,7 +10,7 @@ import { SHOW_FAQ, SHOW_TOOLS } from './flags.ts';
 export const kicker = 'text-sm font-semibold uppercase tracking-[0.14em] text-vio-deep';
 export const h2 = 'text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-ink sm:text-5xl';
 
-const CTA = { free: ['Scan my page free', '/website-accessibility-checker', ''], site: ['Join the waiting list', '/upgrade?plan=site', ''], agency: ['Join the waiting list', '/upgrade?plan=agency', ''] } as const;
+const CTA = { free: ['Scan my page free', '/website-accessibility-checker', ''], site: ['Join Creator waitlist', '/upgrade?plan=site', ''], agency: ['Join Agency waitlist', '/upgrade?plan=agency', ''] } as const;
 
 export function Plans() {
   return (
@@ -48,6 +48,13 @@ export function Plans() {
                   <ul className="mt-4 flex-1 space-y-3.5">{(p.id === 'site' ? ['Planned: whole-site scanning. Scan your public pages together.', 'Planned: see where issues appear across your public pages in one report.', 'After your next release, rescan the page to see what changed.'] : p.features).map((f) => <li key={f} className="flex gap-3 text-lg leading-snug text-neutral-800"><Check aria-hidden className="mt-1 size-5 shrink-0 text-[#2d6a00]" />{f}</li>)}</ul>
                 </>
               )}
+              <dl className="mt-6 divide-y divide-black/10 rounded-2xl bg-white/80 ring-1 ring-black/10" data-testid={`plan-rows-${p.id}`}>
+                {PLAN_ROWS.map((row) => { const v = row.values[p.id]; const no = v === 'Not included'; const [head, ...rest] = v.split(' · '); return (
+                  <div key={row.label} className="px-4 py-3" data-testid={`plan-row-${row.label === 'AI-assisted checks' ? 'ai' : row.label === 'Automated checks' ? 'auto' : 'scores'}`}>
+                    <dt className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[#432099]">{row.label === 'AI-assisted checks' && <Sparkles aria-hidden className="size-4" />}{row.label}</dt>
+                    <dd className={`mt-1 text-lg leading-snug ${no ? 'text-neutral-600' : 'font-medium text-ink'}`}>{head}{rest.length ? <span className="block text-base font-normal text-neutral-700">{rest.join(' · ')}</span> : null}</dd>
+                  </div>); })}
+              </dl>
               <Link href={CTA[p.id][1]} aria-describedby={CTA[p.id][2] ? `cta-note-${p.id}` : undefined} className={`mt-8 inline-flex min-h-14 items-center justify-center gap-2 rounded-xl px-6 text-lg font-semibold ${p.id === 'free' ? 'border border-ink text-ink hover:bg-black/5' : 'bg-ink text-white hover:bg-neutral-800'}`}>{CTA[p.id][0]}{p.id !== 'free' && <span className="sr-only"> for {p.name}</span>}<ArrowRight aria-hidden className="size-5" /></Link>
               {CTA[p.id][2] ? <p id={`cta-note-${p.id}`} className="mt-3 text-base leading-snug text-neutral-700">{CTA[p.id][2]}</p> : null}
             </li>

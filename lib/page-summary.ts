@@ -8,10 +8,13 @@ import type { Report } from './report-types.ts';
 import { buildView, ENGINE_CAT, type Item } from './review-view.ts';
 import { CATALOG, CATEGORIES, type CatCode } from './avara/catalog.ts';
 
-export type SummaryCategory = { code: string; label: string; boardLabel: string; status: 'scored' | 'insufficient' | 'observation' | 'not_applicable' | 'unknown'; score: number | null; note: string; issues: number; fixes: number; scoredRules: number; firstFix: boolean };
+type Sev = { critical: number; high: number; medium: number; review: number };
+export type SummaryCategory = { code: string; label: string; boardLabel: string; severity: Sev; status: 'scored' | 'insufficient' | 'observation' | 'not_applicable' | 'unknown'; score: number | null; note: string; issues: number; fixes: number; scoredRules: number; firstFix: boolean };
 export type PageSummary = {
   policy: string | null; score: number | null; reason: string | null; contributing: number; scorable: number;
-  issues: number; fixes: number; observations: number;
+  issues: number; fixes: number; observations: number; severity: Sev;
+  /** Every item after the first fix, as severity and category only: what a Free report shows as locked rows (no titles, no elements). */
+  locked: { level: Item['level']; category: string }[];
   firstFix: { id: string; title: string; location: string; sentence: string; level: Item['level']; category: string; categoryLabel: string; fixText: string | null } | null;
   categories: SummaryCategory[];
 };
@@ -38,6 +41,8 @@ export function pageSummary(report: Report): PageSummary {
   const seen = new Set<string>();
   const per = new Map<CatCode, { issues: number; fixes: number }>();
   let issues = 0, fixes = 0;
+  const zero = (): Sev => ({ critical: 0, high: 0, medium: 0, review: 0 }); const sev = zero(); const sevBy = new Map<CatCode, Sev>(); const locked: PageSummary['locked'] = [];
+  for (const it of all) { const c = catOf(report, it); sev[it.level]++; if (c) { const x = sevBy.get(c) ?? zero(); x[it.level]++; sevBy.set(c, x); } if (it !== v.primary) locked.push({ level: it.level, category: c ?? '' }); }
   for (const it of all) {
     if (it.kind === 'review') continue;
     // Confirmed findings of a grouped fix; an engine failure or a legacy accessibility issue is one issue on its own.
@@ -53,11 +58,11 @@ export function pageSummary(report: Report): PageSummary {
   const strict = new Map((lib?.strict ?? []).map((c) => [c.code, c]));
   const categories: SummaryCategory[] = (Object.keys(CATEGORIES) as CatCode[]).map((code): SummaryCategory => {
     const s = strict.get(code); const n = per.get(code) ?? { issues: 0, fixes: 0 };
-    return { code, label: CATEGORIES[code].label, boardLabel: ENGINE_CAT[CATEGORIES[code].label] ?? CATEGORIES[code].label, status: s?.status ?? 'unknown', score: s?.status === 'scored' ? s.score : null, note: s?.note ?? 'The rule review did not run on this scan.', issues: n.issues, fixes: n.fixes, scoredRules: s?.scoredRules ?? 0, firstFix: code === leadCat };
+    return { code, severity: sevBy.get(code) ?? zero(), label: CATEGORIES[code].label, boardLabel: ENGINE_CAT[CATEGORIES[code].label] ?? CATEGORIES[code].label, status: s?.status ?? 'unknown', score: s?.status === 'scored' ? s.score : null, note: s?.note ?? 'The rule review did not run on this scan.', issues: n.issues, fixes: n.fixes, scoredRules: s?.scoredRules ?? 0, firstFix: code === leadCat };
   }).sort((a, b) => b.issues - a.issues || b.fixes - a.fixes || CATEGORIES[b.code as CatCode].weight - CATEGORIES[a.code as CatCode].weight || a.label.localeCompare(b.label));
   return {
     policy: lib?.policy ?? null, score: report.score, reason: report.score == null ? report.scoreReason ?? 'No score for this scan.' : null,
-    contributing: lib?.contributing ?? 0, scorable: lib?.scorable ?? 0, issues, fixes, observations: v.board.totals.review,
+    contributing: lib?.contributing ?? 0, scorable: lib?.scorable ?? 0, issues, fixes, observations: v.board.totals.review, severity: sev, locked,
     firstFix: lead ? { id: lead.id, title: lead.title, location: lead.location, sentence: lead.sentence, level: lead.level, category: leadCat ?? '', categoryLabel: leadCat ? CATEGORIES[leadCat].label : '', fixText: lead.fixText } : null,
     categories,
   };

@@ -10,7 +10,11 @@ const results = []; const check = (n, ok, x = '') => { results.push(ok); console
 const b = await chromium.launch(); const ctx = await b.newContext(); const p = await ctx.newPage();
 try {
   fs.copyFileSync(dir + 'book-call-bad.html', live);
-  await p.goto(base + '/'); const t0 = Date.now();
+  // AI-assisted checks are a paid feature (Free scans make no AI call), so this runs as the paid test account.
+  const c = fs.readFileSync('.data/test-account.txt', 'utf8');
+  await p.goto(base + '/login'); await p.fill('input[type=email]', c.match(/Email: (\S+)/)[1]); await p.fill('input[type=password]', c.match(/Password: (\S+)/)[1]);
+  await p.locator('input[type=password]').evaluate((e) => e.form.requestSubmit()); await p.waitForURL('**/app**');
+  const t0 = Date.now();
   const r = await ctx.request.post(base + '/api/scans', { headers: { origin: base, 'content-type': 'application/json' }, data: { url: 'http://127.0.0.1:4200/avara/early-live.html', standard: 'wcag22aa' } });
   const id = (await r.json()).id; const seen = {}; let st;
   for (let i = 0; i < 400; i++) {
@@ -25,7 +29,12 @@ try {
   const e = seen.earlyBody;
   check('a covered "Book a call" is revealed while the scan is still running', seen.early != null && seen.earlyStatus !== 'completed' && seen.early < seen.done);
   check('the early blocker carries its evidence and a fix for each builder', !!e && /Book a call/.test(e.title) && e.evidence.length >= 1 && /covered/.test(e.evidence[0]) && ['lovable', 'bolt', 'v0', 'cursor'].every((k) => /Book a call/.test(e.prompts[k] ?? '')), e?.title);
-  check('free (anonymous) scan: no screenshot URL, and the screenshot route answers 402', e?.shotUrl === null && (await ctx.request.get(`${base}/api/scans/${id}/early-shot`)).status() === 402);
+  check('paid scan: the early blocker carries its screenshot, and the route serves it', !!e?.shotUrl && (await ctx.request.get(base + e.shotUrl)).status() === 200);
+  // Free (anonymous): the same early blocker, without the screenshot (402), as before.
+  const anon = await b.newContext(); await anon.request.get(base + '/');
+  const fr = await anon.request.post(base + '/api/scans', { headers: { origin: base, 'content-type': 'application/json' }, data: { url: 'http://127.0.0.1:4200/avara/early-live.html', standard: 'wcag22aa' } }); const fid = (await fr.json()).id;
+  let fe = null; for (let i = 0; i < 120 && !fe; i++) { const j = await (await anon.request.get(`${base}/api/scans/${fid}`)).json(); fe = j.early ?? null; if (j.status === 'completed' || j.status === 'failed') { fe = j.early ?? fe; break; } await new Promise((x) => setTimeout(x, 500)); }
+  check('free (anonymous) scan: no screenshot URL, and the screenshot route answers 402', !!fe && fe.shotUrl === null && (await anon.request.get(`${base}/api/scans/${fid}/early-shot`)).status() === 402);
   check('the report is complete before the AI review: status completed with AI pending', seen.done != null && seen.pendingAtDone === true && seen.ai > seen.done, `report ${s(seen.done)}, AI ${s(seen.ai)}`);
   await p.goto(`${base}/scans/${id}`); const first = await p.getByTestId('primary').innerText();
   check('the full report leads with the same blocker', /Book a call/.test(first));

@@ -2,6 +2,8 @@
 // Run: node --experimental-strip-types test/avara-catalog.mjs
 import { CATALOG, CATEGORIES, HEURISTICS, MIGRATION, DETECTORS, BY_ID, canonicalFor, coverage } from '../lib/avara/catalog.ts';
 import { scoreRecords, DEFAULT_PROFILE } from '../lib/avara/scoring.ts';
+import fs from 'node:fs';
+const admittedIds = new Set(JSON.parse(fs.readFileSync('src/rules/_admissions.json', 'utf8')).rules.map((a) => a.ruleId));
 const results = []; const check = (n, ok, x = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x ? '  ' + x : ''}`); };
 const EXPECTED = { product_clarity: 15, ux_workflow: 20, mobile: 15, accessibility: 20, trust: 15, design: 15, conversion: 15, performance: 10 };
 const counts = Object.fromEntries(Object.entries(EXPECTED).map(([c, n]) => [c, CATALOG.filter((r) => r.category === c).length === n && CATEGORIES[c].count === n]));
@@ -9,7 +11,7 @@ const canonical = CATALOG.filter((r) => r.category !== 'differentiation');
 check('registry holds exactly 125 canonical IDs with the stated count in every category, plus the 10 DIFF rules', canonical.length === 125 && new Set(CATALOG.map((r) => r.id)).size === CATALOG.length && CATALOG.length === 135 && Object.values(counts).every(Boolean) && CATALOG.filter((r) => r.category === 'differentiation').length === 10 && CATALOG.every((r) => r.version));
 check('category weights total 100%', Object.values(CATEGORIES).reduce((n, c) => n + c.weight, 0) === 100);
 check('all ten heuristic lenses resolve to canonical owners and add no scored rules', HEURISTICS.length === 10 && HEURISTICS.every((h) => h.owners.every((o) => BY_ID.has(o))) && canonical.length === 125);
-check('every detector owner is a real topic and no draft rule is score-eligible without a verified passage', Object.keys(DETECTORS).every((id) => BY_ID.has(id)) && CATALOG.every((r) => !r.scoreEligible || (r.sourceSection && r.confidenceBasis)));
+check('every detector owner is a real topic and no rule is score-eligible without a recorded admission (verified passage or documented guidance)', Object.keys(DETECTORS).every((id) => BY_ID.has(id)) && CATALOG.every((r) => !r.scoreEligible || (r.confidenceBasis && admittedIds.has(r.id))));
 check('owner hypotheses, design references and rollups are advisory; source confidence stays null while unverified', CATALOG.filter((r) => r.sourceKey === 'OWNER' || r.sourceKey === 'DESIGN' || r.mode === 'R').every((r) => r.advisory) && CATALOG.every((r) => r.confidence === null));
 check('rollups (MOB-004, MOB-014, MOB-015, TRUST-004, DESIGN-013, CONV-011, PERF-010) carry no independent deduction', ['MOB-004', 'MOB-014', 'MOB-015', 'TRUST-004', 'DESIGN-013', 'CONV-011', 'PERF-010'].every((id) => BY_ID.get(id).mode === 'R' && BY_ID.get(id).advisory));
 check('existing detectors resolve to their owner (axe color-contrast -> A11Y-001, horizontal scroll -> MOB-002, LCP -> PERF-001)', canonicalFor('color-contrast') === 'A11Y-001' && canonicalFor('mobile/horizontal-scroll') === 'MOB-002' && canonicalFor('perf/lcp') === 'PERF-001' && canonicalFor('mobile/primary-action-unusable') === 'MOB-010');

@@ -48,13 +48,17 @@ check('report page shows the saved evidence to the member', html.includes('Inval
 // Scoring, end to end on these stored scans: one result (lib/page-summary.ts) on the review API, the report page, the project page and quick
 // scans. A number always comes with its basis; without one, "not scored" comes with the reason.
 const ps = fr.pageSummary, cs = cr.pageSummary;
-check('review API: the page score and its basis, from the same policy as the report', !!ps && ps.policy === 'avara-score-1.0' && (ps.score === null ? !!ps.reason : ps.contributing >= 1) && fr.overall.score === ps.score, `${ps?.score} (${ps?.contributing} of ${ps?.scorable})`);
+check('review API: the page score and its basis, from the same policy as the report', !!ps && ps.policy === 'avara-score-2.0' && (ps.score === null ? !!ps.reason : ps.contributing >= 1) && fr.overall.score === ps.score, `${ps?.score} (${ps?.contributing} of ${ps?.scorable})`);
 check('report page: the same page score, or "not scored" with the reason', ps.score === null ? /not scored/i.test(html) : new RegExp(`Page score: ${ps.score}`).test(html.replace(/<[^>]+>/g, '')));
 await page.goto(base + proj); const pj = await page.locator('main').innerText();
 const known = [ps.score, cs?.score].filter((x) => x != null).map(String);
 check('project page: the Score card shows one of these scans’ page scores (its latest), never the legacy number', known.some((n) => new RegExp(`Score\\s*${n}\\b`).test(pj)) || /Score\s*Not scored/i.test(pj), pj.match(/Score[\s\S]{0,60}/)?.[0].replace(/\s+/g, ' '));
-await page.goto(`${base}/app/${slug}/quick-scans`); const qs = await page.locator('main').innerText();
-check('quick scans: the Score column shows page scores from the same policy', known.some((n) => qs.includes(n)) || /Not scored/.test(qs));
+await page.goto(`${base}/app/${slug}/quick-scans`);
+// The first listed quick scan: its row shows the same score the report API gives it (or that it could not be scored).
+const qid = await page.evaluate(() => document.querySelector('main a[href*="/scans/"]')?.getAttribute('href')?.match(/[0-9a-f-]{36}/)?.[0]);
+const qps = qid ? (await (await page.request.get(`${base}/api/scans/${qid}/review`)).json()).pageSummary : null;
+const qrow = qid ? await page.evaluate((id) => document.querySelector(`main a[href*="${id}"]`)?.closest('tr,li,article')?.innerText ?? '', qid) : '';
+check('quick scans: a listed scan’s Score column matches its page score from the report API', !qid || (qps?.score != null ? new RegExp(`\\b${qps.score}\\b`).test(qrow) : /couldn.t score|not scored|–/i.test(qrow)), `${qid?.slice(0, 8)} → ${qps?.score ?? 'none'} | ${qrow.replace(/\s+/g, ' ').slice(0, 100)}`);
 // Category tabs: the per-category counts add up to the All total (worth-a-look items and observation-only categories included), and skipped
 // rules are listed with their saved reason instead of a bare "no issues".
 await page.goto(`${base}/scans/${flagsId}`); await page.waitForTimeout(500);

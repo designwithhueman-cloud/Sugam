@@ -21,6 +21,8 @@ import { recordKnowledge } from '../src/context/knowledge/index.ts';
 import { detectPatterns } from '../src/context/knowledge/patterns.ts';
 import { ruleLoader } from '../src/engines/rule-engine/RuleLoader.ts';
 import { createLlmClient } from '../src/engines/rule-engine/llm/index.ts';
+import { hasFeature } from './plans.ts';
+import { planForScan } from './entitlements.ts';
 import type { ReviewResult } from '../src/engines/rule-engine/RuleTypes.ts';
 
 export async function runScanJob(scanId: string): Promise<void> {
@@ -36,8 +38,12 @@ export async function runScanJob(scanId: string): Promise<void> {
     await db.update(schema.scans).set({ status: 'analyzing', progress: { step: 'Grouping findings and writing fixes', percent: 92 } }).where(eq(schema.scans.id, scanId));
     const a = analyze(out);
     // The AI fix writer runs after the report is saved (finishFixWriter), so the first usable fix never waits on a model.
-    const fixTargets = aiEnabledForFixes() ? selectFixTargets(a.issues).length : 0;
-    const ai = fixTargets ? { used: false, reason: 'AI fix wording is still running; Avara’s own fixes are shown until it finishes.', model: undefined as string | undefined }
+    // Free scans (anonymous, or a Free workspace) make no AI call at all: no AI review, no AI fix wording. Every built-in check still runs, and
+    // scores come only from measured checks, so a page scores the same on every plan.
+    const aiAllowed = hasFeature(await planForScan(scanId), 'ai_checks');
+    const fixTargets = aiAllowed && aiEnabledForFixes() ? selectFixTargets(a.issues).length : 0;
+    const ai = !aiAllowed ? { used: false, reason: 'Free plan: automated checks only. No AI was used for this scan.', model: undefined as string | undefined }
+      : fixTargets ? { used: false, reason: 'AI fix wording is still running; Avara’s own fixes are shown until it finishes.', model: undefined as string | undefined }
       : await enrich(out, a.issues);   // returns at once with the reason (off, no mapped fix): no model call
     // Avara's analysis must never cost the report: if it throws, the accessibility report is still saved and the failure is recorded.
     let av: AvaraAnalysis | null = null; const analyzers = { ...out.analyzers };
@@ -49,8 +55,8 @@ export async function runScanJob(scanId: string): Promise<void> {
     // The rule engine reviews the page against the JSON rule library. A failure here is recorded and never costs the rest of the report.
     // Report first: with AI on, the review is saved now with judgement rules marked pending, the scan completes, and the AI review runs after
     // (finishAiReview). Nothing a free user can open waits on it: the first fix comes from measured findings.
-    const aiLater = !!createLlmClient();
-    const rv = process.env.AVARA_FAIL_ANALYZER === 'review' ? { review: null, error: 'forced failure' } : await runReview(out, a, av, aiLater ? { llm: null, aiPending: true } : {});
+    const aiLater = aiAllowed && !!createLlmClient();
+    const rv = process.env.AVARA_FAIL_ANALYZER === 'review' ? { review: null, error: 'forced failure' } : await runReview(out, a, av, aiLater ? { llm: null, aiPending: true } : aiAllowed ? {} : { llm: null, aiExcluded: true });
     if (!rv.review) analyzers.review = { status: 'failed', message: `The rule review did not complete: ${rv.error ?? 'unknown error'}` }; else analyzers.review = { status: 'ok' };
     // DIFF-002 hero-layout comparison: diagnostic evidence kept beside the scan (never a finding, never scored), read through /api/scans/{id}/diagnostics.
     try { await putObject(`scans/${scanId}/diagnostics/diff-002.json`, JSON.stringify(heroDiagnostic(out))); } catch (e) { console.error('DIFF-002 diagnostic not stored', scanId, e); }

@@ -1,59 +1,56 @@
-// Scoring policy avara-score-1.0 (lib/avara/scoring.ts) on per-rule records: the category formula, what is excluded, the coverage requirement,
-// the overall from unrounded category scores normalized over contributing categories, and the statuses. Pure; no browser or server.
+// Scoring policy avara-score-2.0 (lib/avara/scoring.ts) on per-rule records: measured results of admitted checks only, every category scored
+// (Differentiation included), "Couldn't score" with the reason, and the page score as the simple average of the scored categories. Pure.
 // Run: node --experimental-strip-types test/scoring.mjs
 const { scoreRecords, DEFAULT_PROFILE, SCORING_POLICY } = await import('../lib/avara/scoring.ts');
-const { CATALOG, CATEGORIES } = await import('../lib/avara/catalog.ts');
+const { CATALOG } = await import('../lib/avara/catalog.ts');
 const { ruleLoader } = await import('../src/engines/rule-engine/RuleLoader.ts');
 const results = []; const check = (n, ok, x = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x ? '  ' + x : ''}`); };
-const W = new Map(ruleLoader().loadAllRules({ includeDisabled: true }).map((r) => [r.ruleId, r.weight]));
-const ADMITTED = ['A11Y-001', 'A11Y-002', 'A11Y-003', 'A11Y-005', 'A11Y-006', 'A11Y-009', 'A11Y-011', 'A11Y-012', 'A11Y-015', 'A11Y-020'];
-// Every catalog rule ran and passed with a measured, full result unless a test changes it.
-const recs = (o = {}, eligible = ADMITTED) => CATALOG.map((r) => ({ ruleId: r.id, category: r.category, weight: W.get(r.id) ?? 0, execution: 'ran', reason: null, outcome: 'observed_pass', method: 'measured', scope: 'full',
+const rules = ruleLoader().loadAllRules({ includeDisabled: true }); const W = new Map(rules.map((r) => [r.ruleId, r.weight]));
+const ADMITTED = rules.filter((r) => r.scoreEligible).map((r) => r.ruleId);
+const A11Y = ADMITTED.filter((id) => id.startsWith('A11Y-'));
+// Every catalog rule ran; admitted checks measured a pass unless a test changes it.
+const recs = (o = {}, eligible = ADMITTED) => CATALOG.map((r) => ({ ruleId: r.id, category: r.category, weight: W.get(r.id) ?? 0, execution: 'ran', reason: null, outcome: 'observed_pass', method: 'measured', scope: 'full', measured: 'observed_pass',
   scoreEligible: eligible.includes(r.id), observationOnly: (W.get(r.id) ?? 0) === 0 || r.mode === 'R', ...(o[r.id] ?? {}) }));
 const cat = (s, c) => s.categories.find((x) => x.category === c);
-const fail = { outcome: 'observed_failure' };
+const fail = { outcome: 'observed_failure', measured: 'observed_failure' };
+const wsum = (ids) => ids.reduce((n, id) => n + W.get(id), 0);
 
-check('policy is versioned', SCORING_POLICY.version === 'avara-score-1.0');
-check('the production library admits exactly the ten verified Accessibility rules', JSON.stringify(ruleLoader().loadAllRules().filter((r) => r.scoreEligible).map((r) => r.ruleId)) === JSON.stringify(ADMITTED));
+check('policy is versioned', SCORING_POLICY.version === 'avara-score-2.0');
+check('42 admitted checks, in all nine categories', ADMITTED.length === 42 && new Set(ADMITTED.map((id) => id.split('-')[0])).size === 9, String(ADMITTED.length));
 
-// Worked example: A11Y-001 Color Contrast (weight 10) fails; the other nine admitted rules pass. Admitted weight 10+6+10+10+6+6+10+6+6+6 = 76.
-const ex = scoreRecords(recs({ 'A11Y-001': fail }), DEFAULT_PROFILE); const a = cat(ex, 'accessibility');
-check('worked example: Accessibility = 100 × 66 ÷ 76 = 86.84, shown as 87, from 10 scored rules', a.status === 'scored' && a.evaluatedWeight === 76 && a.passedWeight === 66 && Math.abs(a.raw - 6600 / 76) < 1e-9 && a.score === 87 && a.scoredRules === 10 && a.failedRules === 1, `${a.passedWeight}/${a.evaluatedWeight} = ${a.raw?.toFixed(2)}`);
-check('…the overall uses the unrounded category score and says one category contributed', ex.overallRaw === a.raw && ex.overall === 87 && ex.contributing === 1 && ex.scorable === 8, `${ex.overallRaw?.toFixed(2)} from ${ex.contributing} of ${ex.scorable}`);
-check('…categories with no admitted rule are "Insufficient coverage" with the reason', ['product_clarity', 'ux_workflow', 'mobile', 'trust', 'design', 'conversion', 'performance'].every((c) => cat(ex, c).status === 'insufficient' && cat(ex, c).score === null && /no rule in this category has been admitted/.test(cat(ex, c).note)));
-check('…Differentiation is "Observation only", outside the score', cat(ex, 'differentiation').status === 'observation' && cat(ex, 'differentiation').score === null && /Observation only/.test(cat(ex, 'differentiation').note));
+// Worked example: A11Y-001 (weight 10) fails; every other admitted check passes.
+const ex = scoreRecords(recs({ 'A11Y-001': fail }), DEFAULT_PROFILE); const a = cat(ex, 'accessibility'); const aw = wsum(A11Y);
+check(`worked example: Accessibility = 100 × ${aw - 10} ÷ ${aw}`, a.status === 'scored' && a.evaluatedWeight === aw && a.passedWeight === aw - 10 && Math.abs(a.raw - (100 * (aw - 10)) / aw) < 1e-9 && a.score === Math.round((100 * (aw - 10)) / aw), `${a.passedWeight}/${a.evaluatedWeight} = ${a.raw.toFixed(2)}`);
+check('…all nine categories are scored, Differentiation included', ex.contributing === 9 && ex.scorable === 9 && cat(ex, 'differentiation').status === 'scored');
+const simple = ex.categories.reduce((n, c) => n + c.raw, 0) / 9;
+check('…the page score is the simple average of the nine unrounded category scores', Math.abs(ex.overallRaw - simple) < 1e-9 && ex.overall === Math.round(simple), `${ex.overallRaw.toFixed(3)} → ${ex.overall}`);
 
-// Overall from two categories, normalized over contributing weights, from unrounded scores.
-const twoElig = [...ADMITTED, 'PERF-001', 'PERF-002'];
-const two = scoreRecords(recs({ 'A11Y-001': fail, 'PERF-002': fail }, twoElig), DEFAULT_PROFILE); const p = cat(two, 'performance');
-const expect = (cat(two, 'accessibility').raw * CATEGORIES.accessibility.weight + p.raw * CATEGORIES.performance.weight) / (CATEGORIES.accessibility.weight + CATEGORIES.performance.weight);
-check('two contributing categories: weights normalized over Accessibility (10) and Performance (15) only', Math.abs(two.overallRaw - expect) < 1e-9 && two.contributing === 2 && p.raw === 50, `${two.overallRaw.toFixed(3)} (Perf ${p.raw})`);
-check('…rounding happens once: the overall is round(weighted unrounded mean), not a mean of rounded scores', two.overall === Math.round(expect));
-
-// Each rule once, and what is left out of both sides.
-const dup = scoreRecords([...recs({ 'A11Y-001': fail }), { ...recs()[0], ruleId: 'A11Y-001', outcome: 'observed_pass' }], DEFAULT_PROFILE);
-check('each rule counts once (a second record for the same rule is ignored)', cat(dup, 'accessibility').evaluatedWeight === 76 && cat(dup, 'accessibility').failedRules === 1);
-const ex2 = { 'A11Y-002': { scope: 'measurable_part' }, 'A11Y-003': { outcome: 'inconclusive' }, 'A11Y-005': { method: 'ai_assisted' }, 'A11Y-006': { outcome: 'needs_human_review' }, 'A11Y-009': { execution: 'not_applicable', outcome: 'not_applicable' }, 'A11Y-011': { method: 'rollup', scope: 'summary' } };
+// Measured results only: an AI opinion never moves a score.
+const ai = cat(scoreRecords(recs({ 'TRUST-002': { method: 'ai_assisted', outcome: 'observed_pass', measured: 'observed_failure' } }), DEFAULT_PROFILE), 'trust');
+check('a hybrid check counts by its measured result, even when AI said pass', ai.failedRules === 1 && ai.rules.find((r) => r.ruleId === 'TRUST-002').result === 'fail');
+const aiOnly = cat(scoreRecords(recs({ 'TRUST-003': { method: 'ai_assisted', outcome: 'observed_pass', measured: null } }), DEFAULT_PROFILE), 'trust');
+check('an AI-only result is left out of both sides, with the reason', aiOnly.excluded.some((x) => x.ruleId === 'TRUST-003' && /AI opinion only/.test(x.why)));
+const ex2 = { 'A11Y-002': { measured: 'inconclusive', outcome: 'inconclusive' }, 'A11Y-003': { measured: 'needs_human_review', outcome: 'needs_human_review' }, 'A11Y-005': { execution: 'not_applicable', outcome: 'not_applicable', measured: null } };
 const exc = cat(scoreRecords(recs(ex2), DEFAULT_PROFILE), 'accessibility');
-check('partial, inconclusive, AI-only, needs-a-person, not-applicable and summary results are excluded from both sides', exc.scoredRules === 4 && exc.evaluatedWeight === 10 + 6 + 6 + 6 && exc.excluded.length === 6, exc.excluded.map((x) => `${x.ruleId}: ${x.why}`).join('; '));
-check('…not applicable still counts as covered, so the category is scored', exc.status === 'scored' && exc.score === 100);
+check('inconclusive, needs-a-person and not-applicable count on neither side', exc.excluded.length === 3 && exc.scoredRules === A11Y.length - 3 && exc.status === 'scored', exc.excluded.map((x) => `${x.ruleId}: ${x.why}`).join('; '));
 
-// Coverage requirement (avara-coverage-0.1: every M/H rule of the category ran or was decided not applicable).
-const skip = cat(scoreRecords(recs({ 'A11Y-013': { execution: 'skipped', reason: 'analyzer_error', outcome: 'not_run' } }), DEFAULT_PROFILE), 'accessibility');
-check('one required check skipped: "Insufficient coverage" with the count and the reason, even though admitted rules passed', skip.status === 'insufficient' && skip.score === null && /1 required check did not run \(analyzer error\)/.test(skip.note), skip.note);
-const hist = scoreRecords(CATALOG.map((r) => ({ ruleId: r.id, category: r.category, weight: W.get(r.id) ?? 0, execution: 'unknown', reason: 'unknown_historical', outcome: 'unknown', method: 'unknown', scope: 'none', scoreEligible: false, observationOnly: false })), DEFAULT_PROFILE);
-check('a historical scan (no saved per-rule records, nothing admitted then) is not rescored: no number, with the reason', hist.overall === null && /No rule has been admitted/.test(hist.overallWithheld));
-const allNa = cat(scoreRecords(recs(Object.fromEntries(ADMITTED.map((id) => [id, { execution: 'not_applicable', outcome: 'not_applicable' }]))), DEFAULT_PROFILE), 'accessibility');
-check('every admitted rule not applicable: covered, but nothing to score, so "Insufficient coverage" says why', allNa.status === 'insufficient' && /none of the 10 admitted rules could be decided/.test(allNa.note), allNa.note);
-
-// A genuine zero is a number; "not scored" is a status with a reason.
-const zero = cat(scoreRecords(recs(Object.fromEntries(ADMITTED.map((id) => [id, fail]))), DEFAULT_PROFILE), 'accessibility');
-check('every admitted rule failed: a genuine 0, scored, not null', zero.status === 'scored' && zero.score === 0 && zero.raw === 0);
+// Couldn't score.
+const skip = cat(scoreRecords(recs({ 'PERF-001': { execution: 'skipped', reason: 'missing_input', outcome: 'not_run', measured: null } }), DEFAULT_PROFILE), 'performance');
+check('an admitted check that did not run: "Couldn\'t score" with the count and the reason', skip.status === 'insufficient' && skip.score === null && /Couldn't score: 1 admitted check did not run \(missing input\)/.test(skip.note), skip.note);
+const nonAdmittedSkip = cat(scoreRecords(recs({ 'A11Y-018': { execution: 'skipped', reason: 'needs_person', outcome: 'not_run', measured: null } }), DEFAULT_PROFILE), 'accessibility');
+check('a skipped check that is not admitted (person or AI only) does not stop the category from being scored', nonAdmittedSkip.status === 'scored');
+const allNa = cat(scoreRecords(recs(Object.fromEntries(A11Y.map((id) => [id, { execution: 'not_applicable', outcome: 'not_applicable', measured: null }]))), DEFAULT_PROFILE), 'accessibility');
+check('every admitted check not applicable: "Couldn\'t score" says why', allNa.status === 'insufficient' && /none of the \d+ admitted checks could be decided/.test(allNa.note), allNa.note);
+const partial = scoreRecords(recs({ 'PERF-001': { execution: 'skipped', reason: 'missing_input', outcome: 'not_run', measured: null } }), DEFAULT_PROFILE);
+check('8 of 9 categories scored: the page score averages those eight and says so', partial.contributing === 8 && partial.scorable === 9 && Math.abs(partial.overallRaw - partial.categories.filter((c) => c.status === 'scored').reduce((n, c) => n + c.raw, 0) / 8) < 1e-9);
 const none = scoreRecords(recs({}, []), DEFAULT_PROFILE);
-check('nothing admitted: no overall, with the reason, and never 100', none.overall === null && none.contributing === 0 && /No rule has been admitted/.test(none.overallWithheld));
+check('nothing admitted: no page score, with the reason, never 100', none.overall === null && none.contributing === 0 && /Couldn't score: no check has been admitted/.test(none.overallWithheld));
 
-// Determinism.
-const shuffled = scoreRecords([...recs({ 'A11Y-001': fail })].reverse(), DEFAULT_PROFILE);
-check('the same records in any order give the same result', JSON.stringify(shuffled) === JSON.stringify(ex));
+// A genuine zero, each rule once, determinism.
+const zero = cat(scoreRecords(recs(Object.fromEntries(A11Y.map((id) => [id, fail]))), DEFAULT_PROFILE), 'accessibility');
+check('every admitted check failed: a genuine 0, scored, not null', zero.status === 'scored' && zero.score === 0);
+const dup = scoreRecords([...recs({ 'A11Y-001': fail }), { ...recs()[0], ruleId: 'A11Y-001', measured: 'observed_pass' }], DEFAULT_PROFILE);
+check('each rule counts once', cat(dup, 'accessibility').failedRules === 1 && cat(dup, 'accessibility').evaluatedWeight === aw);
+check('the same records in any order give the same result', JSON.stringify(scoreRecords([...recs({ 'A11Y-001': fail })].reverse(), DEFAULT_PROFILE)) === JSON.stringify(ex));
 
 const failed = results.filter((x) => !x).length; console.log(failed ? `\n${failed} FAILED` : '\nAll passed'); process.exit(failed ? 1 : 0);

@@ -73,7 +73,7 @@ export type Coverage = { rules: number; decided: number; weightDecided: number; 
 /** Why a rule produced no decision. Each is a different situation and they are never merged: a missing detector is unbuilt work, missing AI is configuration,
  *  missing input means the scan did not capture what the detector reads, an analyzer error is a failure, and unknown_historical is an old scan that never saved it. */
 export type SkipReason = 'missing_detector' | 'ai_unavailable' | 'ai_no_answer' | 'ai_pending' | 'missing_input' | 'not_applicable' | 'analyzer_error' | 'needs_person' | 'rollup_no_inputs' | 'unknown_historical';
-export interface RuleOutcome { ruleId: string; result: RuleResult; method: Method; observation: string; evidence: string[]; confidence: number; reason?: string; skip?: SkipReason; detectorsRan?: string[]; userImpact?: string; businessImpact?: string }
+export interface RuleOutcome { ruleId: string; result: RuleResult; method: Method; observation: string; evidence: string[]; confidence: number; reason?: string; skip?: SkipReason; detectorsRan?: string[]; /** a hybrid rule decided by AI: what its detectors measured before the model was asked */ measuredResult?: RuleResult; userImpact?: string; businessImpact?: string }
 
 /** What the evaluators are given. All of it comes from the scan; none of it is rules. */
 export interface WebsiteContext {
@@ -87,6 +87,8 @@ export interface WebsiteContext {
   detectors: Record<string, DetectorReport>;
   /** The report is saved before the AI review: judgement rules are recorded as pending, and the review is replaced when the AI part finishes. */
   aiPending?: boolean;
+  /** The scan's plan has no AI-assisted checks (Free): judgement rules say so instead of "no model configured". */
+  aiExcluded?: boolean;
 }
 export interface DetectorHit { bucket: 'confirmed_failure' | 'needs_review'; title: string; summary: string; evidence: string[]; severity?: string }
 export interface DetectorReport { ran: boolean; hits: DetectorHit[]; note?: string; notApplicable?: string; analyzerError?: boolean; passNote?: string }   // passNote: what a clean run actually checked, shown instead of the generic pass sentence   // analyzerError: it did not run because its analyzer failed (not because input was missing)   // notApplicable: the detector ran and the rule does not apply to this page

@@ -14,12 +14,12 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "M",
       "advisory": true,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -76,7 +76,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -128,9 +128,20 @@
           "positionToleranceStatus": "experimental coordinate tolerance",
           "minimumGroups": 3,
           "groups": {
-            "heading position": ["headingX", "headingY"],
-            "action position": ["actionX", "actionY"],
-            "visual composition": ["visualX", "visualY", "visualWidth", "visualHeight"]
+            "heading position": [
+              "headingX",
+              "headingY"
+            ],
+            "action position": [
+              "actionX",
+              "actionY"
+            ],
+            "visual composition": [
+              "visualX",
+              "visualY",
+              "visualWidth",
+              "visualHeight"
+            ]
           }
         }
       },
@@ -153,7 +164,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "low",
-      "weight": 0,
+      "weight": 3,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -206,7 +217,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "M",
       "advisory": true,
       "scoreEligible": false,
@@ -252,7 +263,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "low",
-      "weight": 0,
+      "weight": 3,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -296,7 +307,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "low",
-      "weight": 0,
+      "weight": 3,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -344,7 +355,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -388,7 +399,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -433,7 +444,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "M",
       "advisory": true,
       "scoreEligible": false,

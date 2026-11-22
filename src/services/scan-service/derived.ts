@@ -293,7 +293,10 @@ function interactionLatency(out: ScanOutput): DetectorReport {
   const good = param('PERF-003', 'goodMs', 200);
   const worst = t.worst ?? 0; const scope = `Lab, one load at ${v.width}px, unthrottled CPU, ${t.interactions} key presses and taps; not field INP (p75 of real visits).`;
   const top = t.measured.slice(0, 3).map((x) => `${x.name} on ${x.target || 'the page'}: ${x.duration} ms`);
-  if (worst > good) return ran([fail(`An interaction took ${worst} ms to show a response`, `The slowest of ${t.interactions} interactions took ${worst} ms from input to the next frame, over the ${good} ms “good” limit for Interaction to Next Paint.`, [...top, scope])]);
+  // One slow reading can be machine load during the scan. Confirmed: two or more interactions over the limit, or one over 500 ms ("poor").
+  const over = t.measured.filter((x) => x.duration > good).length; const poor = param('PERF-003', 'poorMs', 500);
+  if (worst > good && (over >= 2 || worst > poor)) return ran([fail(`An interaction took ${worst} ms to show a response`, `${over} of ${t.interactions} interactions took longer than the ${good} ms “good” limit for Interaction to Next Paint; the slowest took ${worst} ms from input to the next frame.`, [...top, scope])]);
+  if (worst > good) return ran([review(`One interaction took ${worst} ms to show a response`, `One of ${t.interactions} interactions took ${worst} ms, over the ${good} ms limit; the others were faster. A single slow reading can come from load during the scan, so check it on a real phone.`, [...top, scope])]);
   return pass(`The slowest of ${t.interactions} interactions took ${worst >= 16 ? `${worst} ms` : 'under 16 ms'} (limit ${good} ms). ${scope}`);
 }
 
@@ -309,7 +312,7 @@ function journeyContinuity(out: ScanOutput): DetectorReport {
     if (j.actionAgain === false) return ran([review('After Back, the main action is not where it was', 'Back returned to the starting page, but the main action could not be found again. Check that the page restores its state.', j.steps)]);
     return pass(j.steps.join(' '));
   }
-  if (!j.escapeCloses && !j.closeControl) return ran([fail('The dialog that opens has no way out', 'The main action opens a dialog that Escape does not close and that has no visible close or cancel control, so a visitor who opened it by mistake is stuck.', j.steps)]);
+  if (!j.escapeCloses && !j.closeControl) return ran([fail(j.backdropCloses ? 'The dialog closes only by tapping outside it' : 'The dialog that opens has no way out', j.backdropCloses ? 'The main action opens a dialog with no close or cancel control that Escape does not close; only tapping outside it works, so a keyboard user who opened it is stuck.' : 'The main action opens a dialog that Escape does not close and that has no visible close or cancel control, so a visitor who opened it by mistake is stuck.', j.steps)]);
   if (!j.escapeCloses) return ran([review('Escape does not close the dialog', `The dialog has a “${j.closeControl}” control, but Escape leaves it open.`, j.steps)]);
   return pass(j.steps.join(' '));
 }

@@ -17,6 +17,8 @@ export interface RuleRecord {
   implementation: Implementation;
   execution: Execution; reason: SkipReason | null; evidence: string[];   // what proves it ran: detector ids that reported, "model", or "rule_findings:<id>"
   outcome: RuleResult | 'unknown'; method: Method | 'unknown'; scope: Scope;
+  /** What the rule's detectors measured, independent of any AI (the same with AI on or off); null when no detector decided. */
+  measured?: RuleResult | null;
   scoreEligible: boolean; observationOnly: boolean;
   origin: 'engine' | 'historical';
 }
@@ -43,6 +45,8 @@ function base(r: Rule): Omit<RuleRecord, 'execution' | 'reason' | 'evidence' | '
 const DECIDED: RuleResult[] = ['observed_pass', 'observed_failure', 'needs_human_review', 'inconclusive'];
 
 /** Records for a fresh review: one per loaded rule, from the engine's outcomes. A rule with no outcome is unknown, never a pass. */
+/** The detectors' own answer: a measured outcome, or the measured part a model then judged. */
+const measuredOf = (o: RuleOutcome): RuleResult | null => (o.method === 'measured' && o.detectorsRan?.length ? o.result : o.measuredResult ?? null);
 export function recordsFromOutcomes(rules: Rule[], outcomes: Map<string, RuleOutcome>, _manifest?: Manifest): RuleRecord[] {
   return rules.map((r): RuleRecord => {
     const b = base(r); const o = outcomes.get(r.ruleId);
@@ -52,7 +56,7 @@ export function recordsFromOutcomes(rules: Rule[], outcomes: Map<string, RuleOut
     if (DECIDED.includes(o.result)) {
       if (!evidence.length) return { ...b, execution: 'unknown', reason: null, evidence, outcome: 'unknown', method: o.method, scope: 'none', origin: 'engine' };
       const scope: Scope = o.method === 'rollup' ? 'summary' : o.method === 'measured' && !(r.mode === 'M' && specOf(r).type === 'detector') ? 'measurable_part' : 'full';
-      return { ...b, execution: 'ran', reason: null, evidence, outcome: o.result, method: o.method, scope, origin: 'engine' };
+      return { ...b, execution: 'ran', reason: null, evidence, outcome: o.result, method: o.method, scope, origin: 'engine', measured: measuredOf(o) };
     }
     if (o.result === 'not_applicable') return { ...b, execution: 'not_applicable', reason: 'not_applicable', evidence, outcome: 'not_applicable', method: o.method, scope: 'none', origin: 'engine' };
     const reason: SkipReason = o.skip ?? (o.result === 'unimplemented' ? 'missing_detector' : o.method === 'human' ? 'needs_person' : 'missing_input');

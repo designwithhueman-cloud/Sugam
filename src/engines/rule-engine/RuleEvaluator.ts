@@ -13,6 +13,7 @@ export const SYSTEM_PROMPT = 'You are a careful website reviewer. You are given 
 export const BATCH = Number(process.env.AVARA_RULE_BATCH || 25);   // rules per model call, so 1000 rules is 40 calls, not one giant prompt
 
 const specOf = (r: Rule) => r.evaluator ?? (r.mode === 'H' ? { type: 'llm' as const } : r.mode === 'U' ? { type: 'human' as const } : r.mode === 'R' ? { type: 'rollup' as const } : { type: 'detector' as const });
+export const AI_PLAN_NOTE = 'Not part of the Free plan: AI-assisted checks run on Creator and Agency. This says nothing about the page.';
 export const AI_PENDING_NOTE = 'AI checks are still running for this scan; this report updates when they finish.';
 /** Why judgement rules did not run, naming the switch and the key for the configured provider. */
 export function aiOffNote(): string {
@@ -49,12 +50,12 @@ export abstract class CategoryEvaluator {
       if (first && !llm && (first.result === 'observed_pass' || first.result === 'not_applicable')) { outcomes.push(first); continue; }
       // Hybrid rule whose measurement did not run, with no model: keep the detector's own skip reason (missing input, analyzer error). Filing it
       // under "AI unavailable" would hide that the implemented detector itself was skipped.
-      if (first && !llm && (first.result === 'not_run' || first.result === 'unimplemented')) { outcomes.push({ ...first, observation: `${first.observation} ${ctx.aiPending ? AI_PENDING_NOTE : aiOffNote()}` }); continue; }
+      if (first && !llm && (first.result === 'not_run' || first.result === 'unimplemented')) { outcomes.push({ ...first, observation: `${first.observation} ${ctx.aiPending ? AI_PENDING_NOTE : ctx.aiExcluded ? AI_PLAN_NOTE : aiOffNote()}` }); continue; }
       if (first?.detectorsRan?.length) measured.set(r.ruleId, first);
       forAi.push(r);
     }
     if (forAi.length) {
-      if (!llm) { aiNote = ctx.aiPending ? AI_PENDING_NOTE : aiOffNote(); for (const r of forAi) outcomes.push({ ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: ctx.aiPending ? 'ai_pending' : 'ai_unavailable' }); }
+      if (!llm) { aiNote = ctx.aiPending ? AI_PENDING_NOTE : ctx.aiExcluded ? AI_PLAN_NOTE : aiOffNote(); for (const r of forAi) outcomes.push({ ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: ctx.aiPending ? 'ai_pending' : 'ai_unavailable' }); }
       else {
         const context = this.slice(ctx); const haystack = flat(context);
         for (let i = 0; i < forAi.length; i += BATCH) {
@@ -67,7 +68,7 @@ export abstract class CategoryEvaluator {
               // An unanswered call (rate limit, overload, refusal) is not a judgement: the rule did not run, and says why.
               if (v.undecided) { const why = v.observation.replace(/^Not decided: /, 'The model gave no answer: ').replace(/ This says nothing about the page\.$/, ''); aiNote ??= why; outcomes.push(this.measuredOr(r, ctx, why) ?? { ...this.out(r, 'not_run', 'none', `${why}. This says nothing about the page.`, [], 0), skip: 'ai_no_answer' }); continue; }
               judged++; const o = this.fromVerdict(r, v, haystack); const m = measured.get(r.ruleId);
-              outcomes.push(m ? { ...o, detectorsRan: m.detectorsRan, observation: `${o.observation} Measured part: ${m.observation}` } : o);
+              outcomes.push(m ? { ...o, detectorsRan: m.detectorsRan, measuredResult: m.result, observation: `${o.observation} Measured part: ${m.observation}` } : o);
             }
           } catch (e) { aiNote = `The model call failed (${(e as Error).message.split('\n')[0].slice(0, 100)}).`; for (const r of chunk) outcomes.push(this.measuredOr(r, ctx, aiNote) ?? { ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: 'ai_unavailable' }); }
         }
