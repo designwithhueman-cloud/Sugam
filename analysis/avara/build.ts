@@ -141,15 +141,19 @@ export function analyzeAvara(out: ScanOutput, a: Analysis): AvaraAnalysis {
   const perf = out.perf;
   if (perf) {
     const m = perf.median; const runs = perf.runs.length;
+    const fieldText = perf.field.available ? perf.field.note : perf.field.reason;
+    const byGoogle = perf.conditions.runBy === 'google' ? ' (run by Google PageSpeed Insights, not by Avara)' : '';
     const spread = perf.range.lcp ? (perf.range.lcp[1] - perf.range.lcp[0]) / Math.max(perf.range.lcp[1], 1) : 1;
     const conf: Confidence = runs >= 3 && spread < 0.15 ? 'high' : 'medium';
-    const metricEv = (metric: 'lcp' | 'cls'): EvidenceDraft => ({ kind: 'metric', data: { metric, value: m[metric], runs: perf.runs.map((r) => r[metric]), range: perf.range[metric], conditions: perf.conditions, lab: true, field: perf.field.reason } });
+    const metricEv = (metric: 'lcp' | 'cls'): EvidenceDraft => ({ kind: 'metric', data: { metric, value: m[metric], runs: perf.runs.map((r) => r[metric]), range: perf.range[metric], conditions: perf.conditions, lab: true, field: fieldText,
+      // Real-visitor numbers for the same metric, kept apart from the lab value above. Null unless Google actually has them.
+      fieldMetric: perf.field.available && perf.field.metrics[metric] ? { ...perf.field.metrics[metric], scope: perf.field.scope, period: perf.field.periodNote, source: perf.field.source } : null } });
     const lcpCtx: FixContext = { ruleId: 'perf/lcp', action: { text: 'main content', selector: perf.diagnostics.lcpElement?.selector || 'body', html: perf.diagnostics.lcpElement?.snippet || '' }, causes: [], width: 0, perf: { lcpElement: perf.diagnostics.lcpElement, renderBlocking: perf.diagnostics.renderBlocking } };
     if (m.lcp != null && m.lcp > THRESHOLDS.lcp.good) {
       const poor = m.lcp > THRESHOLDS.lcp.poor;
       const cause = perf.diagnostics.lcpLazyLoaded ? 'perf/lcp-image-lazy' : null;
       push({ key: 'perf-lcp', category: 'performance', rule: rule('perf/lcp'), bucket: 'confirmed_failure', severity: poor ? 'serious' : 'moderate', confidence: conf,
-        title: `The main content takes ${sec(m.lcp)} to appear on a phone`, summary: `Lab LCP on mobile Lighthouse was ${sec(m.lcp)} (${runs} run${runs === 1 ? '' : 's'}; good is 2.5 s or less). Test: ${perf.conditions.emulatedDevice}, ${perf.conditions.network}, ${perf.conditions.cpuSlowdown}.`,
+        title: `The main content takes ${sec(m.lcp)} to appear on a phone`, summary: `Lab LCP on mobile Lighthouse${byGoogle} was ${sec(m.lcp)} (${runs} run${runs === 1 ? '' : 's'}; good is 2.5 s or less). Test: ${perf.conditions.emulatedDevice}, ${perf.conditions.network}, ${perf.conditions.cpuSlowdown}.`,
         affects: 'visitors on phones and slower connections', trying: goalVerb, consequence: 'Slow pages tend to lose some visitors before they can act. This is a hypothesis; Sugam did not measure your visitors or conversions.', consequenceKind: 'hypothesis', goalImpact: 'hinders',
         repairKey: cause ? 'perf:lcp-image' : 'perf:lcp', fp: 'performance|lcp|page', verify: { kind: 'perf', metric: 'lcp', before: m.lcp, runs, range: perf.range.lcp }, evidence: [metricEv('lcp'), ...(perf.diagnostics.lcpElement ? [{ kind: 'dom' as const, data: perf.diagnostics.lcpElement as unknown as Record<string, unknown> }] : [])],
         fix: buildAvaraFix({ ...lcpCtx, ruleId: cause || 'perf/lcp' }) });
@@ -160,12 +164,12 @@ export function analyzeAvara(out: ScanOutput, a: Analysis): AvaraAnalysis {
     if (m.cls != null && m.cls > THRESHOLDS.cls.good) {
       const poor = m.cls > THRESHOLDS.cls.poor; const unsized = perf.diagnostics.unsizedImages.length > 0;
       push({ key: 'perf-cls', category: 'performance', rule: rule(unsized ? 'perf/cls-unsized-images' : 'perf/cls'), bucket: 'confirmed_failure', severity: poor ? 'serious' : 'moderate', confidence: conf,
-        title: `The layout shifts while loading (score ${Math.round(m.cls * 1000) / 1000})`, summary: `Lab CLS was ${Math.round(m.cls * 1000) / 1000} (good is 0.1 or less)${unsized ? `; ${perf.diagnostics.unsizedImages.length} image(s) have no width and height` : ''}.`,
+        title: `The layout shifts while loading (score ${Math.round(m.cls * 1000) / 1000})`, summary: `Lab CLS${byGoogle} was ${Math.round(m.cls * 1000) / 1000} (good is 0.1 or less)${unsized ? `; ${perf.diagnostics.unsizedImages.length} image(s) have no width and height` : ''}.`,
         affects: 'visitors on phones', trying: goalVerb, consequence: 'Content that jumps can make visitors tap the wrong thing. This is a hypothesis; Sugam did not measure mistakes.', consequenceKind: 'hypothesis', goalImpact: 'hinders', repairKey: 'perf:cls', fp: 'performance|cls|page',
         verify: { kind: 'perf', metric: 'cls', before: m.cls, runs, range: perf.range.cls }, evidence: [metricEv('cls'), ...perf.diagnostics.unsizedImages.slice(0, 3).map((i) => ({ kind: 'dom' as const, data: i as unknown as Record<string, unknown> }))],
         fix: unsized ? buildAvaraFix({ ruleId: 'perf/cls-unsized-images', action: { text: 'images', selector: perf.diagnostics.unsizedImages[0].selector, html: perf.diagnostics.unsizedImages[0].snippet }, causes: [], width: 0, perf: { unsized: perf.diagnostics.unsizedImages } }) : undefined });
     } else if (m.cls != null) push({ key: 'perf-cls-ok', category: 'performance', rule: rule('perf/cls'), bucket: 'verified_pass', severity: 'minor', confidence: conf, title: 'The layout stays steady while loading', summary: `Lab CLS ${Math.round(m.cls * 1000) / 1000} is within the 0.1 guideline.`, affects: 'visitors on phones', trying: goalVerb, consequence: 'No consequence: the check passed.', consequenceKind: 'observed', goalImpact: 'none', repairKey: 'perf:cls', fp: 'performance|cls-ok|page', verify: null, evidence: [metricEv('cls')] });
-    coverage.push(`Performance is a lab measurement (${perf.conditions.tool} ${perf.conditions.version}, ${runs} run${runs === 1 ? '' : 's'}). ${perf.field.reason}`);
+    coverage.push(`Performance findings are lab measurements (${perf.conditions.tool} ${perf.conditions.version}, ${runs} run${runs === 1 ? '' : 's'}).`, fieldText);
   } else if (out.analyzers.performance?.status !== 'ok') coverage.push(`Performance: ${out.analyzers.performance?.message || 'not measured'}`);
 
   // ---------- accessibility: the existing issues, brought into the same model ----------

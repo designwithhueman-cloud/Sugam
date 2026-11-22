@@ -5,7 +5,7 @@ const CONTACT = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
 
 export default function Privacy() {
   return (
-    <Legal title="Privacy" updated="15 November 2026">
+    <Legal title="Privacy" updated="21 November 2026">
       <p>This page says plainly what Sugam does with information today. It describes how the product behaves, so it will change as the product does.</p>
       <section><H>What the scanner does with the page you give it</H>
         <UL items={[
@@ -14,6 +14,9 @@ export default function Privacy() {
           'It records the issues it finds, the code of the flagged elements, and screenshots of the page. A screenshot shows whatever was visible on the page, so scan pages that do not show personal information.',
           'It refuses addresses that point to private or internal networks.',
         ]} />
+      </section>
+      <section><H>Google PageSpeed Insights</H>
+        <p>For the performance check, the address of the page you scan (only the address, nothing else from your account) is sent to Google&apos;s PageSpeed Insights service. Google then loads that page itself, on its own servers, and returns two things: real-visitor speed data from its Chrome UX Report, when Google has enough visits to the page or site, and its own lab test of the page. Google&apos;s handling of that request is covered by the <a className="font-semibold text-ink underline" href="https://policies.google.com/privacy">Google Privacy Policy</a>. Only public addresses are sent; addresses on private or internal networks never are. The operator of this site can turn this off.</p>
       </section>
       <section><H>What we store</H>
         <UL items={[

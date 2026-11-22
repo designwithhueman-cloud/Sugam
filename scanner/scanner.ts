@@ -291,7 +291,7 @@ export async function scanUrl(url: string, standard: StandardId, onProgress?: (s
     if (opts.perf === false || process.env.AVARA_PERF === 'off') analyzers.performance = { status: 'skipped', message: 'Performance was not requested for this scan.' };
     else {
       onProgress?.('Measuring mobile performance with Lighthouse', 88); const t0 = Date.now();
-      try { perf = await runLighthouse(finalUrl, opts.perfRuns ?? 1); analyzers.performance = { status: 'ok', ms: Date.now() - t0 }; }
+      try { perf = await runLighthouse(finalUrl, opts.perfRuns ?? 1); analyzers.performance = { status: 'ok', ms: Date.now() - t0, ...(perf.localError ? { message: `Avara's Lighthouse run did not complete (${perf.localError}); the lab numbers are from Lighthouse run by Google PageSpeed Insights.` } : {}) }; if (perf.localError) limitations.push('Avara could not run Lighthouse itself, so the lab performance numbers come from Lighthouse run by Google PageSpeed Insights.'); }
       catch (e) { analyzers.performance = { status: 'failed', message: `Lighthouse did not complete: ${(e as Error).message.split('\n')[0].slice(0, 160)}` }; limitations.push('The performance check did not complete, so this report has no performance findings.'); }
     }
     return { url, finalUrl, title, standard, engine: { axe: axeVersion, browser: `Chrome ${browser.version()}`, viewports: VIEWPORTS.map((v) => `${v.name} ${v.width}x${v.height}`) }, viewports: out, limitations, perf, analyzers, goal: opts.goal ?? null };

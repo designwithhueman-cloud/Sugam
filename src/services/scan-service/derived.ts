@@ -224,6 +224,19 @@ function perfThirdParty(out: ScanOutput): DetectorReport {
   return ran(block >= 250 || bytes >= 256000 ? [fail('Third-party code adds noticeable cost', `Other origins' scripts use the main thread for about ${Math.round(block)} ms and transfer ${kb(bytes)}.`, items(a, 5).map((x) => `${x.entity || x.url}  ${Math.round(x.blockingMs || x.mainThreadMs || 0)} ms on the main thread, ${kb(x.transferBytes ?? 0)}`))] : []);
 }
 
+// INP exists only as real-visitor (field) data from Google's Chrome UX Report. Lab Total Blocking Time is never substituted.
+// Thresholds: web.dev, good is 200 ms or less at the 75th percentile, poor is over 500 ms.
+function perfInpField(out: ScanOutput): DetectorReport {
+  const f = out.perf?.field;
+  if (!f) return off('The performance check did not run, so real-visitor data was not looked up.');
+  if (!f.available) return off(f.reason);
+  const inp = f.metrics.inp; if (!inp) return off('Google has real-visitor data for this site but not for INP, so responsiveness could not be verified.');
+  const where = f.scope === 'url' ? 'this page' : `the whole site (${f.scopeId}; this page alone has too few visits)`;
+  const ev = [`INP ${Math.round(inp.p75)} ms at the 75th percentile, phones, ${where}, ${f.periodNote} (${f.source})`];
+  if (inp.p75 <= 200) return ran([]);
+  return ran([fail(inp.p75 > 500 ? 'Real visitors wait a long time after tapping' : 'Real visitors notice a delay after tapping', `For real Chrome visitors on phones to ${where}, 3 in 4 interactions got a visible response within ${Math.round(inp.p75)} ms; good is 200 ms or less. This is Google's field data, not an Avara measurement.`, ev)]);
+}
+
 /** Every derived detector id. The ids are written into src/rules/*.json under the one rule that owns each. */
 export function derivedReports(out: ScanOutput): Record<string, DetectorReport> {
   const pc = vp(out, 'desktop')?.pageContext as PageCtx | undefined; const vc = pc as VPC | undefined;
@@ -238,7 +251,7 @@ export function derivedReports(out: ScanOutput): Record<string, DetectorReport> 
     'trust/privacy-link': privacy(pc), 'trust/terms-link': terms(pc), 'trust/contact-route': contact(pc), 'trust/review-route': reviewRoute(pc), 'trust/support-route': supportRoute(pc),
     'conv/trial-visibility': trial(pc), 'conv/cta-consistency': ctaConsistency(pc), 'conv/field-count': fieldCount(pc),
     'ux/scannability': scannability(pc), 'design/visual-hierarchy': visualHierarchy(out, vc), 'design/spacing-rhythm': spacingRhythm(vc), 'ux/error-recovery': errorRecovery(out), 'nav/fragment-target': fragmentTarget(out), 'a11y/reading-order': readingOrder(out), 'design/font-families': fontFamilies(out), 'conv/generic-primary-action': genericPrimaryAction(out), 'trust/unfinished-proof': unfinishedProof(vc), 'design/typography-hierarchy': typographyHierarchy(pc), 'design/cta-emphasis': ctaEmphasis(out, pc), 'design/component-consistency': componentConsistency(pc),
-    'perf/image-optimization': perfImages(out), 'perf/font-optimization': perfFonts(out), 'perf/javascript-efficiency': perfJs(out), 'perf/css-efficiency': perfCss(out), 'perf/render-blocking': perfBlocking(out), 'perf/third-party': perfThirdParty(out),
+    'perf/image-optimization': perfImages(out), 'perf/font-optimization': perfFonts(out), 'perf/javascript-efficiency': perfJs(out), 'perf/css-efficiency': perfCss(out), 'perf/render-blocking': perfBlocking(out), 'perf/third-party': perfThirdParty(out), 'perf/inp-field': perfInpField(out),
   };
 }
 

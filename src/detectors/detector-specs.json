@@ -3823,8 +3823,10 @@
         "couldNotVerify": "No field data: could not verify. Total Blocking Time is never substituted."
       },
       "implementation": {
-        "status": "not-built",
-        "detectors": [],
+        "status": "partial",
+        "detectors": [
+          "perf/inp-field"
+        ],
         "exercisedOnFixtures": false,
         "engineEvaluator": "detector",
         "suggestedEvaluator": "llm"

@@ -97,7 +97,9 @@
       "confidenceBasis": null,
       "evaluator": {
         "type": "detector",
-        "detectors": []
+        "detectors": [
+          "perf/inp-field"
+        ]
       },
       "recommendationTemplate": "Fix \"Interaction To Next Paint\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",
       "recommendationTemplateStatus": "generic",

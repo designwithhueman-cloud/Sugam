@@ -62,9 +62,11 @@ function words(f: AvaraFinding, all: AvaraFinding[]): { headline: string; senten
   if (id === 'workflow/action-no-response') return { headline: `${cap(A)} seems to do nothing.`, sentence: `After activating ${A} no form, dialog or new page appeared, so a visitor may think it is broken${goal}.` };
   if (id === 'workflow/first-field-unreachable') return { headline: `After ${A}, the first field cannot be reached.`, sentence: `The form opens, but a visitor cannot get to its first field${goal}.` };
   if (id === 'mobile/horizontal-scroll') return { headline: 'On phones, the page scrolls sideways.', sentence: `At 320px wide the page is ${m?.pageWidth ?? 'wider than the screen'}px wide, so a visitor has to scroll sideways to see all of it.` };
-  if (id.startsWith('perf/')) { const e = f.evidence?.find((x) => x.kind === 'metric')?.data as { value?: number; metric?: string } | undefined;
-    if (e?.metric === 'cls') return { headline: 'The page jumps around while it loads on a phone.', sentence: 'Content that moves as it loads can make a visitor tap the wrong thing.' };
-    return { headline: e?.value ? `On a phone, the main content takes about ${sec(e.value)} seconds to appear.` : 'On a phone, the main content appears slowly.', sentence: 'A visitor waits, on a simulated phone and connection, before they can see the page.' }; }
+  if (id.startsWith('perf/')) { const e = f.evidence?.find((x) => x.kind === 'metric')?.data as { value?: number; metric?: string; fieldMetric?: { p75: number; category: string; scope: string } | null } | undefined;
+    // Real-visitor numbers are added only when Google has them, and always named as such; the headline stays the lab measurement.
+    const fm = e?.fieldMetric; const where = fm?.scope === 'url' ? 'this page' : 'this site';
+    if (e?.metric === 'cls') return { headline: 'The page jumps around while it loads on a phone.', sentence: `Content that moves as it loads can make a visitor tap the wrong thing.${fm ? ` Google's data from real Chrome visitors to ${where} rates layout stability as ${fm.category} (CLS ${Math.round(fm.p75 * 100) / 100} for 3 in 4 visits).` : ''}` };
+    return { headline: e?.value ? `On a phone, the main content takes about ${sec(e.value)} seconds to appear.` : 'On a phone, the main content appears slowly.', sentence: `A visitor waits, on a simulated phone and connection, before they can see the page.${fm ? ` For real Chrome visitors to ${where}, Google measured ${sec(fm.p75)} seconds or less for 3 in 4 visits (${fm.category}).` : ''}` }; }
   return { headline: plainTitle(id, f.title), sentence: `${cap(f.affects)} may be unable to ${f.trying}.` };
 }
 

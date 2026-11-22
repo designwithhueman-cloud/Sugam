@@ -38,6 +38,9 @@ Scanner without the web app: `node scanner/cli.ts <url> [standard] [outDir]` (ra
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Turns on "Continue with GitHub". Create an OAuth app in GitHub developer settings with the callback `<your site>/api/auth/github/callback` |
 | `SUGAM_URL` | Public address of the site (for example `https://sugam.example`), used to build the callback address behind a proxy. Defaults to the address of the request |
 | `SUGAM_INSECURE_COOKIES=1` | Allow the session cookies over plain http when `NODE_ENV=production` (local testing only) |
+| `PAGESPEED_API_KEY` | Google PageSpeed Insights API key, used to fetch real-visitor (Chrome UX Report) data, including INP, for the scanned page, and a Google-run Lighthouse result used only if the local Lighthouse run fails. Free: create it in Google Cloud and enable the "PageSpeed Insights API". Optional in principle, but keyless calls share one anonymous daily quota that is often used up (HTTP 429); without data the report says so and shows lab numbers only |
+| `PAGESPEED_TIMEOUT_MS` | How long to wait for PageSpeed Insights (default 60000). It runs alongside the local Lighthouse run, and a timeout never fails the scan |
+| `AVARA_PSI=off` | Never call PageSpeed Insights (Google then never fetches scanned URLs). Field data is reported as not looked up |
 | `STORAGE_DIR`, `PGLITE_DIR` | Where screenshots (default `.data/objects`) and the embedded database (default `.data/pglite`) live |
 
 ## How a scan works
