@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { eq } from 'drizzle-orm';
-import { ScanSearch, UserCheck, Keyboard, ArrowRight, Table2, Contrast, Mic, AudioLines, CheckCircle2, ShieldCheck, Play } from 'lucide-react';
+import { Accessibility, ArrowRight, AudioLines, CheckCircle2, Contrast, Keyboard, Mic, Play, ScanSearch, ShieldCheck, Table2, UserCheck, Wrench } from 'lucide-react';
 import { getDb, schema } from '@/lib/db/index.ts';
 import { requireUser } from '@/lib/auth.ts';
 import { orgForSlug, projectAccess } from '@/lib/access.ts';
@@ -15,7 +15,7 @@ import { STANDARDS } from '@/lib/standards.ts';
 import { PILLARS, PILLAR_KEYS } from '@/lib/groups.ts';
 import { SegmentedBar, FIX_COLORS, FIX_LABELS, SEV_STATUS, SEV_ICON } from '@/components/dashboard/SegmentedBar.tsx';
 import { PageHead } from '@/components/dashboard/PageHead.tsx';
-import { DayDate, Panel, btnOutline, btnPrimary } from '@/components/dashboard/bits.tsx';
+import { DayDate, Panel, btnOutline, btnPrimary, IconBadge } from '@/components/dashboard/bits.tsx';
 import { EmptyNote } from '@/components/dashboard/Tables.tsx';
 import { ScreenshotCrop } from '@/components/report/ScreenshotCrop.tsx';
 import { LEVELS } from '@/lib/levels.ts';
@@ -63,16 +63,16 @@ export default async function ProjectOverview({ params }: { params: Promise<{ or
         </Panel>
       ) : (<>
         <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Latest scan">
-          <Stat label="Score" value={s.score?.score != null ? String(s.score.score) : 'Not scored'} note={s.score?.score == null ? (s.score?.reason ?? '') : s.change?.delta != null ? `${s.change.delta >= 0 ? '+' : ''}${s.change.delta} since the last scan` : 'No earlier score'} small={s.score?.score == null} />
-          <Stat label="Recommended fixes" value={String(recommended)} note={t ? [t.critical && `${t.critical} critical`, t.high && `${t.high} before launch`, t.medium && `${t.medium} to improve`].filter(Boolean).join(' · ') || 'Nothing to fix' : ''} />
-          <Stat label="Observations" value={String(t?.review ?? 0)} note="Worth a look. A person decides; they never count as failures." />
-          <Stat label="Since the last scan" value={s.change ? `${s.change.resolved} fixed` : '–'} note={s.change ? `${s.change.introduced} new since the scan before` : 'Needs two scans of the same site'} />
+          <Stat accent="border-t-[#c9c4b8]" label="Score" value={s.score?.score != null ? String(s.score.score) : 'Not scored'} note={s.score?.score == null ? (s.score?.reason ?? '') : s.change?.delta != null ? `${s.change.delta >= 0 ? '+' : ''}${s.change.delta} since the last scan` : 'No earlier score'} small={s.score?.score == null} />
+          <Stat accent="border-t-[#e0623a]" label="Recommended fixes" value={String(recommended)} note={t ? [t.critical && `${t.critical} critical`, t.high && `${t.high} before launch`, t.medium && `${t.medium} to improve`].filter(Boolean).join(' · ') || 'Nothing to fix' : ''} />
+          <Stat accent="border-t-[#7c5cf0]" label="Observations" value={String(t?.review ?? 0)} note="Worth a look. A person decides; they never count as failures." />
+          <Stat accent="border-t-[#2f9e6a]" label="Since the last scan" value={s.change ? `${s.change.resolved} fixed` : '–'} note={s.change ? `${s.change.introduced} new since the scan before` : 'Needs two scans of the same site'} />
         </dl>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <Panel aria-labelledby="ff-h" className="p-5 sm:p-7">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 id="ff-h" className={h2}>Fix these first</h2>
+              <h2 id="ff-h" className={cn(h2, 'flex items-center gap-3')}><IconBadge icon={Wrench} tone="peach" />Fix these first</h2>
               <p className="text-sm text-pine-600">From the {s.latest.environment} scan, <DayDate date={s.latest.completedAt!} lower /></p>
             </div>
             {fixes.length ? (
@@ -85,7 +85,7 @@ export default async function ProjectOverview({ params }: { params: Promise<{ or
           </Panel>
 
           <Panel aria-labelledby="cov-h" className="p-5 sm:p-7">
-            <h2 id="cov-h" className={cn(h2, 'flex items-center gap-2')}><ShieldCheck aria-hidden className="size-5 text-pine-600" />What was checked</h2>
+            <h2 id="cov-h" className={cn(h2, 'flex items-center gap-3')}><IconBadge icon={ShieldCheck} tone="green" />What was checked</h2>
             <ul className="mt-4 space-y-2.5">
               <Check icon={ScanSearch} title="Automated rules" note={`axe-core and Avara checks at ${at(full)}`} done />
               <Check icon={Keyboard} title="Keyboard and layout" note={`Tab trace at ${at(full)}${narrow ? `; reflow and the main button at ${narrow}px` : ''}`} done />
@@ -97,7 +97,7 @@ export default async function ProjectOverview({ params }: { params: Promise<{ or
 
         {s.byPillar && s.byFix && s.bySeverity && (
           <section aria-labelledby="acc-h" className="mt-6">
-            <div className="mb-3"><h2 id="acc-h" className={h2}>Accessibility findings</h2>
+            <div className="mb-3"><h2 id="acc-h" className={cn(h2, 'flex items-center gap-3')}><IconBadge icon={Accessibility} tone="blue" />Accessibility findings</h2>
               <p className="text-sm text-pine-600">Everything axe-core and Avara’s accessibility checks reported in this scan, confirmed and worth a look, by who it affects, who fixes it and how serious it is.</p></div>
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               <Panel aria-labelledby="pil-h" className="p-5 md:col-span-2 xl:col-span-1">
@@ -122,9 +122,9 @@ export default async function ProjectOverview({ params }: { params: Promise<{ or
   );
 }
 
-function Stat({ label, value, note, small }: { label: string; value: string; note: string; small?: boolean }) {
+function Stat({ label, value, note, small, accent }: { label: string; value: string; note: string; small?: boolean; accent: string }) {
   return (
-    <div className="rounded-2xl border border-stone-line bg-white p-4 sm:p-5">
+    <div className={cn('rounded-2xl border border-stone-line border-t-4 bg-white p-4 sm:p-5', accent)}>
       <dt className="text-sm font-medium text-pine-600">{label}</dt>
       <dd className={cn('mt-1 font-semibold tracking-tight text-ink tabular-nums', small ? 'text-2xl sm:text-[1.75rem]' : 'text-[2rem] sm:text-[2.25rem]')}>{value}</dd>
       {note && <dd className="mt-1 text-sm leading-snug text-pine-600">{note}</dd>}

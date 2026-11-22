@@ -1,6 +1,7 @@
 // Numbers for the workspace overview: one row per client project, the single finding that most needs attention,
 // and the signed-in person's own quick scans. Everything is read from stored scans and human decisions; nothing is estimated.
 import { and, count, desc, eq, inArray, isNull } from 'drizzle-orm';
+import { scanSummaryView } from './scan-summary.ts';
 import { getDb, schema } from './db/index.ts';
 import { hasFeature, type PlanId } from './plans.ts';
 import type { Shot } from './review-view.ts';
@@ -13,7 +14,7 @@ export type ProjectRow = {
   scanId: string | null; lastScanAt: Date | null; confirmed: number | null; waiting: number | null; running: boolean;
 };
 export type Attention = {
-  issueId: string; scanId: string; title: string; severity: Sev; instances: number; whatToChange: string;
+  issueId: string | null; scanId: string; title: string; levelLabel: string; location: string; whatToChange: string;
   project: { id: string; name: string; client: string }; page: string; environment: string; completedAt: Date | null;
   shot: Shot | null; otherConfirmed: number;
 };
@@ -28,7 +29,7 @@ export async function workspaceOverview(orgId: string, plan: PlanId) {
   const db = await getDb();
   const projects = await db.select({ id: schema.projects.id, name: schema.projects.name, live: schema.projects.liveUrl, staging: schema.projects.stagingUrl, client: schema.clients.name })
     .from(schema.projects).innerJoin(schema.clients, eq(schema.clients.id, schema.projects.clientId)).where(eq(schema.projects.organizationId, orgId));
-  const rows: ProjectRow[] = []; const candidates: { row: ProjectRow; scan: typeof schema.scans.$inferSelect; issue: typeof schema.issues.$inferSelect; confirmed: number }[] = [];
+  const rows: ProjectRow[] = []; const candidates: { row: ProjectRow; scan: typeof schema.scans.$inferSelect; lead: import('./review-view.ts').Item; label: string; recommended: number }[] = [];
   for (const p of projects) {
     const recent = await db.select().from(schema.scans).where(eq(schema.scans.projectId, p.id)).orderBy(desc(schema.scans.createdAt)).limit(20);
     const done = recent.filter((s) => s.status === 'completed').sort((a, b) => +(b.completedAt ?? b.createdAt) - +(a.completedAt ?? a.createdAt));
@@ -36,32 +37,29 @@ export async function workspaceOverview(orgId: string, plan: PlanId) {
     const latest = done.find((s) => s.environment === 'live') ?? done[0] ?? null;
     const row: ProjectRow = { id: p.id, name: p.name, client: p.client, url: p.live || p.staging, scanId: latest?.id ?? null, lastScanAt: latest ? latest.completedAt ?? latest.createdAt : null, confirmed: null, waiting: null, running: recent.some((s) => s.status === 'queued' || s.status === 'running' || s.status === 'analyzing') };
     if (latest) {
-      const decisions = new Map((await db.select().from(schema.reviewDecisions).where(eq(schema.reviewDecisions.projectId, p.id))).map((d) => [d.componentKey, d.decision]));
-      const open = (await db.select().from(schema.issues).where(eq(schema.issues.scanId, latest.id))).filter((i) => i.bucket !== 'verified_pass' && decisions.get(i.componentKey) !== 'not_an_issue');
-      const confirmed = open.filter((i) => i.bucket === 'confirmed_failure' || decisions.get(i.componentKey) === 'confirmed');
-      row.confirmed = confirmed.length; row.waiting = open.filter((i) => i.bucket === 'needs_review' && !decisions.has(i.componentKey)).length;
-      const top = confirmed.sort((a, b) => RANK[a.severity] - RANK[b.severity] || b.instanceCount - a.instanceCount || a.position - b.position)[0];
-      if (top) candidates.push({ row, scan: latest, issue: top, confirmed: confirmed.length });
+      const sv = await scanSummaryView(latest.id);
+      if (sv) { row.confirmed = sv.recommended; row.waiting = sv.observations; if (sv.lead) candidates.push({ row, scan: latest, lead: sv.lead, label: sv.levelLabel ?? '', recommended: sv.recommended }); }
     }
     rows.push(row);
   }
   // Most recent scan first; projects that were never scanned go last, alphabetically.
   rows.sort((a, b) => +(b.lastScanAt ?? 0) - +(a.lastScanAt ?? 0) || a.name.localeCompare(b.name));
 
-  // The finding that needs attention: the most serious confirmed finding from the most recently finished scan that has one.
-  candidates.sort((a, b) => +(b.scan.completedAt ?? b.scan.createdAt) - +(a.scan.completedAt ?? a.scan.createdAt) || RANK[a.issue.severity] - RANK[b.issue.severity]);
+  // What needs attention: the report's own first fix, from the most recently finished scan that has one (the most urgent level breaks ties).
+  const ORDER: Record<string, number> = { Critical: 0, 'Before launch': 1, Improve: 2 };
+  candidates.sort((a, b) => +(b.scan.completedAt ?? b.scan.createdAt) - +(a.scan.completedAt ?? a.scan.createdAt) || (ORDER[a.label] ?? 9) - (ORDER[b.label] ?? 9));
   const pick = candidates[0];
   let attention: Attention | null = null;
   if (pick) {
-    const { scan, issue, row } = pick;
+    const { scan, lead, row, label } = pick;
     attention = {
-      issueId: issue.id, scanId: scan.id, title: issue.title, severity: issue.severity, instances: issue.instanceCount,
+      issueId: lead.issueId ?? null, scanId: scan.id, title: lead.title, levelLabel: label, location: lead.location,
       // Repair text is redacted from free reports (lib/entitlements.ts), so it stays off the free dashboard too.
-      whatToChange: hasFeature(plan, 'full_report') ? issue.whatToChange : '',
+      whatToChange: hasFeature(plan, 'full_report') ? lead.sentence : '',
       project: { id: row.id, name: row.name, client: row.client }, page: pageLabel(scan), environment: scan.environment, completedAt: scan.completedAt,
-      // The screenshot route is plan-gated (402 on the free plan), so only point at it when the plan includes it.
-      shot: hasFeature(plan, 'full_report') ? await shotFor(scan.id, issue.id, 'Affected element') : null,
-      otherConfirmed: candidates.reduce((n, c) => n + c.confirmed, 0) - 1,
+      // The report's own crop of the affected element, already plan-gated by loadReport.
+      shot: hasFeature(plan, 'full_report') ? lead.shot : null,
+      otherConfirmed: candidates.reduce((n, c) => n + c.recommended, 0) - 1,
     };
   }
   return { rows, attention };

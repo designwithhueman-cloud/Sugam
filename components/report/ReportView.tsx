@@ -124,7 +124,7 @@ export function ReportView({ report, readOnly = false, initialIssueId, filters }
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Tabs value={vp} onValueChange={(v) => setVp(v as ViewportId)} className="w-full sm:w-auto">
               <TabsList aria-label="Screenshot width" className={cn(segList, 'bg-white/80 ring-1 ring-stone-line sm:w-auto')}>
-                {report.viewports.map((v) => <TabsTrigger key={v.viewport} value={v.viewport} className={cn(segTrigger, 'data-[state=active]:bg-ink data-[state=active]:text-white')}>{v.viewport === 'desktop' ? <Monitor aria-hidden className="size-4" /> : <Smartphone aria-hidden className="size-4" />}{v.viewport === 'desktop' ? 'Desktop' : 'Phone'}<span className="font-normal opacity-80">{v.viewportWidth}px</span></TabsTrigger>)}
+                {report.viewports.map((v) => <TabsTrigger key={v.viewport} value={v.viewport} className={cn(segTrigger, 'data-[state=active]:bg-ink data-[state=active]:text-white')}>{v.viewport === 'desktop' ? <Monitor aria-hidden className="size-4" /> : <Smartphone aria-hidden className="size-4" />}<span className="max-sm:sr-only">{v.viewport === 'desktop' ? 'Desktop' : 'Phone'}</span><span className="font-normal opacity-80">{v.viewportWidth}px</span></TabsTrigger>)}
               </TabsList>
             </Tabs>
             <p className="text-sm text-pine-700">Pins: <b className="font-semibold text-ink">{bucketLabel}</b></p>

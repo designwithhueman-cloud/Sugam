@@ -5,20 +5,29 @@ import { projectAccess } from '@/lib/access.ts';
 import { compareScans, type CompareRow } from '@/lib/compare.ts';
 import { strictScore } from '@/lib/score-display.ts';
 import { siteStats } from '@/lib/dashboard.ts';
-import { Badge } from '@/components/ui/badge.tsx';
+import { Panel } from '@/components/dashboard/bits.tsx';
+import { EmptyNote } from '@/components/dashboard/Tables.tsx';
+import { SEV_STATUS, SEV_ICON } from '@/components/dashboard/SegmentedBar.tsx';
+import { plainTitle } from '@/lib/plain.ts';
 import { getDb, schema } from '@/lib/db/index.ts';
 import { eq } from 'drizzle-orm';
 import { hasFeature } from '@/lib/plans.ts';
 import { ProjectHead, projectMain } from '@/components/dashboard/ProjectHead.tsx';
 
 export const dynamic = 'force-dynamic';
+const th = 'px-3 pb-2.5 pt-1 text-left text-[13px] font-medium text-pine-600';
 function Table({ rows, caption, empty }: { rows: CompareRow[]; caption: string; empty: string }) {
-  if (!rows.length) return <p className="mt-2 text-sm text-slate-600">{empty}</p>;
+  if (!rows.length) return <div className="pb-4"><EmptyNote>{empty}</EmptyNote></div>;
   return (
-    <table className="mt-2 w-full overflow-hidden rounded-xl bg-white text-sm shadow-sm">
+    <table className="w-full table-fixed border-collapse text-[15px]">
       <caption className="sr-only">{caption}</caption>
-      <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600"><tr><th className="p-3">Issue</th><th className="p-3">Severity</th><th className="p-3">Instances before</th><th className="p-3">Instances after</th></tr></thead>
-      <tbody>{rows.map((r) => <tr key={r.componentKey} className="border-t border-slate-100"><td className="p-3">{r.title}</td><td className="p-3"><Badge variant={r.severity as 'critical'}>{r.severity}</Badge></td><td className="p-3">{r.before}</td><td className="p-3">{r.after}</td></tr>)}</tbody>
+      <thead><tr className="border-b border-stone-line"><th scope="col" className={th}>Issue</th><th scope="col" className={`${th} w-[7.5rem]`}>Severity</th><th scope="col" className={`${th} hidden w-[6rem] sm:table-cell`}>Before</th><th scope="col" className={`${th} w-[5rem] sm:w-[6rem]`}>After</th></tr></thead>
+      <tbody>{rows.map((r) => { const sev = r.severity as keyof typeof SEV_STATUS; return (
+        <tr key={r.componentKey} className="border-b border-stone-line last:border-0">
+          <th scope="row" className="px-3 py-3 text-left font-semibold text-ink">{plainTitle(r.componentKey.split('|')[0], r.title)}<span className="block text-sm font-normal text-pine-600 sm:hidden">{r.before} before</span></th>
+          <td className="px-3 py-3"><span className="inline-flex items-center gap-1 text-[15px]"><span aria-hidden style={{ color: SEV_STATUS[sev] }}>{SEV_ICON[sev]}</span><span className="capitalize">{r.severity}</span></span></td>
+          <td className="hidden px-3 py-3 tabular-nums sm:table-cell">{r.before}</td><td className="px-3 py-3 font-semibold tabular-nums">{r.after}</td>
+        </tr>); })}</tbody>
     </table>
   );
 }
@@ -36,20 +45,22 @@ export default async function Compare({ params, searchParams }: { params: Promis
   // Strict policy only; with either side unscored there is no change to show (a missing score is not 0).
   const [sb, sa] = await Promise.all([strictScore(c.before.id, c.before.status), strictScore(c.after.id, c.after.status)]);
   const delta = sb.score != null && sa.score != null ? sa.score - sb.score : null;
-  const shown = (v: typeof sb) => v.score != null ? <p className="text-4xl font-extrabold">{v.score}</p> : <><p className="text-2xl font-bold">Not scored</p><p className="text-sm text-slate-600">{v.reason}</p></>;
+  const shown = (v: typeof sb) => v.score != null ? <span className="block text-[2rem] font-semibold tracking-tight text-ink tabular-nums">{v.score}</span> : <><span className="block text-[1.75rem] font-semibold tracking-tight text-ink">Not scored</span><span className="mb-1 block text-sm text-pine-600">{v.reason}</span></>;
   const label = (s: typeof c.before) => `${s.environment} · ${s.createdAt.toLocaleString('en', { dateStyle: 'medium', timeStyle: 'short' })}`;
   return (
     <main id="main" className={projectMain}>
       <ProjectHead org={org} project={pa.project} current="Before and after" sub="What changed between two scans of the same site." />
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-stone-line bg-white p-5"><p className="text-sm text-slate-600">Before ({label(c.before)})</p>{shown(sb)}<Link className="text-sm text-pine-700 underline" href={`/scans/${c.before.id}`}>Open report</Link></div>
-        <div className="rounded-2xl border border-stone-line bg-white p-5"><p className="text-sm text-slate-600">After ({label(c.after)})</p>{shown(sa)}<Link className="text-sm text-pine-700 underline" href={`/scans/${c.after.id}`}>Open report</Link></div>
-        <div className={`rounded-2xl p-5 ${delta == null ? 'bg-slate-50 text-slate-900' : delta >= 0 ? 'bg-green-50 text-green-900' : 'bg-red-50 text-red-900'}`}><p className="text-sm">Score change</p><p className="text-4xl font-extrabold">{delta == null ? '–' : `${delta > 0 ? '+' : ''}${delta}`}</p>{delta == null && <p className="text-sm">No change to show: a score is missing on one side.</p>}<p className="text-sm">{c.resolved.length} resolved · {c.introduced.length} new · {c.persisting.length} remaining</p></div>
-      </div>
-      <p className="mt-3 text-xs text-slate-600">Compares confirmed failures only, matched by rule and markup pattern. The score is for tracking progress, not a compliance grade.</p>
-      <section className="mt-8" aria-labelledby="r-h"><h2 id="r-h" className="text-lg font-semibold text-green-800">Resolved ({c.resolved.length})</h2><Table rows={c.resolved} caption="Resolved issues" empty="Nothing resolved between these scans." /></section>
-      <section className="mt-8" aria-labelledby="n-h"><h2 id="n-h" className="text-lg font-semibold text-red-800">New ({c.introduced.length})</h2><Table rows={c.introduced} caption="New issues" empty="No new issues." /></section>
-      <section className="mt-8" aria-labelledby="p-h"><h2 id="p-h" className="text-lg font-semibold">Still present ({c.persisting.length})</h2><Table rows={c.persisting} caption="Issues still present" empty="None." /></section>
+      <dl className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-stone-line border-t-4 border-t-[#c9bbff] bg-white p-5"><dt className="text-sm font-medium text-pine-600">Before · {label(c.before)}</dt><dd className="mt-1">{shown(sb)}</dd><dd><Link className="text-[15px] font-semibold text-ink underline underline-offset-4" href={`/scans/${c.before.id}`}>Open report</Link></dd></div>
+        <div className="rounded-2xl border border-stone-line border-t-4 border-t-[#7c5cf0] bg-white p-5"><dt className="text-sm font-medium text-pine-600">After · {label(c.after)}</dt><dd className="mt-1">{shown(sa)}</dd><dd><Link className="text-[15px] font-semibold text-ink underline underline-offset-4" href={`/scans/${c.after.id}`}>Open report</Link></dd></div>
+        <div className="rounded-2xl border border-[#b8e6cc] bg-[#effaf3] p-5"><dt className="text-sm font-medium text-[#174a32]">What changed</dt><dd className="mt-1 text-[2rem] font-semibold tracking-tight text-ink">{c.resolved.length} fixed</dd><dd className="text-sm text-pine-600">{c.introduced.length} new · {c.persisting.length} still open{delta != null ? ` · score ${delta > 0 ? '+' : ''}${delta}` : ''}</dd></div>
+      </dl>
+      <p className="mt-3 text-sm text-pine-600">Compares confirmed accessibility issues, matched by rule and markup pattern. A score, when there is one, tracks progress; it is not a compliance grade.</p>
+      {([['r-h', 'Fixed', c.resolved, 'Nothing was fixed between these scans.', 'bg-[#dcf3e7] text-[#174a32]'], ['n-h', 'New', c.introduced, 'Nothing new appeared.', 'bg-[#fde7e1] text-[#7a1f0b]'], ['p-h', 'Still present', c.persisting, 'Nothing is left from the earlier scan.', 'bg-pine-100 text-pine-700']] as const).map(([id, title, rows, empty, chip]) => (
+        <Panel key={id} aria-labelledby={id} className="mt-6 px-4 pb-2 pt-5 sm:px-6">
+          <h2 id={id} className="mb-3 flex items-center gap-2 text-[1.375rem] font-semibold tracking-tight text-ink">{title}<span className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${chip}`}>{rows.length}</span></h2>
+          <Table rows={[...rows]} caption={`${title} issues`} empty={empty} />
+        </Panel>))}
     </main>
   );
 }

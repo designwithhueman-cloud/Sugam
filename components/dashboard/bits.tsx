@@ -39,3 +39,10 @@ export function OpenLink({ href, name, label = 'Open report' }: { href: string; 
 export function Panel({ children, className, ...rest }: React.HTMLAttributes<HTMLElement>) {
   return <section {...rest} className={cn('rounded-2xl border border-stone-line bg-white', className)}>{children}</section>;
 }
+
+// A soft-tinted icon beside a panel heading, so each kind of list reads at a glance (the same pairs as the initials, all at least 7:1).
+const TONE = { lilac: 'bg-[#ece6ff] text-[#35197a]', green: 'bg-[#dcf3e7] text-[#174a32]', amber: 'bg-[#f5efd6] text-[#4d3f0a]', peach: 'bg-[#fde9d7] text-[#6b2f0c]', blue: 'bg-[#e3eefb] text-[#173a66]' } as const;
+export type Tone = keyof typeof TONE;
+export function IconBadge({ icon: Icon, tone }: { icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>; tone: Tone }) {
+  return <span aria-hidden className={cn('grid size-10 shrink-0 place-items-center rounded-xl', TONE[tone])}><Icon aria-hidden className="size-5" /></span>;
+}

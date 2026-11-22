@@ -62,6 +62,11 @@ function layoutIntegrity(out: ScanOutput): DetectorReport {
   const tr = vp(out, 'mobile')?.textResize as TR | null | undefined; if (!tr) return off('The phone layout check did not run.');
   return ran(tr.baselineClipped.length ? [review('Content is clipped on a phone', `${tr.baselineClipped.length} element${tr.baselineClipped.length === 1 ? ' is' : 's are'} clipped by their container on the phone (${vp(out, 'mobile')?.width ?? 390}px wide). It may be intended (a carousel); a person should confirm.`, tr.baselineClipped.map((x) => `${x.selector}  clipped by ${x.by}px (${x.kind})  "${x.text}"`))] : []);
 }
+// A measurement reason in plain words: a covering element's CSS path becomes "a fixed element" (the path stays in the evidence line).
+const plainReason = (r: string) => {
+  const m = r.match(/^\S.*?\((fixed|sticky|absolute)\) covers the middle of it(.*)$/);
+  return m ? `is covered by a ${m[1]} element${m[2].replace(/^, so a tap lands there instead\./, ', so a tap lands on that instead.')}` : r.charAt(0).toLowerCase() + r.slice(1);
+};
 function orientation(out: ScanOutput): DetectorReport {
   const m = vp(out, 'mobile'); const o = m?.orientation; const mp = m?.mobileProbe as MP | null | undefined;
   if (!m || (o === undefined && !mp)) return off('The phone-width pass did not run.');
@@ -69,7 +74,7 @@ function orientation(out: ScanOutput): DetectorReport {
   if (mp && mp.viewportMeta == null) hits.push(fail('The page has no viewport tag', 'Without <meta name="viewport"> phones show the page at desktop width and shrink it.', ['<head> has no meta name="viewport"']));
   if (o) {
     if (o.docW > o.vw + 1) hits.push(fail('The page scrolls sideways when the phone is turned', `In landscape (640px wide) the page is ${o.docW}px wide.`, [`document width ${o.docW}px, screen ${o.vw}px`]));
-    if (o.action && o.action.level !== 'ok') hits.push(fail(`“${o.action.text}” stops working in landscape`, `In landscape “${o.action.text}” ${o.action.reasons[0] ?? 'is not usable'}`, [`level ${o.action.level}`]));
+    if (o.action && o.action.level !== 'ok') hits.push(fail(`“${o.action.text}” stops working in landscape`, `In landscape (640px wide) “${o.action.text}” ${plainReason(o.action.reasons[0] ?? 'is not usable')}`, [`level ${o.action.level}`, ...(o.action.reasons[0] ? [o.action.reasons[0]] : [])]));
   } else if (!mp) return off('The landscape check did not run.');
   return ran(hits);
 }

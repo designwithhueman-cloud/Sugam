@@ -28,8 +28,8 @@ export function ProjectTable({ org, rows, caption }: { org: string; rows: Projec
       <caption className="sr-only">{caption}</caption>
       <thead><tr className="border-b border-stone-line">
         <th scope="col" className={th}>Project</th>
-        <th scope="col" className={`${th} w-[5.25rem] sm:w-[7.5rem]`}>Confirmed<span className="max-sm:sr-only"> issues</span></th>
-        <th scope="col" className={`${th} hidden w-[7rem] xl:table-cell`}>Needs review</th>
+        <th scope="col" className={`${th} w-[5.25rem] sm:w-[7.5rem]`}>Fixes<span className="max-sm:sr-only"> recommended</span></th>
+        <th scope="col" className={`${th} hidden w-[7rem] xl:table-cell`}>Observations</th>
         <th scope="col" className={`${th} hidden w-[6.5rem] sm:table-cell`}>Last scan</th>
         <th scope="col" className={`${th} w-[3.75rem] md:w-[10rem]`}><span className="sr-only">Open</span></th>
       </tr></thead>
@@ -62,7 +62,7 @@ export function ProjectTable({ org, rows, caption }: { org: string; rows: Projec
 type Scan = InferSelectModel<typeof scans>;
 const statusText: Record<Scan['status'], string> = { queued: 'Waiting to start', running: 'Scanning…', analyzing: 'Analysing…', completed: '', failed: 'Scan failed' };
 
-export function QuickScanTable({ rows, caption, scores }: { rows: Scan[]; caption: string; scores?: Record<string, ShownScore> }) {
+export function QuickScanTable({ rows, caption, scores, showEnv }: { rows: Scan[]; caption: string; scores?: Record<string, ShownScore>; showEnv?: boolean }) {
   const withScore = !!scores;
   return (
     <table className="w-full table-fixed border-collapse text-[15px]">
@@ -70,7 +70,7 @@ export function QuickScanTable({ rows, caption, scores }: { rows: Scan[]; captio
       <thead><tr className="border-b border-stone-line">
         <th scope="col" className={th}>Page</th>
         {withScore && <th scope="col" className={`${th} hidden w-[6.5rem] xl:table-cell`}>Score</th>}
-        <th scope="col" className={`${th} w-[5.25rem] sm:w-[7.5rem]`}>Confirmed<span className="max-sm:sr-only"> issues</span></th>
+        <th scope="col" className={`${th} w-[5.25rem] sm:w-[7.5rem]`}>Accessibility<span className="max-sm:sr-only"> issues confirmed</span></th>
         <th scope="col" className={`${th} hidden w-[9.5rem] xl:table-cell`}>Scanned</th>
         <th scope="col" className={`${th} w-[3.75rem] md:w-[10rem]`}><span className="sr-only">Open</span></th>
       </tr></thead>
@@ -84,7 +84,7 @@ export function QuickScanTable({ rows, caption, scores }: { rows: Scan[]; captio
                   <Initials name={name} className="size-9 rounded-lg text-[13px] max-sm:hidden" />
                   <div className="min-w-0">
                     <p className="line-clamp-2 font-semibold text-ink xl:line-clamp-1">{name}</p>
-                    <p className="line-clamp-2 break-all text-sm text-pine-600 sm:line-clamp-1">{host(s.finalUrl || s.url)}<span className="xl:hidden"> · <time dateTime={when.toISOString()} title={fullDate(when)}>{shortDate(when)}</time></span></p>
+                    <p className="line-clamp-2 break-all text-sm text-pine-600 sm:line-clamp-1">{showEnv && s.environment !== 'adhoc' ? <span className="mr-1.5 rounded-full bg-pine-100 px-2 py-0.5 text-xs font-semibold text-pine-700">{s.environment}</span> : null}{host(s.finalUrl || s.url)}<span className="xl:hidden"> · <time dateTime={when.toISOString()} title={fullDate(when)}>{shortDate(when)}</time></span></p>
                   </div>
                 </div>
               </th>
