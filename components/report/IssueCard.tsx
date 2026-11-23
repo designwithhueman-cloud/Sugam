@@ -14,6 +14,8 @@ import { SEV_COLOR } from './PinViewer.tsx';
 import { impactLabels, IMPACT_NOTE } from '@/lib/impact.ts';
 import { nonEmpty } from '@/lib/bullets.ts';
 import { splitFix, promptOnly } from '@/lib/fix-text.ts';
+import { FixPanel } from './FixPanel.tsx';
+import { fixesFromSet } from '@/lib/fix-tools.ts';
 const ROLE: Record<string, string> = { design: 'Design fix', no_code: 'No-code fix', dev: 'Code fix' };
 const BUILDERS = [['lovable', 'Lovable'], ['bolt', 'Bolt.new'], ['v0', 'v0'], ['cursor', 'Cursor']] as const;
 const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
@@ -108,38 +110,7 @@ export const IssueCard = React.forwardRef<HTMLElement, Props>(function IssueCard
             {f && (
               <div>
                 <Label>How to fix it</Label>
-                <Tabs defaultValue="prompt" className="mt-2">
-                  <TabsList aria-label="Fix formats" className={segList}>
-                    <TabsTrigger value="prompt" className={segTrigger}><span className="sm:hidden">Prompt</span><span className="hidden sm:inline">AI builder prompt</span></TabsTrigger>
-                    <TabsTrigger value="nocode" className={segTrigger}><span className="sm:hidden">No-code</span><span className="hidden sm:inline">No-code steps</span></TabsTrigger>
-                    <TabsTrigger value="code" className={segTrigger}><span className="sm:hidden">Code</span><span className="hidden sm:inline">Code patch</span></TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="prompt">
-                    <div className="mb-2 flex flex-wrap items-center gap-1" role="group" aria-label="AI builder">
-                      {BUILDERS.map(([k, label]) => <Button key={k} size="sm" variant={builder === k ? 'default' : 'outline'} className="rounded-lg" aria-pressed={builder === k} onClick={() => setBuilder(k)}>{label}</Button>)}
-                      <span className="ml-auto"><CopyButton text={promptOnly(f.aiPrompt[builder])} label={`${builder} prompt`} /></span>
-                    </div>
-                    <Code label={`Prompt for ${builder}`}>{promptOnly(f.aiPrompt[builder])}</Code>
-                    {splitFix(f.aiPrompt[builder]).verify && <p className="mt-3 text-base text-neutral-800 [overflow-wrap:anywhere]" data-testid="how-to-check"><span className="font-semibold text-ink">How to check it: </span>{splitFix(f.aiPrompt[builder]).verify}</p>}
-                  </TabsContent>
-                  <TabsContent value="nocode">
-                    <div className="grid gap-3">
-                      {([['Framer', nonEmpty(f.noCode.framer)], ['Webflow', nonEmpty(f.noCode.webflow)]] as const).map(([name, steps]) => (
-                        <div key={name} className="rounded-lg border border-stone-line p-3">
-                          <div className="flex items-center justify-between"><h5 className="text-sm font-semibold text-ink">{name}</h5><CopyButton text={steps.map((s, n) => `${n + 1}. ${s}`).join('\n')} label={`${name} steps`} /></div>
-                          <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-pine-700">{steps.map((s) => <li key={s}>{s}</li>)}</ol>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="code">
-                    <div className="grid gap-3">
-                      <div><p className="mb-1 text-xs font-semibold text-[#9e2a1a]">Before {f.code.language === 'css' ? '(CSS)' : '(verbatim from the page)'}</p><Code label="Code before">{f.code.before}</Code></div>
-                      {f.code.after && <div><div className="mb-1 flex items-center justify-between"><p className="text-xs font-semibold text-[#2d6a00]">After ({f.code.language.toUpperCase()})</p><CopyButton text={f.code.after} label="fixed code" /></div><Code label="Code after">{f.code.after}</Code></div>}
-                      {f.code.note && <p className="text-xs text-pine-700">{f.code.note}</p>}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <div className="mt-2"><FixPanel fixes={fixesFromSet(f)} id={`issue-${issue.id}`} /></div>
               </div>
             )}
             {issue.helpUrl && <a href={issue.helpUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-1 text-[13px] font-semibold text-ink underline underline-offset-2">Rule documentation (Deque) <ExternalLink aria-hidden className="size-3" /><span className="sr-only">(opens in a new tab)</span></a>}

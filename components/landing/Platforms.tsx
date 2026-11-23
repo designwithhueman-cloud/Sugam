@@ -11,7 +11,7 @@ import * as React from 'react';
 import { Pause, Play } from 'lucide-react';
 import { PLATFORMS, FIX_LABEL, type Platform, type FixKind } from '@/lib/platforms.ts';
 
-const TAG: Record<FixKind, string> = { prompt: 'bg-[#d9f56e]', steps: 'bg-[#e6dcff]', patch: 'bg-[#eceae4]' };
+const TAG: Record<FixKind, string> = { prompt: 'bg-[#d9f56e]', steps: 'bg-[#e6dcff]', patch: 'bg-[#eceae4]', route: 'bg-white' };
 
 function Logo({ p }: { p: Platform }) {
   return (

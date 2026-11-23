@@ -27,11 +27,19 @@ type Recipe = { title: string; element: string; change: string; code?: { languag
 const fileOf = (url: string) => { try { const u = new URL(url); const f = u.pathname.split('/').pop() || u.hostname; return f.length > 48 ? f.slice(0, 47) + '…' : f; } catch { return url.slice(0, 48); } };
 /** Paste-ready CSS for one measured element, or the reason there is none. The selector must be the one the scan confirmed matches only that
  *  element; a breakpoint must come from the scan (seen at every width) or from the page's own @media rule for that property. */
+/** The CSS change a recipe wanted but could not offer as a patch (no confirmed selector or breakpoint), kept as an example. */
+const exampleSink: { css: string | null } = { css: null };
 function gateCss(c: FixContext, key: 'action' | 'cover' | 'clippedBy', prop: string, problem: RegExp, decl: string): { code: { language: 'css'; text: string; label: string } | null; why: string | null; bp: Breakpoint | null; sel: string | null } {
   const t = c.evidence?.[key] ?? null;
   const bp = t?.stable && c.evidence ? breakpointFor(t.media, { prop, problem, seenAt: c.evidence.seenAt, clearAt: c.evidence.clearAt }) : null;
   const why = !c.evidence ? 'Avara has no selector evidence for this element, so no code is given.' : whyNoCss(t, t?.stable ? bp : 'n/a');
-  if (why || !t?.stable || !bp) return { code: null, why, bp, sel: t?.stable ?? null };
+  if (why || !t?.stable || !bp) {
+    // An example, never a patch: a readable placeholder selector and, when the problem was seen only at phone widths, a phone media query to adjust.
+    const rule = `.your-${key === 'cover' ? 'banner' : key === 'clippedBy' ? 'container' : 'button'} { ${decl} }`;
+    const phoneOnly = !!c.evidence && c.evidence.seenAt.length > 0 && c.evidence.clearAt.some((w) => w > Math.max(...c.evidence!.seenAt));
+    exampleSink.css = phoneOnly ? `/* Adjust 767px to the width where the problem starts */\n@media (max-width: 767px) {\n  ${rule}\n}` : rule;
+    return { code: null, why, bp, sel: t?.stable ?? null };
+  }
   const text = cssPatch(t.stable, decl, bp);
   if (!safeCode(text)) return { code: null, why: 'The patch would not be safe to paste as written, so no code is given.', bp, sel: t.stable };
   // The label comes from what Avara actually did: applied and remeasured at both phone widths, or not tested.
@@ -159,9 +167,31 @@ function recipe(c: FixContext): Recipe {
   };
 }
 
+/** An example for fixes whose recipe has no CSS gate: built from what the scan measured, with readable placeholders. Never a patch. */
+function fallbackExample(c: FixContext): { css?: string; html?: string } | null {
+  const attrs = (h: string) => h.replace(/\s*\/?>\s*$/, '');
+  if (c.ruleId === 'mobile/horizontal-scroll') {
+    const off = c.hscroll?.offenders[0]; const cls = off ? /class="([^" ]+)/.exec(off.html)?.[1] : null;
+    return { css: `/* The element that is wider than the screen */\n${cls ? `.${cls}` : '.your-wide-element'} {\n  max-width: 100%;\n  box-sizing: border-box;\n}\n/* For a wide table or code block, let it scroll on its own instead */\n.your-table-wrapper { overflow-x: auto; }` };
+  }
+  if (c.ruleId === 'workflow/action-cannot-be-activated' || c.ruleId.startsWith('mobile/')) {
+    const k = c.causes.map((x) => x.kind); const decl = [k.includes('hidden') && 'display: inline-flex;\n  visibility: visible;', k.includes('ignored') && 'pointer-events: auto;', k.includes('offscreen') && 'position: static;\n  transform: none;', k.includes('small') && 'min-width: 44px;\n  min-height: 44px;'].filter(Boolean).join('\n  ');
+    const clipped = k.includes('clipped');
+    if (!decl && !clipped) return null;
+    return { css: `${decl ? `.your-button {\n  ${decl}\n}` : ''}${clipped ? `${decl ? '\n' : ''}/* The container that cuts it off */\n.your-container { overflow: visible; }` : ''}` };
+  }
+  if (c.ruleId === 'workflow/action-no-response') return { html: `<a href="#your-form-id">${c.action.text}</a>\n<!-- …and on the form it should open: -->\n<form id="your-form-id">…</form>` };
+  if (c.ruleId === 'perf/lcp' && c.perf?.lcpElement) { const src = /src="([^"]+)"/.exec(c.perf.lcpElement.snippet)?.[1]; return src ? { html: `<!-- In the <head>, before other scripts and styles -->\n<link rel="preload" as="image" href="${src}" fetchpriority="high">` } : null; }
+  if (c.ruleId === 'perf/cls-unsized-images' && c.perf?.unsized?.[0]) return { html: `${attrs(c.perf.unsized[0].snippet)} width="[width in px]" height="[height in px]">` };
+  return null;
+}
+
 export function buildAvaraFix(c: FixContext): { title: string; fixes: FixSet; plainChange: string } {
-  const r = recipe(c);
+  exampleSink.css = null;
+  // The measured cause decides the example (pointer-events for a control that ignores taps); a recipe's own CSS example is the fallback.
+  const r = recipe(c); const ex = !r.code && !(r.language === 'html' && safeCode(r.after, 200)) ? (fallbackExample(c) ?? (exampleSink.css ? { css: exampleSink.css } : null)) : null;
+  const example = ex?.css ?? ex?.html; const exLang = ex?.css ? 'css' : ex?.html ? 'html' : null;
   const body = formatFix({ element: r.element, change: r.change, code: r.code, verify: r.verify, manual: r.manual });
   const aiPrompt = Object.fromEntries(Object.entries(TOOLS).map(([k, pre]) => [k, `${pre}\n\n${body}`])) as FixSet['aiPrompt'];
-  return { title: r.title, plainChange: r.change, fixes: { aiPrompt, noCode: { framer: r.framer, webflow: r.webflow }, code: { language: r.language, before: r.before, after: r.code ? r.code.text : (r.language === 'html' && safeCode(r.after, 200) ? r.after : ''), note: r.note ?? (r.code || (r.language === 'html' && safeCode(r.after, 200)) ? `${r.code?.label ?? 'Suggested HTML'} (not tested by Avara).` : 'No paste-ready patch here: follow the Change text, which names the property to edit.') } } };
+  return { title: r.title, plainChange: r.change, fixes: { aiPrompt, noCode: { framer: r.framer, webflow: r.webflow }, code: { ...(example ? { example } : {}), language: exLang ?? r.language, before: r.before, after: r.code ? r.code.text : (r.language === 'html' && safeCode(r.after, 200) ? r.after : ''), note: r.note ?? (r.code || (r.language === 'html' && safeCode(r.after, 200)) ? `${r.code?.label ?? 'Suggested HTML'} (not tested by Avara).` : 'No paste-ready patch here: follow the Change text, which names the property to edit.') } } };
 }

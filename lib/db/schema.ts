@@ -157,7 +157,9 @@ export const issues = pgTable('issues', {
 export type FixSet = {
   aiPrompt: Record<'lovable' | 'bolt' | 'v0' | 'cursor', string>;
   noCode: { framer: string[]; webflow: string[] };
-  code: { language: 'html' | 'jsx' | 'css'; before: string; after: string; note?: string };
+  /** after: an exact, evidence-backed edit (or empty). example: the same change with a placeholder selector or wording, when the scan could
+   *  not confirm a selector for this exact element (shown as "Copy example", never as a patch). */
+  code: { language: 'html' | 'jsx' | 'css'; before: string; after: string; note?: string; example?: string };
 };
 
 // Each affected element, with verbatim HTML as extracted from the page.

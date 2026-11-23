@@ -10,6 +10,8 @@ import { hasFeature } from './plans.ts';
 import { BY_ID, CATALOG, CATEGORIES, LENSES, HEURISTICS, RELATED, SOURCES, canonicalFor, coverage as libCoverage } from './avara/catalog.ts';
 import { buildCoverage, loadRecords, EMPTY_LOADED } from './avara/coverage.ts';
 import { pageSummary } from './page-summary.ts';
+import { buildFixes } from '../analysis/fixes.ts';
+import type { FixSet } from './db/schema.ts';
 import { ruleLoader } from '../src/engines/rule-engine/RuleLoader.ts';
 const ruleWeight = new Map(ruleLoader().loadAllRules({ includeDisabled: true }).map((r) => [r.ruleId, r.weight]));
 import { collapsedContainer, collapsedNote, fixCaps } from './avara/evidence-check.ts';
@@ -100,6 +102,16 @@ async function loadAvara(scanId: string, scan: typeof schema.scans.$inferSelect)
   };
 }
 
+/** A fix saved before code examples existed gets its example at read time, from the issue's own rule, markup and selector. Rows are not
+ *  rewritten. Only when the stored fix has no exact patch and no example. */
+function withExample(i: { ruleId: string; title: string; whatToChange: string; instanceCount: number; source: string; fixes: FixSet | null }, inst: { selector: string; html: string; detail: string | null; viewports: string[] } | undefined): FixSet | null {
+  const f = i.fixes; if (!f || f.code.after || f.code.example || !inst) return f ?? null;
+  try {
+    const ex = buildFixes({ ruleId: i.ruleId, title: i.title, whatToChange: i.whatToChange, wcagText: '', pageUrl: '', selector: inst.selector, html: inst.html, instanceCount: i.instanceCount, detail: inst.detail ?? undefined, viewports: inst.viewports, source: i.source, stable: null }).code.example;
+    return ex ? { ...f, code: { ...f.code, example: ex } } : f;
+  } catch { return f; }
+}
+
 export async function loadReport(scanId: string, opts: { shareToken?: string } = {}): Promise<Report | null> {
   const db = await getDb();
   const [scan] = await db.select().from(schema.scans).where(eq(schema.scans.id, scanId));
@@ -121,7 +133,7 @@ export async function loadReport(scanId: string, opts: { shareToken?: string } =
     viewports: vps.sort((a, b) => (a.viewport === 'desktop' ? -1 : 1) - (b.viewport === 'desktop' ? -1 : 1)).map((v) => ({ viewport: v.viewport, viewportWidth: v.viewportWidth, viewportHeight: v.viewportHeight, pageWidth: v.pageWidth, pageHeight: v.pageHeight, truncated: v.screenshotTruncated, screenshotUrl: shot(v.viewport) })),
     issues: issues.map((i) => ({
       id: i.id, position: i.position, ruleId: i.ruleId, componentKey: i.componentKey, source: i.source, bucket: i.bucket, severity: i.severity, title: i.title, wcag: i.wcag, impactGroups: i.impactGroups, roleTag: i.roleTag,
-      instanceCount: i.instanceCount, whatToChange: i.whatToChange, helpUrl: i.evidence?.helpUrl, fixes: i.fixes ?? null, aiEnriched: i.aiEnriched,
+      instanceCount: i.instanceCount, whatToChange: i.whatToChange, helpUrl: i.evidence?.helpUrl, fixes: withExample(i, insts.find((x) => x.issueId === i.id)), aiEnriched: i.aiEnriched,
       instances: insts.filter((x) => x.issueId === i.id).map((x) => ({ id: x.id, selector: x.selector, html: x.html, detail: x.detail, viewports: x.viewports, boxes: boxes.filter((b) => b.instanceId === x.id).map((b) => ({ viewport: b.viewport, x: b.x, y: b.y, width: b.width, height: b.height, visible: b.visible })) })),
     })),
     brand,
@@ -139,6 +151,15 @@ export async function loadReport(scanId: string, opts: { shareToken?: string } =
   }
   // One score everywhere: the strict overall, or null with the reason. scans.score (the legacy accessibility number) is kept in the row, unread.
   if (report.avara) { report.score = report.avara.library.overall; report.scoreReason = report.score == null ? (report.avara.library.overallWithheld ?? 'Scoring is not enabled yet.') : null; }
+  // Scans saved before code examples existed: a recommendation that reuses an issue's fix gets that issue's example too (read time only).
+  if (report.avara) for (const rec of report.avara.recommendations) {
+    const patch = rec.fixes?.find((f) => f.kind === 'patch'); if (!patch) continue;
+    let code: { after?: string; example?: string } = {}; try { code = JSON.parse(patch.content); } catch { continue; }
+    if (code.after || code.example) continue;
+    const issueId = report.avara.findings.find((f) => rec.findingIds.includes(f.id) && f.issueId)?.issueId;
+    const ex = report.issues.find((x) => x.id === issueId)?.fixes?.code.example;
+    if (ex) patch.content = JSON.stringify({ ...code, example: ex });
+  }
   // The page summary is built from the full report, before redaction, so Free and Paid see the same score, breakdown and totals.
   report.pageSummary = pageSummary(report);
   // Entitlements are applied here so no caller can hand a locked report to the browser by accident.

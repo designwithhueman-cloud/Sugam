@@ -2,7 +2,7 @@
 // (Framer, Webflow) and a native-HTML-first code patch. "Before" is always the verbatim HTML
 // extracted from the page; "after" changes only what the fix needs. Placeholders in [brackets]
 // mark wording only the site owner can supply; Sugam never invents content.
-import { formatFix, safeCode, describeElement, shortSelector, viewportAt, defaultLabel, type FixParts } from './fix-format.ts';
+import { formatFix, safeCode, describeElement, shortSelector, viewportAt, defaultLabel, roleWord, type FixParts } from './fix-format.ts';
 import type { FixSet } from '../lib/db/schema.ts';
 
 export type FixInput = {
@@ -79,6 +79,10 @@ const RECIPES: Record<string, Recipe> = {
     change: 'Fix the ARIA attribute value so it is valid. For aria-controls / aria-labelledby, point it at an id that exists on the page.',
     framer: ['ARIA attributes are usually set in code components or embeds. Open the component and correct the attribute value.'],
     webflow: ['Select the element.', 'Settings panel (D) → Custom attributes.', 'Correct the attribute value, or point it at the id of an element that exists on the page.'],
+    // Point the reference at an id that exists, and give the target that id. [Brackets] are names only the owner knows, so this is an example.
+    after: (h) => /\saria-(controls|labelledby|describedby|owns|activedescendant)="/.test(h)
+      ? `${h.replace(/(\saria-(?:controls|labelledby|describedby|owns|activedescendant)=")[^"]*"/, '$1[id-of-the-target]"')}\n<!-- and on the element it points to: -->\n<div id="[id-of-the-target]">…</div>`
+      : h.replace(/(\saria-[a-z]+=")[^"]*"/, '$1[a valid value, e.g. true or false]"'),
   },
   'color-contrast': {
     change: 'Increase the contrast between the text and its background to at least 4.5:1 (3:1 for large text).',
@@ -223,6 +227,8 @@ const RECIPES: Record<string, Recipe> = {
     change: 'Use one h1 for the page title, then h2 for sections and h3 inside them, going down one level at a time. Pick the tag by structure, then style it to the size you want with CSS.',
     framer: ['Select the text layer and set its tag (H1 to H6) in the properties panel. One H1 per page; do not skip levels.'],
     webflow: ['Select the heading → Settings (D) → Tag: choose the level that matches the page outline. Keep the look with the Style panel.'],
+    // The next level down from the section heading above it (h2 under the page's h1 is the common case).
+    after: (h) => h.replace(/^<\s*h[1-6]\b/i, '<h2').replace(/<\/\s*h[1-6]\s*>\s*$/i, '</h2>') + '\n<!-- Use the level one below the heading above it: h2 under h1, h3 under h2. -->',
   },
   'sugam/no-main-landmark': {
     change: 'Wrap the page content, everything except the header and footer, in a single <main> element.',
@@ -271,6 +277,8 @@ const RECIPES: Record<string, Recipe> = {
     change: 'If it does something when clicked, make it a <button> or <a href>. If it does nothing, remove cursor: pointer so it does not suggest an action.',
     framer: ['Check whether the frame has a click interaction. If yes, turn it into a Link or button component; if not, remove the pointer cursor.'],
     webflow: ['Check the element for interactions. If it is clickable, replace it with a Link Block; if not, remove cursor: pointer from its class.'],
+    // A real button (or a link when it goes somewhere): keyboard and screen-reader support come with the element.
+    after: (h) => { const inner = h.replace(/^<[^>]+>/, '').replace(/<\/[a-z0-9-]+>\s*$/i, ''); const cls = /\sclass="([^"]*)"/.exec(h)?.[1]; return `<button type="button"${cls ? ` class="${cls}"` : ''}>${inner}</button>\n<!-- If it goes to another page, use <a href="[where it goes]"> instead. -->`; },
   },
   'sugam/aria-tablist': {
     change: 'Follow the WAI-ARIA tabs pattern: one tab has aria-selected="true" and tabindex="0", the others tabindex="-1"; every tab has aria-controls pointing to an existing role="tabpanel"; Left/Right arrow keys move between tabs. If the "tabs" load separate pages, use links in a <nav> instead.',
@@ -326,6 +334,8 @@ const RECIPES: Record<string, Recipe> = {
     change: 'Hide it from the Tab order when it is not shown, or make it visible when focused (like a skip link).',
     framer: ['Check hidden menus or drawers: when closed, they should be removed from the page or set to display: none.'],
     webflow: ['For closed menus and drawers, set Display: None on the closed state so their links are not in the Tab order.'],
+    language: 'css',
+    css: (i) => ({ before: `${i.selector} { /* off screen when focused */ }`, after: `${i.selector}:focus-visible {\n  position: static;\n  left: auto;\n  transform: none;\n}` }),
   },
   'sugam/keyboard-trap': {
     change: 'Make sure Tab and Shift+Tab always move on (modal dialogs must close with Escape).',
@@ -492,6 +502,8 @@ export function buildFixes(i: FixInput): FixSet {
   // The Plain code tab follows the same standard: "before" stays as a locator (it may keep the long selector), "after" only when paste-ready.
   const g = gatePatch(i, r, code);
   const tab: FixSet['code'] = { ...code, after: g.text ?? '', note: g.label ? `${g.label}.` : g.text ? (code.language === 'css' && i.stable && code.after.includes(i.selector) ? `${defaultLabel(code.language)} (not tested by Avara): ${i.stable} matches only this element on the scanned page.${code.note ? ' ' + code.note : ''}` : `${defaultLabel(code.language)} (not tested by Avara).${code.note ? ' ' + code.note : ''}`) : g.why ?? '' };
+  // When the gate keeps the change back, the same change is kept as an example: the long generated selector becomes a readable placeholder.
+  if (!tab.after && code.after) tab.example = code.language === 'css' ? code.after.split(i.selector).join(`.your-${roleWord(i.html).replace(/\s+/g, '-')}`) : code.after;
   return { aiPrompt, noCode: { framer: r.framer, webflow: r.webflow }, code: tab };
 }
 export { attrOf, textOf };

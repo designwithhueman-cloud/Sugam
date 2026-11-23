@@ -10,21 +10,20 @@ import * as React from 'react';
 import { Check, Code2, MousePointerClick, Smartphone, Wand2 } from 'lucide-react';
 import { CopyButton } from '@/components/CopyButton.tsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx';
-import { EXAMPLE_EDITORS, EXAMPLE_PATCH, EXAMPLE_PATCH_LINES, EXAMPLE_PROMPT } from './example-fix.ts';
+import { EXAMPLE_EDITORS, EXAMPLE_FRAMEWORKS, EXAMPLE_PATCH, EXAMPLE_PATCH_LINES, EXAMPLE_PROMPT } from './example-fix.ts';
 import { BookingPhone } from './BookingPhone.tsx';
 
 const STEPS = [['Scan', 0.2], ['Review', 1.4], ['Fix', 2.4], ['Resolved', 3.9]] as const;
 const TABS = [['prompt', 'AI builder prompt', Wand2], ['steps', 'Editor steps', MousePointerClick], ['patch', 'Code patch', Code2]] as const;
 type Tab = typeof TABS[number][0];
 const at = (s: number) => ({ animationDelay: `${s}s` });
-const STEPS_TEXT = EXAMPLE_EDITORS.map(([tool, steps]) => `${tool}\n${steps.map((x, i) => `${i + 1}. ${x}`).join('\n')}`).join('\n\n');
-const COPY: Record<Tab, [string, string]> = { prompt: [EXAMPLE_PROMPT, 'prompt'], steps: [STEPS_TEXT, 'steps'], patch: [EXAMPLE_PATCH, 'patch'] };
+const stepsText = (i: number) => EXAMPLE_EDITORS[i][1].map((x, n) => `${n + 1}. ${x}`).join('\n');
 
 const trigger = 'flex min-h-12 flex-col justify-center gap-1 rounded-lg px-2 py-1.5 text-center text-sm font-medium leading-tight text-ink hover:bg-white/70 sm:flex-row sm:gap-2 sm:px-3 sm:text-base data-[state=active]:bg-[#d9f56e] data-[state=active]:font-semibold data-[state=active]:text-ink data-[state=active]:shadow-none';
 
 export function HeroResult() {
-  const [tab, setTab] = React.useState<Tab>('prompt');
-  const [text, label] = COPY[tab];
+  const [tab, setTab] = React.useState<Tab>('prompt'); const [ed, setEd] = React.useState(0); const [fw, setFw] = React.useState(0);
+  const [text, label] = tab === 'prompt' ? [EXAMPLE_PROMPT, 'prompt'] : tab === 'steps' ? [stepsText(ed), 'steps'] : [EXAMPLE_PATCH, 'patch'];
   // Hold the story at its first frame until the card is on screen, then play it once.
   const box = React.useRef<HTMLDivElement>(null);
   const [wait, setWait] = React.useState(false);
@@ -79,16 +78,14 @@ export function HeroResult() {
                 <p className="mt-2 rounded-2xl bg-[#f6f5f1] p-4 text-lg leading-relaxed text-ink">{EXAMPLE_PROMPT}</p>
               </TabsContent>
               <TabsContent value="steps" className="mt-3 rounded-2xl">
-                <p className="text-base font-semibold text-neutral-700">Follow these steps in your visual editor</p>
-                <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                  {EXAMPLE_EDITORS.map(([tool, steps]) => (
-                    <div key={tool} className="rounded-2xl bg-[#f6f5f1] p-4"><h3 className="text-lg font-semibold text-ink">{tool}</h3>
-                      <ol className="mt-1.5 list-decimal space-y-1 pl-5 text-base leading-snug text-ink">{steps.map((x) => <li key={x}>{x}</li>)}</ol></div>
-                  ))}
-                </div>
+                <div className="flex flex-wrap items-center gap-2"><label htmlFor="hr-ed" className="text-base font-semibold text-neutral-700">Follow these steps in</label>
+                  <select id="hr-ed" value={ed} onChange={(e) => setEd(Number(e.target.value))} className="min-h-10 rounded-lg border border-black/20 bg-white px-2 text-base font-semibold text-ink">{EXAMPLE_EDITORS.map(([t], i) => <option key={t} value={i}>{t}</option>)}</select></div>
+                <ol className="mt-2 list-decimal space-y-1 rounded-2xl bg-[#f6f5f1] p-4 pl-9 text-base leading-snug text-ink">{EXAMPLE_EDITORS[ed][1].map((x) => <li key={x}>{x}</li>)}</ol>
               </TabsContent>
               <TabsContent value="patch" className="mt-3 rounded-2xl">
-                <p className="text-base font-semibold text-neutral-700">Apply this change in your code</p>
+                <div className="flex flex-wrap items-center gap-2"><label htmlFor="hr-fw" className="text-base font-semibold text-neutral-700">Apply this change in</label>
+                  <select id="hr-fw" value={fw} onChange={(e) => setFw(Number(e.target.value))} className="min-h-10 rounded-lg border border-black/20 bg-white px-2 text-base font-semibold text-ink">{EXAMPLE_FRAMEWORKS.map(([t], i) => <option key={t} value={i}>{t}</option>)}</select>
+                  <span className="text-base text-neutral-700">in {EXAMPLE_FRAMEWORKS[fw][1]}</span></div>
                 <pre tabIndex={0} role="region" aria-label="Code patch" className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-2xl bg-[#1e1e1e] p-4 font-mono text-[14px] leading-relaxed text-white [overflow-wrap:anywhere]">
                   <code>
                     {EXAMPLE_PATCH_LINES.map(([k, t], n) => k === ' '

@@ -45,7 +45,7 @@ try {
     // The exact generated fix, opened on demand (free plan: the recommended first fix is the available fix)
     check('the fix is closed until asked for, then offered for AI builders, Framer, Webflow and code', (await prim().getByTestId('fix-primary').isHidden()) && (await (async () => { await p.getByTestId('see-fix').click(); return prim().getByTestId('fix-primary').isVisible(); })()));
     const fixBox = prim().getByTestId('fix-primary'); const tools = await fixBox.locator('option').allInnerTexts();
-    check('the builder picker lists every tool', ['Lovable', 'Bolt', 'v0', 'Cursor', 'Framer', 'Webflow', 'Plain code'].every((t) => tools.includes(t)), tools.join(','));
+    check('the tool picker lists the 16 tools from Fix it where you build', ['Lovable', 'Bolt.new', 'v0', 'Base44', 'Cursor', 'Claude', 'ChatGPT', 'Shopify', 'Webflow', 'Framer', 'Vercel', 'Next.js', 'React', 'Astro', 'Vue', 'Svelte'].every((t) => tools.includes(t)) && tools.length === 16, tools.join(','));
     await fixBox.locator('select').selectOption('lovable');
     const prompt = await fixBox.getByTestId('fix-text').innerText();
     await fixBox.getByRole('button', { name: /Copy prompt/ }).click(); await p.waitForTimeout(200);
