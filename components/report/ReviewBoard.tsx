@@ -254,7 +254,7 @@ function CategorySummary({ summary, onPick, locked }: { summary: PageSummary; on
   return (
     <section aria-labelledby="catsum-h" className="mt-10" data-testid="category-summary">
       <h2 id="catsum-h" className="text-3xl font-semibold tracking-tight text-ink">Categories by confirmed issues</h2>
-      <p className="mt-1 max-w-3xl text-base text-neutral-700">Highest first. Each category is scored from its built-in checks; where the evidence is not enough, it says “Couldn’t score” and why.</p>
+      <p className="mt-1 max-w-3xl text-base text-neutral-700">Highest first. Each category is scored from its built-in checks. Where the evidence is not enough, it says “Couldn’t score” and why.</p>
       <div aria-hidden className="mt-5 hidden grid-cols-[2rem_minmax(0,1fr)_8rem_7rem_7rem] gap-x-3 px-5 pb-2 text-sm font-semibold uppercase tracking-[0.1em] text-neutral-600 sm:grid"><span /><span>Category</span><span className="text-right">Score</span><span className="text-right">Issues</span><span className="text-right">Scored rules</span></div>
       <ol className="mt-2 divide-y divide-black/10 overflow-hidden rounded-[1.5rem] bg-white ring-1 ring-black/10 sm:mt-0">
         {summary.categories.map((c, i) => (
@@ -272,7 +272,7 @@ function CategorySummary({ summary, onPick, locked }: { summary: PageSummary; on
             <dl className="col-span-2 grid grid-cols-3 gap-2 sm:contents">
               <div className="sm:text-right"><dt className="text-sm text-neutral-600 sm:sr-only">Score</dt><dd className="text-lg font-semibold text-ink" data-testid="catsum-score">{c.score != null ? <>{c.score}<span className="text-neutral-500">/100</span></> : <span className="text-base text-neutral-700">{STATUS[c.status]}</span>}</dd></div>
               <div className="sm:text-right"><dt className="text-sm text-neutral-600 sm:sr-only">Confirmed issues</dt><dd className="text-lg font-semibold text-ink" data-testid="catsum-issues">{c.issues}<span className="hidden text-sm font-normal text-neutral-600 sm:inline"> issue{c.issues === 1 ? '' : 's'}</span></dd></div>
-              <div className="sm:text-right"><dt className="text-sm text-neutral-600 sm:sr-only">Scored rules</dt><dd className="text-lg font-semibold text-ink" data-testid="catsum-rules">{c.scoredRules}<span className="hidden text-sm font-normal text-neutral-600 sm:inline"> scored rule{c.scoredRules === 1 ? '' : 's'}</span></dd></div>
+              <div className="sm:text-right"><dt className="text-sm text-neutral-600 sm:sr-only">Scored rules</dt><dd className="text-lg font-semibold text-ink" data-testid="catsum-rules">{c.status === 'scored' ? <>{c.scoredRules}<span className="hidden text-sm font-normal text-neutral-600 sm:inline"> scored rule{c.scoredRules === 1 ? '' : 's'}</span></> : <span className="text-base font-normal text-neutral-600">–</span>}</dd></div>
             </dl>
           </li>))}
       </ol>

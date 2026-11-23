@@ -150,7 +150,9 @@ export function buildView(report: Report, access: View['access']): View {
       categories: rec.categories.map((c) => CAT[c] ?? c), sharedBy: Math.max(0, members.length - 1), fixes: rec.fixes, fixText: fixTextOf(rec.fixes), locked: rec.fixLocked || !rec.fixes?.length, members, evidence: [], trace: { owner: rec.owner, related: rec.related, lenses: rec.lenses, scoring: rec.scoring },
       shot: lead ? shotFor(report, lead, members, loc.split(' · ')[1] ?? 'the affected control') : null, source: lead?.sourceSection ?? null };
   }) : legacyItems(report);
-  const covered = new Set(findings.flatMap((f) => (f.canonicalId ? [f.canonicalId] : [])).concat(recs.flatMap((r) => [r.owner?.id, ...r.related.map((x) => x.id)]).filter((x): x is string => !!x)));
+  // A rule is already shown when a finding or a fix owns it. A fix's *related* rules are context only: a related rule that failed on its own
+  // check is a separate issue and is listed, so every failed check that lowers a score appears in its category.
+  const covered = new Set(findings.flatMap((f) => (f.canonicalId ? [f.canonicalId] : [])).concat(recs.map((r) => r.owner?.id).filter((x): x is string => !!x)));
   const engine = report.review?.categories.flatMap((c) => c.findings.map((f) => ({ ...f, cat: c.category }))) ?? [];
   const extra: Item[] = engine.filter((f) => f.result === 'observed_failure' && f.method === 'measured' && !covered.has(f.ruleId)).map((f, i) => ({
     id: `x-${f.findingId}`, level: lvl(f.severity), kind: 'confirmed' as const, rank: 100 + i, tier: null, blocker: false, title: firstSentence(f.observation, f.title), location: '', sentence: f.observation, categories: [ENGINE_CAT[f.cat] ?? f.cat], sharedBy: 0,

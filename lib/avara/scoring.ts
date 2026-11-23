@@ -86,7 +86,7 @@ export function scoreRecords(records: ScoreInput[], profile: CoverageProfile, he
       const reasons = [...new Set(rs.filter((r) => missing.includes(r.ruleId)).map((r) => (r.reason ?? 'unknown').replace(/_/g, ' ')))];
       return { ...base, status: 'insufficient', note: `Couldn't score: ${missing.length} admitted check${missing.length === 1 ? '' : 's'} did not run (${reasons.join(', ')}).` };
     }
-    if (!evaluatedWeight) return { ...base, status: 'insufficient', note: `Couldn't score: none of the ${eligible.length} admitted checks could be decided on this page (${[...new Set(excluded.map((x) => x.why))].join('; ')}).` };
+    if (!evaluatedWeight) return { ...base, status: 'insufficient', note: `Couldn't score: none of the ${eligible.length} admitted checks could be decided on this page (${[...new Set(excluded.map((x) => x.why))].join(' or ')}).` };
     const raw = (100 * passedWeight) / evaluatedWeight;
     return { ...base, status: 'scored', assessed: true, raw, score: Math.round(raw), note: `${scored.length} scored check${scored.length === 1 ? '' : 's'}: ${passedWeight} of ${evaluatedWeight} weight passed.` };
   });
