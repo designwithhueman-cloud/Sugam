@@ -120,7 +120,7 @@ export function ReviewPage({ report, access, mode = 'owner' }: { report: Report;
           </section>
         )}
 
-        <ReviewBoard board={v.board} domain={v.domain} locked={!!report.locked} summary={report.pageSummary ?? null} primary={
+        <ReviewBoard board={v.board} domain={v.domain} locked={!!report.locked} summary={report.pageSummary ?? null} aiReview={report.aiReview ?? null} primary={
           p ? (
           <section aria-labelledby="first-h" className="rounded-[1.75rem] bg-[#f3fbd9] p-5 ring-1 ring-black/10 sm:p-8" data-testid="primary">
             <div className="grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] md:gap-10">

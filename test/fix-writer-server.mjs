@@ -10,10 +10,10 @@ await p.goto(base + '/login'); await p.fill('input[type=email]', c.match(/Email:
 if (log) fs.writeFileSync(log, '');
 const t0 = Date.now(); const { id } = await (await ctx.request.post(base + '/api/scans', { headers: { origin: base }, data: { url: F + '/launch/unnamed-button.html', goal: 'Book a demo' } })).json();
 let done = null, fixDone = null, atDone = null;
-for (;;) { const s = await (await ctx.request.get(`${base}/api/scans/${id}`)).json(); if (s.status === 'completed' && done == null) { done = Date.now() - t0; atDone = s; } if (done != null && !s.fixPending) { fixDone = Date.now() - t0; break; } if (s.status === 'failed') break; if (Date.now() - t0 > 240000) break; await new Promise((r) => setTimeout(r, 300)); }
+for (;;) { const s = await (await ctx.request.get(`${base}/api/scans/${id}`)).json(); if (s.status === 'completed' && done == null) { done = Date.now() - t0; atDone = s; } if (done != null && !s.fixPending && fixDone == null) fixDone = Date.now() - t0; if (fixDone != null && !s.aiPending) break; if (s.status === 'failed') break; if (Date.now() - t0 > 240000) break; await new Promise((r) => setTimeout(r, 300)); }
 check('the report completed', done != null, `report ${(done / 1000).toFixed(1)} s, fix wording settled ${(fixDone / 1000).toFixed(1)} s`);
 if (mode !== 'off') check('the report did not wait for the fix writer (it was still pending when the report completed)', atDone?.fixPending === true);
-const html = await (await ctx.request.get(`${base}/scans/${id}`)).text(); const unesc = html.replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\u0026/g, '&');
+const html = await (await ctx.request.get(`${base}/scans/${id}`)).text(); const unesc = html.replace(/\\\\n/g, '\n').replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\u0026/g, '&');
 const prompts = [...unesc.matchAll(/In Lovable chat, paste:\n\n([\s\S]*?)"/g)].map((m) => m[1]); const named = prompts.filter((x) => /button/i.test(x) && /name/i.test(x));
 const stubbed = prompts.filter((x) => /Stub \(copy-tone\)/.test(x));
 if (mode === 'ok') {

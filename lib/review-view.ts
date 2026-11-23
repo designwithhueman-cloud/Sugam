@@ -16,6 +16,8 @@ export type Item = {
   title: string; location: string; sentence: string; categories: string[]; sharedBy: number; fixes: AvaraFix[] | null; fixText: string | null; locked: boolean;
   members: AvaraFinding[]; shot: Shot | null; evidence: string[]; source: string | null;
   issueId?: string; level: Level;
+  /** Paid AI review: the criterion's grade, when this item comes from it. */
+  aiGrade?: 'met' | 'partly_met' | 'unmet' | 'insufficient_evidence';
   trace: { owner: AvaraRecommendation['owner']; related: AvaraRecommendation['related']; lenses: AvaraRecommendation['lenses']; scoring: AvaraRecommendation['scoring'] } | null;
 };
 export type Level = 'critical' | 'high' | 'medium' | 'review';
@@ -44,7 +46,9 @@ export type View = {
 const CAT: Record<string, string> = { accessibility: 'Accessibility', mobile: 'Mobile', ux_workflow: 'UX and workflow', performance: 'Performance' };
 export const ENGINE_CAT: Record<string, string> = { 'Product Clarity': 'Product clarity', 'UX & Workflow Quality': 'UX and workflow', 'Mobile Responsiveness': 'Mobile', Accessibility: 'Accessibility', 'Trust & Credibility': 'Trust', 'Design & Brand Quality': 'Design', 'Conversion Readiness': 'Conversion', Performance: 'Performance', 'Differentiation & Design Maturity': 'Differentiation' };
 const LEVEL = { fix_immediately: 'critical', fix_before_launch: 'high', improve_later: 'medium' } as const;
-const lvl = (s: string): Level => (/crit/i.test(s) ? 'critical' : /high|major|serious/i.test(s) ? 'high' : 'medium');
+// Critical is reserved for a measured blocker that stops the main task (a ranked fix in tier fix_immediately). Anything else, however severe its
+// rule, is at most "Before launch".
+const lvl = (s: string): Level => (/crit|high|major|serious/i.test(s) ? 'high' : 'medium');
 const SEV = { critical: 0, serious: 1, moderate: 2, minor: 3 } as const;
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const strip = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -127,7 +131,7 @@ function legacyItems(report: Report): Item[] {
     const role = /^<button/i.test(html) ? 'button' : /^<a[\s>]/i.test(html) ? 'link' : /^<img/i.test(html) ? 'image' : /^<(input|select|textarea)/i.test(html) ? 'field' : 'element';
     const location = [deviceLabel(report, viewport), name ? `${q(name)} ${role}` : inst?.selector ?? '', i.instanceCount > 1 ? `and ${i.instanceCount - 1} more like it` : ''].filter(Boolean).join(' · ');
     const f = i.fixes; const fixes: AvaraFix[] | null = f ? [...(['lovable', 'bolt', 'v0', 'cursor'] as const).map((t) => ({ tool: t, kind: 'prompt', content: f.aiPrompt[t] })), { tool: 'framer', kind: 'steps', content: f.noCode.framer.join('\n') }, { tool: 'webflow', kind: 'steps', content: f.noCode.webflow.join('\n') }, { tool: 'code', kind: 'patch', content: JSON.stringify(f.code) }] : null;
-    return { id: `i-${i.id}`, level: i.severity === 'critical' ? 'critical' : i.severity === 'serious' ? 'high' : 'medium', issueId: i.id, kind: 'fix', rank: n + 1, tier: i.severity === 'critical' ? 'fix_immediately' : i.severity === 'serious' ? 'fix_before_launch' : 'improve_later', blocker: false, title: plainTitle(i.ruleId, i.title), location, sentence: affectsSentence(i.impactGroups),
+    return { id: `i-${i.id}`, level: i.severity === 'critical' || i.severity === 'serious' ? 'high' : 'medium', issueId: i.id, kind: 'fix', rank: n + 1, tier: i.severity === 'critical' || i.severity === 'serious' ? 'fix_before_launch' : 'improve_later', blocker: false, title: plainTitle(i.ruleId, i.title), location, sentence: affectsSentence(i.impactGroups),
       categories: ['Accessibility'], sharedBy: 0, fixes, fixText: null, locked: !fixes, members: [], evidence: i.instances.slice(0, 3).map((x) => `${x.selector}  ${x.html}`), source: i.wcag.map((w) => `WCAG ${w.sc}`).join(', ') || null, trace: null,
       shot: shotAt(report, viewport, box, null, `${name ? q(name) : 'the element'}`) } as Item;
   });
@@ -139,6 +143,13 @@ function leadOf(rec: AvaraRecommendation, findings: AvaraFinding[]) {
   return { lead, members };
 }
 const fixTextOf = (fixes: AvaraFix[] | null) => fixes?.find((f) => f.tool === 'cursor' || f.kind === 'prompt')?.content ?? null;
+
+/** A fix for every tool from a graded AI criterion: the grounded evidence is the Element, the recommendation is the Change. */
+function aiFix(x: import('./avara/ai-review.ts').AiItem): AvaraFix[] {
+  const g = x.grounding; const at = g?.kind === 'quote' && g.quote ? `“${g.quote.slice(0, 140)}”` : g?.kind === 'measurement' && g.measurement ? `the part of the page measured as ${g.measurement.slice(0, 140)}` : g?.region ? `the area at ${Math.round(g.region.x)},${Math.round(g.region.y)} (${Math.round(g.region.width)}×${Math.round(g.region.height)}px) of the ${g.region.viewport === 'desktop' ? 'desktop (1280px wide)' : 'phone (390px wide)'} view` : 'the page';
+  const body = `Element: ${at}. ${x.observation}\nChange: ${x.recommendation.replace(/\s+$/, '')}${/Change nothing else\.?$/.test(x.recommendation) ? '' : ' Change nothing else.'}\nVerify: Rescan: Avara reviews “${x.title}” again and marks it met only when the page shows the change.`;
+  return [{ tool: 'lovable', kind: 'prompt', content: `In Lovable chat, paste:\n\n${body}` }];
+}
 
 export function buildView(report: Report, access: View['access']): View {
   const av = report.avara; const url = (() => { try { return new URL(report.finalUrl || report.url); } catch { return null; } })();
@@ -157,9 +168,13 @@ export function buildView(report: Report, access: View['access']): View {
   const extra: Item[] = engine.filter((f) => f.result === 'observed_failure' && f.method === 'measured' && !covered.has(f.ruleId)).map((f, i) => ({
     id: `x-${f.findingId}`, level: lvl(f.severity), kind: 'confirmed' as const, rank: 100 + i, tier: null, blocker: false, title: firstSentence(f.observation, f.title), location: '', sentence: f.observation, categories: [ENGINE_CAT[f.cat] ?? f.cat], sharedBy: 0,
     fixes: null, fixText: f.recommendation || null, locked: !f.recommendation, members: [], shot: null, evidence: f.evidence, source: f.source, trace: null }));
-  const advisory: Item[] = engine.filter((f) => f.result === 'needs_human_review' && f.severity !== 'info' && !covered.has(f.ruleId)).map((f, i) => ({
+  // Paid AI review: an unmet or partly met criterion becomes an actionable item with a fix for every tool, built once from the model's
+  // grounded recommendation (switching tools in the report makes no further call). Unmet before partly met, then by weight.
+  const ai = new Map((report.aiReview?.categories ?? []).flatMap((c) => c.items).filter((x) => (x.grade === 'unmet' || x.grade === 'partly_met') && x.recommendation).map((x, n) => [x.ruleId, { x, n }] as const));
+  const aiOrder = (id: string) => ai.get(id)?.n ?? 9999;
+  const advisory: Item[] = engine.filter((f) => f.result === 'needs_human_review' && f.severity !== 'info' && !covered.has(f.ruleId)).sort((a, b) => aiOrder(a.ruleId) - aiOrder(b.ruleId)).map((f, i) => ({
     id: `r-${f.findingId}`, level: 'review' as const, kind: 'review' as const, rank: 200 + i, tier: null, blocker: false, title: firstSentence(f.observation, f.title), location: '', sentence: `Worth a look: ${f.observation.charAt(0).toLowerCase()}${f.observation.slice(1)}`, categories: [ENGINE_CAT[f.cat] ?? f.cat], sharedBy: 0,
-    fixes: null, fixText: f.recommendation || null, locked: !f.recommendation, members: [], shot: null, evidence: f.evidence, source: f.source, trace: null }));
+    fixes: ai.has(f.ruleId) ? aiFix(ai.get(f.ruleId)!.x) : null, fixText: f.recommendation || null, locked: !ai.has(f.ruleId) && !f.recommendation, members: [], shot: null, evidence: f.evidence, source: f.source, trace: null, aiGrade: ai.get(f.ruleId)?.x.grade }));
   const primary = items[0] ?? null; const others = [...items.slice(1), ...extra, ...advisory];
   const linked = new Set([...findings.map((f) => f.issueId), ...items.map((i) => i.issueId)].filter(Boolean)); const more = report.issues.filter((i) => i.bucket === 'confirmed_failure' && !linked.has(i.id)).sort((a, b) => SEV[a.severity] - SEV[b.severity]);
   const categories = [...new Set([...(primary ? primary.categories : []), ...others.flatMap((o) => o.categories)])];

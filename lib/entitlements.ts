@@ -49,5 +49,6 @@ export function redactReport(r: Report): Report {
     viewports: r.viewports.map((v) => ({ ...v, screenshotUrl: '' })),
     issues: top ? [{ ...top, instances: top.instances.slice(0, FREE_ELEMENTS).map((x) => ({ ...x, boxes: [] })) }] : [],
     review: r.review ? { ...r.review, categories: r.review.categories.map((c) => ({ ...c, findings: [] })) } : r.review,
+    aiReview: null,   // the AI review is a paid feature
   };
 }

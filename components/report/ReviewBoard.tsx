@@ -3,10 +3,11 @@
 // category, an issue or a pin updates all of them together. Rows arrive already rendered by the server (so plan gating and redaction are untouched); this file
 // only filters, numbers and positions them. Scores are the rule engine's own provisional numbers, shown with their coverage; nothing is calculated here.
 import * as React from 'react';
-import { MapPin, Lock } from 'lucide-react';
+import { MapPin, Lock, Sparkles } from 'lucide-react';
 import type { Board, Level } from '@/lib/review-view.ts';
 import type { ViewportId } from '@/lib/report-types.ts';
 import type { PageSummary } from '@/lib/page-summary.ts';
+import type { AiReview } from '@/lib/avara/ai-review.ts';
 import { reasonLabel, remedyFor } from '@/lib/coverage-copy.ts';
 
 export type BoardItem = {
@@ -250,11 +251,12 @@ function LockedFindings({ summary }: { summary: PageSummary }) {
   );
 }
 
-function CategorySummary({ summary, onPick, locked }: { summary: PageSummary; onPick: (boardLabel: string) => void; locked: boolean }) {
+function CategorySummary({ summary, onPick, locked, aiReview }: { summary: PageSummary; onPick: (boardLabel: string) => void; locked: boolean; aiReview?: AiReview | null }) {
+  const aiOf = new Map((aiReview?.categories ?? []).map((c) => [c.category, c]));
   return (
     <section aria-labelledby="catsum-h" className="mt-10" data-testid="category-summary">
       <h2 id="catsum-h" className="text-3xl font-semibold tracking-tight text-ink">Categories by confirmed issues</h2>
-      <p className="mt-1 max-w-3xl text-base text-neutral-700">Highest first. Each category is scored from its built-in checks. Where the evidence is not enough, it says “Couldn’t score” and why.</p>
+      <p className="mt-1 text-base text-neutral-700">Highest first. Each category is scored from its built-in checks. Where the evidence is not enough, it says “Couldn’t score” and why.{aiReview ? ' The AI review rates each category separately and never changes the score.' : locked ? ' Creator and Agency add an AI-assisted review of every category.' : ''}</p>
       <div aria-hidden className="mt-5 hidden grid-cols-[2rem_minmax(0,1fr)_8rem_7rem_7rem] gap-x-3 px-5 pb-2 text-sm font-semibold uppercase tracking-[0.1em] text-neutral-600 sm:grid"><span /><span>Category</span><span className="text-right">Score</span><span className="text-right">Issues</span><span className="text-right">Scored rules</span></div>
       <ol className="mt-2 divide-y divide-black/10 overflow-hidden rounded-[1.5rem] bg-white ring-1 ring-black/10 sm:mt-0">
         {summary.categories.map((c, i) => (
@@ -263,6 +265,7 @@ function CategorySummary({ summary, onPick, locked }: { summary: PageSummary; on
             <div className="min-w-0">
               <p className="text-lg font-semibold text-ink">{c.label}</p>
               {c.status !== 'scored' && <p className="text-sm text-neutral-700 [overflow-wrap:anywhere]" data-testid="catsum-reason">{c.note}</p>}
+              {aiOf.get(c.label) && (() => { const a = aiOf.get(c.label)!; return <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-sm text-[#432099]" data-testid="catsum-ai"><Sparkles aria-hidden className="size-3.5" /><span className="font-semibold">AI review: {a.rating != null ? `${a.rating}/100` : 'not enough evidence'}</span><span className="text-neutral-700">{a.decided} criteria judged{a.insufficient ? `, ${a.insufficient} without enough evidence` : ''}. Separate from the score.</span></p>; })()}
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-base">
                 {locked && (['critical', 'high', 'medium', 'review'] as Level[]).filter((k) => c.severity[k] > 0).map((k) => <span key={k} className={`rounded-full px-2.5 py-0.5 text-sm font-semibold ${LEVELS[k].chip}`}>{c.severity[k]} {LEVELS[k].label}</span>)}
                 {!locked && c.issues > 0 && <button type="button" onClick={() => onPick(c.boardLabel)} className="font-semibold text-[#5b2fd0] underline underline-offset-4 hover:text-[#432099]">Show {c.label} issues</button>}
@@ -280,7 +283,7 @@ function CategorySummary({ summary, onPick, locked }: { summary: PageSummary; on
   );
 }
 
-export function ReviewBoard({ board, primary, lead, items, shots, locked, domain, summary }: { board: Board; primary: React.ReactNode; lead: BoardItem | null; items: BoardItem[]; shots: Shot[]; locked: boolean; domain: string; summary?: PageSummary | null }) {
+export function ReviewBoard({ board, primary, lead, items, shots, locked, domain, summary, aiReview }: { board: Board; primary: React.ReactNode; lead: BoardItem | null; items: BoardItem[]; shots: Shot[]; locked: boolean; domain: string; summary?: PageSummary | null; aiReview?: AiReview | null }) {
   const [cat, setCat] = React.useState<string | null>(null); const [lvl, setLvl] = React.useState<Level | null>(null); const [activeId, setActive] = React.useState<string | null>(null);
   const shown = items.filter((i) => (!cat || i.categories.includes(cat)) && (!lvl || i.level === lvl));
   const leadShown = lead && (!cat || lead.categories.includes(cat)) && (!lvl || lead.level === lvl) ? lead : null; const total = shown.length + (leadShown ? 1 : 0);
@@ -328,7 +331,7 @@ export function ReviewBoard({ board, primary, lead, items, shots, locked, domain
 
       <div className="mt-6">{primary}</div>
 
-      {summary && <CategorySummary summary={summary} locked={locked} onPick={(label) => { setCat(label); document.getElementById('issues-h')?.scrollIntoView({ block: 'start' }); }} />}
+      {summary && <CategorySummary summary={summary} locked={locked} aiReview={aiReview} onPick={(label) => { setCat(label); document.getElementById('issues-h')?.scrollIntoView({ block: 'start' }); }} />}
       {locked && summary ? <LockedFindings summary={summary} /> : <>
 
       <section aria-labelledby="issues-h" className="mt-12" data-testid="others">

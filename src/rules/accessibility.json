@@ -743,6 +743,117 @@
       "sourceStatus": "passage-verified",
       "evaluationPrompt": "Interpret the measured evidence for \"Color Independence\". SC 1.4.1. Check whether meaning conveyed by colour also has an effective alternative cue. Do not guess beyond the measurements supplied.",
       "valueTier": 2
+    },
+    {
+      "ruleId": "A11Y-021",
+      "version": "1.0.0-draft",
+      "category": "Accessibility",
+      "title": "Text Alternatives Serve The Same Purpose",
+      "description": "For images that have alternative text, judge whether the text serves the same purpose as the image in context (not just that it exists). Quote the alt text and describe the image region.",
+      "source": "W3C WCAG 2.2",
+      "sourceType": "standard",
+      "sourceUrl": "https://www.w3.org/TR/WCAG22/#non-text-content",
+      "sourceKey": "W",
+      "sourceSection": "SC 1.1.1 Non-text Content",
+      "severity": "medium",
+      "weight": 6,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "For images that have alternative text, judge whether the text serves the same purpose as the image in context (not just that it exists). Quote the alt text and describe the image region. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Rewrite the alt text so it serves the same purpose as the image: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.w3.org/TR/WCAG22/#non-text-content",
+        "section": "SC 1.1.1 Non-text Content",
+        "sectionVerified": true,
+        "applicability": "Images with non-empty alt text.",
+        "evidence": [
+          "quote",
+          "region"
+        ],
+        "exceptions": [
+          "Decorative images with empty alt are correct and out of scope.",
+          "Presence of alt text is measured by A11Y-002; this judges its quality only."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ],
+        "act": {
+          "index": "https://www.w3.org/WAI/standards-guidelines/act/rules/",
+          "note": "ACT rules test that an accessible name exists; whether it serves the purpose needs judgement."
+        }
+      },
+      "userImpact": "People who use screen readers get a description that does not match what sighted visitors see.",
+      "businessImpact": "Excluded visitors cannot act on the content. This is a hypothesis about impact.",
+      "requiredEvidence": [
+        "an exact quote from the page",
+        "a screenshot region"
+      ]
+    },
+    {
+      "ruleId": "A11Y-022",
+      "version": "1.0.0-draft",
+      "category": "Accessibility",
+      "title": "Headings And Labels Describe Their Purpose",
+      "description": "Judge whether headings describe the content below them and labels describe their field. Quote the heading or label.",
+      "source": "W3C WCAG 2.2",
+      "sourceType": "standard",
+      "sourceUrl": "https://www.w3.org/TR/WCAG22/#headings-and-labels",
+      "sourceKey": "W",
+      "sourceSection": "SC 2.4.6 Headings and Labels",
+      "severity": "medium",
+      "weight": 6,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Judge whether headings describe the content below them and labels describe their field. Quote the heading or label. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Rewrite the heading or label so it says what follows: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "passage-unverified",
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.w3.org/TR/WCAG22/#headings-and-labels",
+        "section": "SC 2.4.6 Headings and Labels",
+        "sectionVerified": false,
+        "applicability": "Pages with headings or labelled fields.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Heading order and presence are measured by A11Y-007."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      },
+      "userImpact": "People who scan headings or labels cannot tell what each section or field is for.",
+      "businessImpact": "Visitors may miss content they need. This is a hypothesis about impact.",
+      "requiredEvidence": [
+        "an exact quote from the page"
+      ]
     }
   ]
 }

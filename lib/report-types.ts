@@ -59,4 +59,6 @@ export type Report = {
   launch?: import('./launch/view.ts').LaunchReport;
   /** Score, totals and first fix (lib/page-summary.ts), computed before plan redaction: identical on Free and Paid. */
   pageSummary?: import('./page-summary.ts').PageSummary;
+  /** Paid plans: the graded AI review per category (never part of the automated score). Absent on Free. */
+  aiReview?: import('./avara/ai-review.ts').AiReview | null;
 };

@@ -2,11 +2,14 @@
 import crypto from 'node:crypto';
 import { schema } from '../../../lib/db/index.ts';
 import type { ReviewResult, Rule } from '../../engines/rule-engine/RuleTypes.ts';
+import { putObject } from '../../../lib/storage.ts';
 
 type Tx = { insert: (t: unknown) => { values: (v: unknown) => Promise<unknown> & { onConflictDoNothing: () => Promise<unknown> } } };
 const chunk = <T,>(rows: T[], n = 300) => Array.from({ length: Math.ceil(rows.length / n) }, (_, i) => rows.slice(i * n, (i + 1) * n));
 
 export async function saveReview(tx: unknown, scanId: string, productId: string | null, review: ReviewResult, rules: Rule[]) {
+  // The graded AI review (paid plans) is kept beside the scan as one JSON document; the report reads it for paid plans only.
+  if (review.aiReview) await putObject(`scans/${scanId}/ai-review.json`, JSON.stringify(review.aiReview));
   const t = tx as Tx;
   // Every rule the review loaded is snapshotted, not only the ones that produced a finding, so the scan's rule set can be rebuilt later.
   const snap = rules.map((r) => ({ ruleId: r.ruleId, version: r.version ?? '1', category: r.category, enabled: r.enabled, definition: r as unknown as Record<string, unknown> }));

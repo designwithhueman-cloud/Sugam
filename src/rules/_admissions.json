@@ -302,7 +302,7 @@
     {
       "ruleId": "DESIGN-001",
       "version": "1.0.0-draft",
-      "definitionHash": "983a4a115f6f69ac",
+      "definitionHash": "9bcac1719929318d",
       "kind": "avara-guidance",
       "passages": [],
       "guidance": {
@@ -902,7 +902,7 @@
     {
       "ruleId": "TRUST-002",
       "version": "1.0.0-draft",
-      "definitionHash": "c0ad57c576d4ba7d",
+      "definitionHash": "7e79bf7400c3ec76",
       "kind": "avara-guidance",
       "passages": [],
       "guidance": {
@@ -927,7 +927,7 @@
     {
       "ruleId": "TRUST-003",
       "version": "1.0.0-draft",
-      "definitionHash": "35c77cac9bf3175d",
+      "definitionHash": "01d15d4a0f710844",
       "kind": "avara-guidance",
       "passages": [],
       "guidance": {

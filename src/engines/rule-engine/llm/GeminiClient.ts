@@ -6,7 +6,11 @@
 import { z } from 'zod';
 import type { LlmClient, LlmVerdict, WebsiteContext } from '../RuleTypes.ts';
 
-const Verdicts = z.object({ verdicts: z.array(z.object({ ruleId: z.string(), result: z.enum(['pass', 'fail', 'inconclusive', 'not_applicable']), observation: z.string(), evidence: z.array(z.string()), confidence: z.number() })) });
+// The graded review (paid plans): met, partly met, unmet or insufficient evidence per criterion, grounded in an exact quote, a screenshot region
+// or a browser measurement from the context, with one recommendation. result/evidence stay for the engine's existing rules.
+const Grounding = z.object({ kind: z.enum(['quote', 'region', 'measurement']), quote: z.string().optional(), measurement: z.string().optional(), region: z.object({ viewport: z.string(), x: z.number(), y: z.number(), width: z.number(), height: z.number() }).optional() });
+const Verdicts = z.object({ verdicts: z.array(z.object({ ruleId: z.string(), result: z.enum(['pass', 'fail', 'inconclusive', 'not_applicable']), observation: z.string(), evidence: z.array(z.string()), confidence: z.number(),
+  grade: z.enum(['met', 'partly_met', 'unmet', 'insufficient_evidence']).optional(), grounding: Grounding.optional(), recommendation: z.string().optional() })) });
 const Impacts = z.object({ impacts: z.array(z.object({ ruleId: z.string(), userImpact: z.string(), businessImpact: z.string() })) });
 const schemaOf = (s: z.ZodType) => { const { $schema: _drop, ...rest } = z.toJSONSchema(s) as Record<string, unknown>; return rest; };
 const VERDICTS_SCHEMA = schemaOf(Verdicts); const IMPACTS_SCHEMA = schemaOf(Impacts);
@@ -31,9 +35,10 @@ interface GenerateResponse {
 }
 
 // The engine runs every category at once; the free tier allows only a few requests a minute, so calls go out two at a time.
+// The fix writer's single call goes to the front of the line (first), so it is not starved by the review's per-category calls.
 let active = 0; const waiting: (() => void)[] = [];
-export async function limited<T>(fn: () => Promise<T>): Promise<T> {
-  if (active >= 2) await new Promise<void>((r) => waiting.push(r));
+export async function limited<T>(fn: () => Promise<T>, first = false): Promise<T> {
+  if (active >= 2) await new Promise<void>((r) => (first ? waiting.unshift(r) : waiting.push(r)));
   active++;
   try { return await fn(); } finally { active--; waiting.shift()?.(); }
 }

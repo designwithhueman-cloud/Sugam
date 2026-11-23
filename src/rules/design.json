@@ -34,7 +34,25 @@
       "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://m3.material.io/styles/typography/applying-type",
+        "section": "Applying type (type roles)",
+        "sectionVerified": false,
+        "applicability": "Compare heading, supporting text and action emphasis within one task.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "DESIGN-002",
@@ -76,7 +94,25 @@
       "coverageSources": [
         "nextlevelbuilder/ui-ux-pro-max-skill@2de1134dc4d1",
         "wwewtech/anti-slop-design@071fd3c40a57"
-      ]
+      ],
+      "criterion": {
+        "sourceUrl": "https://m3.material.io/styles/typography/applying-type",
+        "section": "Applying type (type roles)",
+        "sectionVerified": false,
+        "applicability": "Compare equivalent text roles with the approved design system.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "DESIGN-003",
@@ -108,7 +144,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 4
+      "valueTier": 4,
+      "criterion": {
+        "sourceUrl": "https://m3.material.io/styles/typography/applying-type",
+        "section": "Applying type (type roles)",
+        "sectionVerified": false,
+        "applicability": "Inspect a specific legibility or brand conflict.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Font count and taste alone do not qualify."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "DESIGN-004",
@@ -217,7 +271,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://m3.material.io/styles/typography/applying-type",
+        "section": "Applying type (type roles)",
+        "sectionVerified": false,
+        "applicability": "Compare equivalent semantic tokens and uses.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Contrast failures have a separate owner."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "DESIGN-007",
@@ -249,7 +321,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 4
+      "valueTier": 4,
+      "criterion": {
+        "sourceUrl": "https://m3.material.io/styles/typography/applying-type",
+        "section": "Applying type (type roles)",
+        "sectionVerified": false,
+        "applicability": "Record a colour collision that obscures meaning.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "DESIGN-008",
@@ -315,7 +405,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-4-consistency-and-standards-4",
+        "section": "4: Consistency and Standards",
+        "sectionVerified": true,
+        "applicability": "Compare repeated regions against an established pattern across observed pages or states.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "DESIGN-010",
@@ -392,7 +500,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-4-consistency-and-standards-4",
+        "section": "4: Consistency and Standards",
+        "sectionVerified": true,
+        "applicability": "Compare the meaning and representation of the same action.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "DESIGN-012",
@@ -424,7 +550,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-4-consistency-and-standards-4",
+        "section": "4: Consistency and Standards",
+        "sectionVerified": true,
+        "applicability": "Check supplied brand references; mark unknown when required references are unavailable.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Check supplied brand references; mark unknown when required references are unavailable."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "DESIGN-013",
@@ -524,7 +668,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 4
+      "valueTier": 4,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-4-consistency-and-standards-4",
+        "section": "4: Consistency and Standards",
+        "sectionVerified": true,
+        "applicability": "Identify a specific alignment or weight issue affecting comprehension.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Aesthetic preference stays advisory."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     }
   ]
 }

@@ -15,13 +15,13 @@ const ctxOf = (o = {}) => ({ url: 'https://example.test/', goal: 'Join the waitl
 // ---- loading ----
 cp(); const L = new RuleLoader(tmp);
 const all = L.loadAllRules();
-check('loads 135 rules (125 canonical + 10 DIFF) from the JSON files, in 9 categories, with no problems', all.length === 135 && L.manifest.categories.length === 9 && L.issues.length === 0 && L.manifest.categories.reduce((n, c) => n + c.weight, 0) === 100);
+check('loads 145 rules (135 + 10 paid-review criteria) from the JSON files, in 9 categories, with no problems', all.length === 145 && L.manifest.categories.length === 9 && L.issues.length === 0 && L.manifest.categories.reduce((n, c) => n + c.weight, 0) === 100);
 check('loadCategoryRules and getRuleById read the same data', L.loadCategoryRules('Trust & Credibility').length === 15 && L.getRuleById('TRUST-001').title === 'Contact Information Visibility' && L.getRuleById('NOPE-1') === undefined);
 check('every rule has the schema fields', all.every((r) => ['ruleId', 'category', 'title', 'description', 'source', 'sourceType', 'sourceUrl', 'severity', 'weight', 'evaluationPrompt', 'recommendationTemplate', 'enabled'].every((k) => r[k] !== undefined)));
 // ---- validation ----
 const d = readJ('trust.json'); d.rules.push({ ruleId: 'BAD-1', category: 'Trust & Credibility', title: '', weight: 500, severity: 'urgent', enabled: 'yes' }, { ...d.rules[0] }); writeJ('trust.json', d);
 const L2 = new RuleLoader(tmp);
-check('bad rules are reported and skipped; duplicates are rejected; the rest still load', L2.loadAllRules().length === 135 && L2.issues.some((i) => /BAD-1/.test(i)) && L2.issues.some((i) => /duplicate ruleId/.test(i)));
+check('bad rules are reported and skipped; duplicates are rejected; the rest still load', L2.loadAllRules().length === 145 && L2.issues.some((i) => /BAD-1/.test(i)) && L2.issues.some((i) => /duplicate ruleId/.test(i)));
 check('validateRule names what is wrong', validateRule({ ruleId: 'X' }, new Set(['A'])).errors.length >= 8);
 // ---- hot reload and growth ----
 cp(); const L3 = new RuleLoader(tmp); const before = L3.getRuleById('TRUST-001').title;
@@ -30,9 +30,9 @@ await new Promise((r) => setTimeout(r, 15)); fs.utimesSync(path.join(tmp, 'trust
 check('hot reload: editing the JSON changes the rule on the next call, with no restart', before !== L3.getRuleById('TRUST-001').title && L3.getRuleById('TRUST-001').title.includes('edited'));
 const extra = { schemaVersion: 1, category: 'Trust & Credibility', rules: Array.from({ length: 1000 }, (_, i) => ({ ...readJ('trust.json').rules[1], ruleId: `TRUST-X${i}`, title: `Extra trust rule ${i}`, mode: 'H', evaluator: { type: 'llm' }, evaluationPrompt: `Check extra item ${i}.`, weight: 3 })) };
 writeJ('trust-extra.json', extra); const t0 = Date.now();
-check('1,000 more rules are added by dropping one JSON file in; nothing else changes', L3.loadAllRules().length === 1135 && L3.loadCategoryRules('Trust & Credibility').length === 1015, `${Date.now() - t0} ms`);
+check('1,000 more rules are added by dropping one JSON file in; nothing else changes', L3.loadAllRules().length === 1145 && L3.loadCategoryRules('Trust & Credibility').length === 1015, `${Date.now() - t0} ms`);
 const dis = readJ('trust-extra.json'); dis.rules.forEach((r, i) => { r.enabled = i < 10; }); writeJ('trust-extra.json', dis); fs.utimesSync(path.join(tmp, 'trust-extra.json'), new Date(), new Date(Date.now() + 9000));
-check('"enabled": false removes a rule from the run', L3.loadAllRules().length === 145);
+check('"enabled": false removes a rule from the run', L3.loadAllRules().length === 155);
 
 // ---- evaluation: rules reach the model as data, per category, in batches ----
 cp(); const L4 = new RuleLoader(tmp); const calls = []; const interprets = [];
@@ -40,13 +40,13 @@ const stub = (verdict) => ({ model: 'stub-model', async evaluate(i) { calls.push
 let rev = await new RuleEngine(L4, stub((r) => ({ ruleId: r.ruleId, result: 'pass', observation: 'ok', evidence: ['Join the waitlist'], confidence: 0.95 }))).review(ctxOf());
 const cats = new Set(calls.map((c) => c.rules.map((r) => L4.getRuleById(r.ruleId).category)).map((a) => [...new Set(a)].join('|')));
 check('each model call carries rules from ONE category only', [...cats].every((c) => !c.includes('|')) && calls.length > 0, `${calls.length} calls`);
-check('the model is handed each rule\'s own evaluationPrompt from the JSON, and the system prompt names no rule', calls.every((c) => c.rules.every((r) => r.evaluationPrompt === L4.getRuleById(r.ruleId).evaluationPrompt)) && !L4.loadAllRules().some((r) => SYSTEM_PROMPT.includes(r.title)));
-check('the Accessibility and Performance evaluators ask the model nothing: measurements answer first', !calls.some((c) => c.rules.some((r) => ['Accessibility', 'Performance'].includes(L4.getRuleById(r.ruleId).category))));
+check('the model is handed each rule\'s own evaluationPrompt from the JSON, and the system prompt names no rule', calls.every((c) => c.rules.every((r) => r.evaluationPrompt.startsWith(L4.getRuleById(r.ruleId).evaluationPrompt))) && !L4.loadAllRules().some((r) => SYSTEM_PROMPT.includes(r.title)));
+check('Accessibility and Performance send the model only their judgement criteria (A11Y-021/022, PERF-011): measured rules are never sent', calls.flatMap((c) => c.rules).filter((r) => ['Accessibility', 'Performance'].includes(L4.getRuleById(r.ruleId).category)).every((r) => L4.getRuleById(r.ruleId).evaluator?.type === 'llm'));
 check('AI-assisted passes carry capped confidence', rev.categories.flatMap((c) => c.findings).filter((f) => f.method === 'ai_assisted').every((f) => f.confidence <= 0.7));
 // editing the JSON changes what the model is asked
 const pc = readJ('product-clarity.json'); pc.rules.find((r) => r.ruleId === 'PC-014').evaluationPrompt = 'CUSTOM PROMPT FROM JSON'; writeJ('product-clarity.json', pc); fs.utimesSync(path.join(tmp, 'product-clarity.json'), new Date(), new Date(Date.now() + 20000));
 calls.length = 0; await new RuleEngine(L4, stub((r) => ({ ruleId: r.ruleId, result: 'pass', observation: 'ok', evidence: [], confidence: 0.5 }))).review(ctxOf());
-check('changing a rule\'s prompt in JSON changes the next review, with no code change', calls.some((c) => c.rules.some((r) => r.evaluationPrompt === 'CUSTOM PROMPT FROM JSON')));
+check('changing a rule\'s prompt in JSON changes the next review, with no code change', calls.some((c) => c.rules.some((r) => r.evaluationPrompt.startsWith('CUSTOM PROMPT FROM JSON'))));
 // evidence must exist in the page
 cp(); const L5 = new RuleLoader(tmp);
 rev = await new RuleEngine(L5, stub((r) => ({ ruleId: r.ruleId, result: 'fail', observation: 'bad', evidence: ['words that are not on the page'], confidence: 0.99 }))).review(ctxOf());
@@ -58,7 +58,7 @@ check('a model alone never confirms a failure: a quoted AI failure becomes "need
 // no model configured
 rev = await new RuleEngine(L5, null).review(ctxOf());
 const pc3 = rev.categories.find((c) => c.category === 'Product Clarity');
-check('without a model, judgement rules are "not run" (said so), never guessed', pc3.counts.not_run === 15 && pc3.score === null && /No AI model/.test(rev.ai.reason ?? '') && rev.ai.used === false);
+check('without a model, judgement rules are "not run" (said so), never guessed', pc3.counts.not_run === 17 && pc3.score === null && /No AI model/.test(rev.ai.reason ?? '') && rev.ai.used === false);
 // ---- detectors first ----
 const hit = (bucket, summary) => ({ ran: true, hits: [{ bucket, title: 't', summary, evidence: ['#book  <button>'] }] });
 rev = await new RuleEngine(L5, null).review(ctxOf({ detectors: { 'color-contrast': hit('confirmed_failure', 'Text is too faint on 3 elements.'), 'mobile/sticky-ui-interference': hit('confirmed_failure', 'A fixed banner covers the button.'), 'perf/lcp': { ran: true, hits: [] }, 'perf/cls': { ran: false, hits: [] } } }));
@@ -104,7 +104,7 @@ const mkScan = async (n, convFail, clarityFail) => {
 };
 const ids = []; for (let i = 0; i < 6; i++) ids.push(await mkScan(i, true, i < 5));
 const stored = await db.select().from(schema.categoryScores); const sr = await db.select().from(schema.scanResults); const rf = await db.select().from(schema.ruleFindings); const ev = await db.select().from(schema.ruleEvidence); const kn = await db.select().from(schema.knowledge); const rl = await db.select().from(schema.rulesTable);
-check('a review is stored: category scores, overall result, findings, evidence, knowledge and a snapshot of the rules used', stored.length === 6 * 9 && sr.length === 6 && rf.length > 100 && ev.length > 0 && kn.length > 0 && rl.length > 30 && rl.length < 136, `${rf.length} findings, ${ev.length} evidence, ${kn.length} knowledge, ${rl.length} rule snapshots`);
+check('a review is stored: category scores, overall result, findings, evidence, knowledge and a snapshot of the rules used', stored.length === 6 * 9 && sr.length === 6 && rf.length > 100 && ev.length > 0 && kn.length > 0 && rl.length > 30 && rl.length < 146, `${rf.length} findings, ${ev.length} evidence, ${kn.length} knowledge, ${rl.length} rule snapshots`);
 const pats = await detectPatterns({ low: 60, minSupport: 5 });
 const p1 = pats.find((p) => p.lowCategory === 'Mobile Responsiveness' && p.ruleId === 'PC-014');
 check('pattern detection states only what the stored scans show: 5 of 6 low-Mobile sites also had PC-014 flagged (83%), Pattern Identified', !!p1 && p1.support === 5 && p1.total === 6 && Math.round(p1.rate * 100) === 83 && p1.status === 'pattern_identified' && /83% of 6 reviewed sites/.test(p1.description), p1?.description);

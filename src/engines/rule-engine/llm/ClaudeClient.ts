@@ -5,7 +5,11 @@ import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { LlmClient, LlmVerdict } from '../RuleTypes.ts';
 
-const Verdicts = z.object({ verdicts: z.array(z.object({ ruleId: z.string(), result: z.enum(['pass', 'fail', 'inconclusive', 'not_applicable']), observation: z.string(), evidence: z.array(z.string()), confidence: z.number() })) });
+// The graded review (paid plans): met, partly met, unmet or insufficient evidence per criterion, grounded in an exact quote, a screenshot region
+// or a browser measurement from the context, with one recommendation. result/evidence stay for the engine's existing rules.
+const Grounding = z.object({ kind: z.enum(['quote', 'region', 'measurement']), quote: z.string().optional(), measurement: z.string().optional(), region: z.object({ viewport: z.string(), x: z.number(), y: z.number(), width: z.number(), height: z.number() }).optional() });
+const Verdicts = z.object({ verdicts: z.array(z.object({ ruleId: z.string(), result: z.enum(['pass', 'fail', 'inconclusive', 'not_applicable']), observation: z.string(), evidence: z.array(z.string()), confidence: z.number(),
+  grade: z.enum(['met', 'partly_met', 'unmet', 'insufficient_evidence']).optional(), grounding: Grounding.optional(), recommendation: z.string().optional() })) });
 const Impacts = z.object({ impacts: z.array(z.object({ ruleId: z.string(), userImpact: z.string(), businessImpact: z.string() })) });
 export const aiConfigured = () => process.env.AVARA_AI === 'on' && !!process.env.ANTHROPIC_API_KEY;
 

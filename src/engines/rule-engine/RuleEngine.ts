@@ -5,6 +5,7 @@ import { evaluatorFor } from './evaluators/index.ts';
 import { generateFinding } from './FindingGenerator.ts';
 import { scoreCategory, scoreOverall } from './RuleScorer.ts';
 import { recordsFromOutcomes } from './RuleCoverage.ts';
+import { buildAiReview } from '../../../lib/avara/ai-review.ts';
 import type { CategoryResult, LlmClient, Rule, RuleOutcome, ReviewResult, WebsiteContext } from './RuleTypes.ts';
 
 export class RuleEngine {
@@ -41,6 +42,7 @@ export class RuleEngine {
     return {
       rulesVersion: manifest.libraryVersion, ranAt: new Date().toISOString(), categories, overall: scoreOverall(categories, manifest),
       ai: { used: judged > 0, model: this.llm?.model, reason: aiNote, rulesJudged: judged }, loaderIssues: issues,
+      aiReview: this.llm ? buildAiReview(this.llm.model, manifest.categories.map((c) => c.label), rules, all) : undefined,
       executions: recordsFromOutcomes(rules, all, manifest),
     };
   }

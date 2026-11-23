@@ -229,6 +229,72 @@
       "name": "Avara editorial pattern definitions (with the references named in each rule)",
       "sourceType": "avara",
       "url": null
+    },
+    "NNHOME": {
+      "key": "NNHOME",
+      "name": "NN/g, Homepage Design: 5 Fundamental Principles",
+      "sourceType": "research",
+      "url": "https://www.nngroup.com/articles/homepage-design-principles/"
+    },
+    "GOVUKW": {
+      "key": "GOVUKW",
+      "name": "GOV.UK, Writing to GOV.UK standards",
+      "sourceType": "best-practice",
+      "url": "https://guidance.publishing.service.gov.uk/writing-to-gov-uk-standards/"
+    },
+    "ONSBTN": {
+      "key": "ONSBTN",
+      "name": "ONS Design System, Button",
+      "sourceType": "best-practice",
+      "url": "https://service-manual.ons.gov.uk/design-system/components/button"
+    },
+    "GOVBTN": {
+      "key": "GOVBTN",
+      "name": "GOV.UK Design System, Button",
+      "sourceType": "best-practice",
+      "url": "https://design-system.service.gov.uk/components/button/"
+    },
+    "UKPBTN": {
+      "key": "UKPBTN",
+      "name": "UK Parliament Design System, Button",
+      "sourceType": "best-practice",
+      "url": "https://designsystem.parliament.uk/components/button/"
+    },
+    "M3TYPE": {
+      "key": "M3TYPE",
+      "name": "Material Design 3, Applying type",
+      "sourceType": "best-practice",
+      "url": "https://m3.material.io/styles/typography/applying-type"
+    },
+    "LHSCORE": {
+      "key": "LHSCORE",
+      "name": "Chrome for Developers, Lighthouse performance scoring",
+      "sourceType": "best-practice",
+      "url": "https://developer.chrome.com/docs/lighthouse/performance/performance-scoring"
+    },
+    "CWVTHR": {
+      "key": "CWVTHR",
+      "name": "web.dev, The research and methodology behind Core Web Vitals thresholds",
+      "sourceType": "research",
+      "url": "https://web.dev/articles/defining-core-web-vitals-thresholds"
+    },
+    "ACT": {
+      "key": "ACT",
+      "name": "W3C, Accessibility Conformance Testing (ACT) Rules",
+      "sourceType": "standard",
+      "url": "https://www.w3.org/WAI/standards-guidelines/act/rules/"
+    },
+    "IPSOS": {
+      "key": "IPSOS",
+      "name": "Ipsos, Getting Brand Assets Right (2018)",
+      "sourceType": "research",
+      "url": "https://www.ipsos.com/en/getting-brand-assets-right"
+    },
+    "EBI": {
+      "key": "EBI",
+      "name": "Ehrenberg-Bass Institute, Building Distinctive Brand Assets (Romaniuk, 2018)",
+      "sourceType": "research",
+      "url": "https://marketingscience.info/learn-with-us/books"
     }
   },
   "exercisedDetectors": [
@@ -333,5 +399,22 @@
     "mobile/navigation-accessibility",
     "perf/interaction-latency",
     "ux/journey-continuity"
+  ],
+  "reviewSupplementary": [
+    {
+      "name": "Impeccable (pbakaus/impeccable, Apache-2.0): critique, audit, typeset, layout, clarify",
+      "url": "https://github.com/pbakaus/impeccable",
+      "use": "supplementary guidance, not a cited source"
+    },
+    {
+      "name": "Vercel Agent Skills, web-design-guidelines (MIT)",
+      "url": "https://github.com/vercel-labs/agent-skills",
+      "use": "supplementary guidance, not a cited source"
+    },
+    {
+      "name": "Marketing Skills, cro and copywriting (coreyhaines31/marketingskills, MIT)",
+      "url": "https://github.com/coreyhaines31/marketingskills",
+      "use": "supplementary guidance, not a cited source"
+    }
   ]
 }

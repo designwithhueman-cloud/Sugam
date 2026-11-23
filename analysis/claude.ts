@@ -110,7 +110,7 @@ export async function enrich(scan: ScanOutput, issues: DraftIssue[]): Promise<En
     if (!process.env.GEMINI_API_KEY) return done({ used: false, model, reason: 'AI fix wording is set to Gemini but GEMINI_API_KEY is not set; Avara’s own fixes are shown.', changed: 0 });
     const parts: GeminiPart[] = [...req.images.map((b) => ({ inline_data: { mime_type: 'image/jpeg', data: b.toString('base64') } })), { text: req.text }];
     try {
-      const parsed = FixChanges.safeParse(await withTimeout(limited(() => geminiJson(model, req.system, parts, FIX_SCHEMA)), FIX_TIMEOUT()));
+      const parsed = FixChanges.safeParse(await withTimeout(limited(() => geminiJson(model, req.system, parts, FIX_SCHEMA), true), FIX_TIMEOUT()));
       if (!parsed.success) return done({ used: false, model, reason: 'AI fix wording (Gemini) returned an unexpected shape; Avara’s own fixes are shown.', changed: 0 });
       const r = applyChanges(targets, parsed.data);
       return done({ used: r.changed > 0, model, changed: r.changed, refused: r.refused, reason: r.changed ? undefined : 'AI fix wording (Gemini) gave no usable change; Avara’s own fixes are shown.' });

@@ -19,6 +19,23 @@ globalThis.fetch = async (url, init) => {
   }
   if (/FAILURES \(data\)/.test(text)) return ok({ impacts: [] });
   const rules = JSON.parse(text.match(/RULES \(data\):\n(\[[\s\S]*?\])\n\nPAGE CONTEXT/)[1]);
+  // GEMINI_STUB=review: a SIMULATED paid review (not a model). It grades criteria from the page context with fixed rules and quotes real page
+  // text, so the pipeline (grounding checks, ratings, saving, gating, fixes) can be tested end to end. It says nothing about model quality.
+  if (mode === 'review') {
+    const ctx = text.slice(text.indexOf('PAGE CONTEXT (data):') + 21); const lc = ctx.toLowerCase();
+    const h1 = /"level":1,"text":"([^"]{3,140})"/.exec(ctx)?.[1] ?? /"h1":\{"text":"([^"]{3,140})"/.exec(ctx)?.[1] ?? null;
+    const claim = /(trusted by [^".]{3,60})/i.exec(ctx)?.[1] ?? null;
+    const cta = /"ctas":\[\{"text":"([^"]{2,60})"/.exec(ctx)?.[1] ?? null;
+    const vague = h1 && /future|welcome|reimagin|next level|innovative|seamless/i.test(h1);
+    const v = (r, grade, observation, grounding, recommendation = '') => ({ ruleId: r.ruleId, result: grade === 'met' ? 'pass' : grade === 'insufficient_evidence' ? 'inconclusive' : 'fail', observation, evidence: grounding?.quote ? [grounding.quote] : [], confidence: 0.6, grade, grounding, recommendation });
+    return ok({ verdicts: rules.map((r) => {
+      if (/^(PC-016|PC-017|DIFF-012)$/.test(r.ruleId) && h1) return vague ? v(r, 'unmet', `Simulated: the headline does not say what is offered or to whom.`, { kind: 'quote', quote: h1 }, `Replace the headline with one plain sentence that names what you offer and who it is for.`) : v(r, 'met', 'Simulated: the headline names what the page offers.', { kind: 'quote', quote: h1 });
+      if (r.ruleId === 'TRUST-013' && claim) return v(r, 'unmet', 'Simulated: the claim has no source, case study or link beside it.', { kind: 'quote', quote: claim }, 'Add a source for the claim next to it: a named customer, a case study link or the survey it comes from.');
+      if (r.ruleId === 'CONV-016' && cta) return /learn more|click here|get started/i.test(cta) ? v(r, 'partly_met', 'Simulated: the main action label does not say what happens next.', { kind: 'quote', quote: cta }, `Rename the main action to say what it does, for example “Book a 20-minute demo”.`) : v(r, 'met', 'Simulated: the main action says what it does.', { kind: 'quote', quote: cta });
+      if (r.ruleId === 'UX-005') return v(r, 'unmet', 'Simulated ungrounded point: this quote is not on the page.', { kind: 'quote', quote: 'This sentence does not exist on the page' }, 'Never shown: it cannot be traced.');
+      return v(r, 'insufficient_evidence', 'Simulated: not judged.', undefined);
+    }) });
+  }
   return ok({ verdicts: rules.map((r) => r.ruleId === 'CONV-008'
     ? { ruleId: r.ruleId, result: 'fail', observation: 'Stub verdict: the offer is not stated next to the main heading.', evidence: ['Talk to a designer this week'], confidence: 0.6 }
     : { ruleId: r.ruleId, result: 'inconclusive', observation: 'Stub: not judged.', evidence: [], confidence: 0.2 }) });

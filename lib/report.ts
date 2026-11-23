@@ -10,6 +10,7 @@ import { hasFeature } from './plans.ts';
 import { BY_ID, CATALOG, CATEGORIES, LENSES, HEURISTICS, RELATED, SOURCES, canonicalFor, coverage as libCoverage } from './avara/catalog.ts';
 import { buildCoverage, loadRecords, EMPTY_LOADED } from './avara/coverage.ts';
 import { pageSummary } from './page-summary.ts';
+import { getObject } from './storage.ts';
 import { buildFixes } from '../analysis/fixes.ts';
 import type { FixSet } from './db/schema.ts';
 import { ruleLoader } from '../src/engines/rule-engine/RuleLoader.ts';
@@ -143,6 +144,8 @@ export async function loadReport(scanId: string, opts: { shareToken?: string } =
   const planFull = hasFeature(await planForScan(scanId), 'full_report');
   report.review = await loadReview(scanId, { full: planFull });
   report.launch = planFull ? await loadLaunch(scanId) : null;   // evidence: paid plans only
+  // The graded AI review: paid plans only, read from beside the scan (lib/avara/ai-review.ts).
+  if (planFull) { const raw = await getObject(`scans/${scanId}/ai-review.json`).catch(() => null); report.aiReview = raw ? JSON.parse(raw.toString('utf8')) : null; }
   // The engine saved provisional averages; every reader (page, board, API) gets the strict scores and record-based counts instead, so none can disagree.
   if (report.review && report.avara) {
     const lib = report.avara.library; const st = new Map(lib.strict.map((c) => [c.label, c])); const bc = new Map(lib.coverage.byCategory.map((c) => [c.category, c]));

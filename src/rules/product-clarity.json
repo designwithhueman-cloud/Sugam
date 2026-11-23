@@ -818,7 +818,23 @@
         "feature order"
       ],
       "parameters": {},
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-8-aesthetic-and-minimalist-design-8",
+        "section": "8: Aesthetic and Minimalist Design",
+        "sectionVerified": true,
+        "applicability": "Features are ordered by the confirmed job to be done.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Needs the owner's confirmed job; without it this rule cannot produce a finding."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "PC-015",
@@ -857,6 +873,118 @@
       ],
       "parameters": {},
       "valueTier": 3
+    },
+    {
+      "ruleId": "PC-016",
+      "version": "1.0.0-draft",
+      "category": "Product Clarity",
+      "title": "Offer Identifiable From The Hero",
+      "description": "Ask whether a first-time visitor can identify the offer from the headline and supporting copy together. Adapt to the page type: a portfolio introduces a person and their work, a product page introduces an offer. Quote the words that answer the question or say what is missing.",
+      "source": "NN/g, Homepage Design: 5 Fundamental Principles",
+      "sourceType": "research",
+      "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-2-communicate-who-you-are-and-what-you-do-2",
+      "sourceKey": "NNHOME",
+      "sourceSection": "Principle 2: Communicate Who You Are and What You Do",
+      "severity": "high",
+      "weight": 10,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Ask whether a first-time visitor can identify the offer from the headline and supporting copy together. Adapt to the page type: a portfolio introduces a person and their work, a product page introduces an offer. Quote the words that answer the question or say what is missing. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Rewrite the hero so the headline and one supporting line say {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 1,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-2-communicate-who-you-are-and-what-you-do-2",
+        "section": "Principle 2: Communicate Who You Are and What You Do",
+        "sectionVerified": true,
+        "applicability": "Every page with a hero (first screen). Page type decides what counts as the offer.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "A portfolio answers with who the person is and what work they do; a missing product or price is not a gap there.",
+          "A deliberately mysterious launch teaser is insufficient evidence, not unmet."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      },
+      "userImpact": "A first-time visitor who cannot tell what is offered may leave before reading further.",
+      "businessImpact": "Fewer visitors may reach the main action. This is a hypothesis; Avara did not measure visits.",
+      "requiredEvidence": [
+        "an exact quote from the page"
+      ]
+    },
+    {
+      "ruleId": "PC-017",
+      "version": "1.0.0-draft",
+      "category": "Product Clarity",
+      "title": "Plain, Specific Language",
+      "description": "Check that the headline and first paragraph use plain, specific words a visitor understands without context. Quote the vague or jargon phrase and offer a plainer one.",
+      "source": "NN/g, Homepage Design: 5 Fundamental Principles",
+      "sourceType": "research",
+      "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-2-communicate-who-you-are-and-what-you-do-2",
+      "sourceKey": "NNHOME",
+      "sourceSection": "Principle 2: Communicate Who You Are and What You Do",
+      "severity": "medium",
+      "weight": 6,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Check that the headline and first paragraph use plain, specific words a visitor understands without context. Quote the vague or jargon phrase and offer a plainer one. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Replace the vague phrase with plain, specific words: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-2-communicate-who-you-are-and-what-you-do-2",
+        "section": "Principle 2: Communicate Who You Are and What You Do",
+        "sectionVerified": true,
+        "applicability": "Headline and first paragraph.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Established product names and terms the audience uses are not jargon."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ],
+        "supplementary": [
+          {
+            "name": "GOV.UK, Writing to GOV.UK standards (plain English)",
+            "url": "https://guidance.publishing.service.gov.uk/writing-to-gov-uk-standards/",
+            "sectionVerified": false
+          }
+        ]
+      },
+      "userImpact": "Vague or insider words make visitors work out what you mean.",
+      "businessImpact": "Visitors may misread the offer. This is a hypothesis; Avara did not measure comprehension.",
+      "requiredEvidence": [
+        "an exact quote from the page"
+      ]
     }
   ]
 }

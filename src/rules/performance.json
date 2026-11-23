@@ -356,6 +356,59 @@
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "\"Mobile Performance\" is a summary of other rules (PERF-001, PERF-002, PERF-003, PERF-004, PERF-005, PERF-006, PERF-007, PERF-008, PERF-009) and adds no independent result.",
       "valueTier": 4
+    },
+    {
+      "ruleId": "PERF-011",
+      "version": "1.0.0-draft",
+      "category": "Performance",
+      "title": "The First Thing Visitors Wait For Is Main Content",
+      "description": "Using Lighthouse lab data (the largest-contentful-paint element and its timing), judge whether what loads last in the first screen is the content the visitor came for, and name it. Lab results only; never present them as real-visitor data.",
+      "source": "Chrome for Developers, Lighthouse performance scoring",
+      "sourceType": "best-practice",
+      "sourceUrl": "https://web.dev/articles/defining-core-web-vitals-thresholds",
+      "sourceKey": "LHSCORE",
+      "sourceSection": "Largest Contentful Paint",
+      "severity": "medium",
+      "weight": 6,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Using Lighthouse lab data (the largest-contentful-paint element and its timing), judge whether what loads last in the first screen is the content the visitor came for, and name it. Lab results only; never present them as real-visitor data. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Make the content visitors came for load first: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://web.dev/articles/defining-core-web-vitals-thresholds",
+        "section": "Largest Contentful Paint",
+        "sectionVerified": true,
+        "applicability": "Scans where Lighthouse ran.",
+        "evidence": [
+          "measurement"
+        ],
+        "exceptions": [
+          "No Lighthouse run: insufficient evidence.",
+          "Field data (real visitors) is not collected; lab results only."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      },
+      "userImpact": "Visitors wait for something that is not what they came for.",
+      "businessImpact": "A slow first view may cost visits. This is a hypothesis; lab data is not real-visitor data.",
+      "requiredEvidence": [
+        "a browser measurement"
+      ]
     }
   ]
 }

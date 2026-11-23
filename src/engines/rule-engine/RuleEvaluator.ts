@@ -9,7 +9,9 @@ import type { LlmClient, Rule, RuleOutcome, WebsiteContext } from './RuleTypes.t
 import type { ScorerOptions } from './RuleScorer.ts';
 import { aiProvider } from './llm/index.ts';
 
-export const SYSTEM_PROMPT = 'You are a careful website reviewer. You are given a JSON list of review rules and a JSON page context. For each rule, apply ONLY the rule\'s evaluationPrompt to the page context. Answer "pass", "fail", "inconclusive" or "not_applicable". For "fail" you must quote exact words or elements from the context in "evidence"; if you cannot, answer "inconclusive". Never use knowledge about the website that is not in the context. Return one verdict per rule.';
+export const SYSTEM_PROMPT = 'You are a careful website reviewer. You are given a JSON list of review criteria and a JSON page context (text, structure, browser measurements and, for some categories, screenshots). For each criterion, apply ONLY its evaluationPrompt, including its applicability and exceptions, to this page. First decide what kind of page it is (for example a portfolio introduces a person and their work, a product page introduces an offer, a service page introduces a service) and judge against that. Give a grade: "met", "partly_met", "unmet" or "insufficient_evidence". Ground every grade other than insufficient_evidence in exactly one of: an exact quote copied from the context (grounding.kind "quote"), a browser measurement copied from the context (kind "measurement"), or a region of a screenshot you were shown (kind "region", with viewport, x, y, width, height in CSS pixels). If you cannot ground it, answer "insufficient_evidence". Write one short observation in plain words and, for partly_met or unmet, one specific recommendation (the smallest change). Also set result ("pass" for met, "fail" for partly_met or unmet, "inconclusive" otherwise) and evidence (the quote or measurement). Never use knowledge about the website that is not in the context, and never predict sales or conversion effects as facts. Return one verdict per criterion.';
+/** The criterion's applicability, exceptions and accepted evidence (src/rules/*.json "criterion") travel with its prompt. */
+const withCriterion = (r: Rule) => { const c = (r as Rule & { criterion?: { applicability?: string; exceptions?: string[]; evidence?: string[] } }).criterion; return c ? `${r.evaluationPrompt} Applies to: ${c.applicability ?? 'every page'} Exceptions: ${(c.exceptions ?? []).join(' ') || 'none'} Accepted evidence: ${(c.evidence ?? ['quote']).join(', ')}.` : r.evaluationPrompt; };
 export const BATCH = Number(process.env.AVARA_RULE_BATCH || 25);   // rules per model call, so 1000 rules is 40 calls, not one giant prompt
 
 const specOf = (r: Rule) => r.evaluator ?? (r.mode === 'H' ? { type: 'llm' as const } : r.mode === 'U' ? { type: 'human' as const } : r.mode === 'R' ? { type: 'rollup' as const } : { type: 'detector' as const });
@@ -61,13 +63,13 @@ export abstract class CategoryEvaluator {
         for (let i = 0; i < forAi.length; i += BATCH) {
           const chunk = forAi.slice(i, i + BATCH);
           try {
-            const verdicts = await llm.evaluate({ system: SYSTEM_PROMPT, rules: chunk.map((r) => ({ ruleId: r.ruleId, title: r.title, evaluationPrompt: r.evaluationPrompt })), context, images: this.useImages ? ctx.screenshots : undefined });
+            const verdicts = await llm.evaluate({ system: SYSTEM_PROMPT, rules: chunk.map((r) => ({ ruleId: r.ruleId, title: r.title, evaluationPrompt: withCriterion(r) })), context, images: this.useImages ? ctx.screenshots : undefined });
             for (const r of chunk) {
               const v = verdicts.find((x) => x.ruleId === r.ruleId);
               if (!v) { outcomes.push(this.out(r, 'inconclusive', 'ai_assisted', 'The model returned no verdict for this rule.', [], 0.3)); continue; }
               // An unanswered call (rate limit, overload, refusal) is not a judgement: the rule did not run, and says why.
               if (v.undecided) { const why = v.observation.replace(/^Not decided: /, 'The model gave no answer: ').replace(/ This says nothing about the page\.$/, ''); aiNote ??= why; outcomes.push(this.measuredOr(r, ctx, why) ?? { ...this.out(r, 'not_run', 'none', `${why}. This says nothing about the page.`, [], 0), skip: 'ai_no_answer' }); continue; }
-              judged++; const o = this.fromVerdict(r, v, haystack); const m = measured.get(r.ruleId);
+              judged++; const o = this.fromVerdict(r, v, haystack, (ctx.screenshots ?? []).map((x) => x.viewport)); const m = measured.get(r.ruleId);
               outcomes.push(m ? { ...o, detectorsRan: m.detectorsRan, measuredResult: m.result, observation: `${o.observation} Measured part: ${m.observation}` } : o);
             }
           } catch (e) { aiNote = `The model call failed (${(e as Error).message.split('\n')[0].slice(0, 100)}).`; for (const r of chunk) outcomes.push(this.measuredOr(r, ctx, aiNote) ?? { ...this.out(r, 'not_run', 'none', aiNote, [], 0), skip: 'ai_unavailable' }); }
@@ -110,15 +112,34 @@ export abstract class CategoryEvaluator {
     const said = [...reps.map((id) => ctx.detectors[id].passNote).filter(Boolean), ...ran.filter((id) => ctx.detectors[id].notApplicable).map((id) => `Not inspected: ${ctx.detectors[id].notApplicable}`)];
     return tag(this.out(r, 'observed_pass', 'measured', said.length ? `${said.join(' ')} This does not prove the whole topic passes.` : 'The measurable part of this rule ran and found nothing. This does not prove the whole topic passes.', [], 0.7));
   }
-  private fromVerdict(r: Rule, v: import('./RuleTypes.ts').LlmVerdict, haystack: string): RuleOutcome {
-    const conf = Math.max(0, Math.min(0.7, Number(v.confidence) || 0.5));   // an AI-assisted judgement never claims more than medium confidence
-    if (v.result === 'not_applicable') return this.out(r, 'not_applicable', 'ai_assisted', v.observation || 'The rule does not apply to this page.', [], conf);
-    if (v.result === 'inconclusive') return this.out(r, 'inconclusive', 'ai_assisted', v.observation || 'The context was not enough to decide.', v.evidence ?? [], conf);
-    if (v.result === 'pass') return this.out(r, 'observed_pass', 'ai_assisted', v.observation, v.evidence ?? [], conf);
-    const quotes = (v.evidence ?? []).filter((q) => q.trim().length > 2 && haystack.includes(q.toLowerCase().replace(/\s+/g, ' ').trim()));
-    if (!quotes.length) return this.out(r, 'inconclusive', 'ai_assisted', 'The model reported a problem but its quoted evidence was not found in the page, so it is not counted.', v.evidence ?? [], 0.3, 'evidence-not-found');
-    return this.out(r, 'needs_human_review', 'ai_assisted', v.observation, quotes, conf);   // a model alone does not confirm a failure; a person does
+  /** Is the model's point traceable? A quote or a measurement must appear in the context it was given; a region must sit inside a screenshot
+   *  it was shown. An untraceable point is insufficient evidence, never a finding. */
+  private grounded(g: import('./RuleTypes.ts').AiGrounding | undefined, haystack: string, shots: string[]): boolean {
+    if (!g) return false;
+    const inCtx = (t?: string) => !!t && t.trim().length > 2 && haystack.includes(t.toLowerCase().replace(/\s+/g, ' ').trim());
+    if (g.kind === 'quote') return inCtx(g.quote);
+    if (g.kind === 'measurement') return inCtx(g.measurement);
+    const r = g.region; if (!r || !shots.includes(r.viewport)) return false;
+    const maxW = r.viewport === 'desktop' ? 1280 : r.viewport === 'narrow' ? 320 : 390;
+    return [r.x, r.y, r.width, r.height].every((n) => Number.isFinite(n)) && r.x >= 0 && r.y >= 0 && r.width > 0 && r.height > 0 && r.x + r.width <= maxW + 2 && r.y + r.height <= 20000;
   }
+  private fromVerdict(r: Rule, v: import('./RuleTypes.ts').LlmVerdict, haystack: string, shots: string[] = []): RuleOutcome {
+    const conf = Math.max(0, Math.min(0.7, Number(v.confidence) || 0.5));   // an AI-assisted judgement never claims more than medium confidence
+    if (v.result === 'not_applicable' && !v.grade) return this.out(r, 'not_applicable', 'ai_assisted', v.observation || 'The rule does not apply to this page.', [], conf);
+    // The graded review: met / partly met / unmet / insufficient evidence. An ungrounded point becomes insufficient evidence.
+    const quotes = (v.evidence ?? []).filter((q) => q.trim().length > 2 && haystack.includes(q.toLowerCase().replace(/\s+/g, ' ').trim()));
+    const g = v.grounding ?? (quotes[0] ? { kind: 'quote' as const, quote: quotes[0] } : undefined);
+    const asked = v.grade ?? (v.result === 'pass' ? 'met' : v.result === 'fail' ? 'unmet' : 'insufficient_evidence');
+    const ok = this.grounded(g, haystack, shots);
+    const grade = asked !== 'insufficient_evidence' && !ok ? 'insufficient_evidence' : asked;
+    // An untraceable point keeps neither its quote nor its recommendation: nothing the model could not ground reaches a report.
+    const ai = { grade, observation: ok ? v.observation : 'The model made a point it could not trace to the page, so it is not counted.', grounding: ok ? g ?? null : null, recommendation: ok ? v.recommendation ?? '' : '', grounded: ok };
+    const ev = !ok ? [] : g?.kind === 'quote' && g.quote ? [g.quote] : g?.kind === 'measurement' && g.measurement ? [g.measurement] : g?.region ? [`${g.region.viewport} screenshot, region ${Math.round(g.region.x)},${Math.round(g.region.y)} ${Math.round(g.region.width)}×${Math.round(g.region.height)}`] : [];
+    if (grade === 'met') return { ...this.out(r, 'observed_pass', 'ai_assisted', v.observation, ev, conf), ai };
+    if (grade === 'insufficient_evidence') return { ...this.out(r, 'inconclusive', 'ai_assisted', asked !== grade ? 'The model reported a point it could not trace to the page (no matching quote, region or measurement), so it is not counted.' : v.observation || 'The context was not enough to decide.', ev, asked !== grade ? 0.3 : conf, asked !== grade ? 'evidence-not-found' : undefined), ai };
+    return { ...this.out(r, 'needs_human_review', 'ai_assisted', v.observation, ev, conf), ai };   // a model alone does not confirm a failure; a person does
+  }
+
   private async explain(ctx: WebsiteContext, rules: Rule[], outcomes: RuleOutcome[], llm: LlmClient) {
     const failed = outcomes.filter((o) => o.result === 'observed_failure').slice(0, 20); if (!failed.length) return;
     const res = await llm.interpret!({ system: 'Explain, in one sentence each, who is affected and the likely consequence. Use only the evidence given. Say "may" for anything inferred.', failures: failed.map((o) => ({ ruleId: o.ruleId, title: rules.find((r) => r.ruleId === o.ruleId)?.title ?? o.ruleId, observation: o.observation, evidence: o.evidence })), context: this.slice(ctx) });

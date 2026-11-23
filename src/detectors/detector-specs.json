@@ -4386,6 +4386,306 @@
       },
       "confidenceCeiling": "not applicable: needs a person or is a summary",
       "buildPriority": "n/a"
+    },
+    {
+      "ruleId": "PC-016",
+      "title": "Offer Identifiable From The Hero",
+      "category": "Product Clarity",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Every page with a hero (first screen). Page type decides what counts as the offer."
+      ],
+      "evidence": [
+        "exact quote"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: A portfolio answers with who the person is and what work they do; a missing product or price is not a gap there."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
+    },
+    {
+      "ruleId": "PC-017",
+      "title": "Plain, Specific Language",
+      "category": "Product Clarity",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Headline and first paragraph."
+      ],
+      "evidence": [
+        "exact quote"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: Established product names and terms the audience uses are not jargon."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
+    },
+    {
+      "ruleId": "UX-021",
+      "title": "Interaction Feedback Makes Sense",
+      "category": "UX & Workflow Quality",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Pages where Avara exercised an interaction (phone menu, main action, dialog)."
+      ],
+      "evidence": [
+        "browser measurement"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: No interaction exercised: insufficient evidence."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
+    },
+    {
+      "ruleId": "MOB-016",
+      "title": "Phone First Screen Keeps Message And Action",
+      "category": "Mobile Responsiveness",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Every page; phone first screen at 390px."
+      ],
+      "evidence": [
+        "screenshot region or browser measurement"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: Whether the main action is measurably below the first screen is a detector result (MOB-010); this judges the message and action together."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
+    },
+    {
+      "ruleId": "A11Y-021",
+      "title": "Text Alternatives Serve The Same Purpose",
+      "category": "Accessibility",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Images with non-empty alt text."
+      ],
+      "evidence": [
+        "exact quote or screenshot region"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: Decorative images with empty alt are correct and out of scope."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
+    },
+    {
+      "ruleId": "A11Y-022",
+      "title": "Headings And Labels Describe Their Purpose",
+      "category": "Accessibility",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Pages with headings or labelled fields."
+      ],
+      "evidence": [
+        "exact quote"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: Heading order and presence are measured by A11Y-007."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
+    },
+    {
+      "ruleId": "PERF-011",
+      "title": "The First Thing Visitors Wait For Is Main Content",
+      "category": "Performance",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Scans where Lighthouse ran."
+      ],
+      "evidence": [
+        "browser measurement"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: No Lighthouse run: insufficient evidence."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
+    },
+    {
+      "ruleId": "CONV-016",
+      "title": "Primary Action Clear, Labelled And Honest",
+      "category": "Conversion Readiness",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Pages with a main action."
+      ],
+      "evidence": [
+        "exact quote or browser measurement"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: Several primary actions are a reason to inspect hierarchy, not a failure by themselves."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
+    },
+    {
+      "ruleId": "DIFF-011",
+      "title": "Owner-Specified Brand Cues Present",
+      "category": "Differentiation & Design Maturity",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Scans where the owner supplied brand cues."
+      ],
+      "evidence": [
+        "screenshot region or exact quote"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: No owner cues: insufficient evidence, never unmet."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
+    },
+    {
+      "ruleId": "DIFF-012",
+      "title": "A Specific Differentiator Is Stated",
+      "category": "Differentiation & Design Maturity",
+      "canBeEvaluatedAutomatically": "assisted",
+      "detectorType": "AI Judgement",
+      "components": [
+        "AI Judgement"
+      ],
+      "requiredData": [
+        "Every page with marketing copy."
+      ],
+      "evidence": [
+        "exact quote"
+      ],
+      "outcomes": {
+        "pass": "Met, grounded in the page.",
+        "fail": "Unmet or partly met (needs a person: a model alone never confirms a failure).",
+        "couldNotVerify": "Insufficient evidence: A portfolio differentiates through its work samples; quoting a project counts."
+      },
+      "implementation": {
+        "status": "not-built",
+        "detectors": [],
+        "exercisedOnFixtures": false,
+        "engineEvaluator": "llm",
+        "suggestedEvaluator": "llm"
+      },
+      "confidenceCeiling": "medium at most, advisory: a model alone never confirms a failure",
+      "buildPriority": "P2"
     }
   ]
 }

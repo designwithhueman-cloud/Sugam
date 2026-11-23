@@ -32,7 +32,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-6-recognition-rather-than-recall-6",
+        "section": "6: Recognition Rather than Recall",
+        "sectionVerified": true,
+        "applicability": "Attempt to locate a named destination from the starting state.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-002",
@@ -100,7 +118,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-8-aesthetic-and-minimalist-design-8",
+        "section": "8: Aesthetic and Minimalist Design",
+        "sectionVerified": true,
+        "applicability": "Trace a redundant or avoidable step and explain why it can be removed.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-004",
@@ -132,7 +168,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-6-recognition-rather-than-recall-6",
+        "section": "6: Recognition Rather than Recall",
+        "sectionVerified": true,
+        "applicability": "Identify information the visitor must mentally combine at a particular step.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-005",
@@ -164,7 +218,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-1-visibility-of-system-status-1",
+        "section": "1: Visibility of System Status",
+        "sectionVerified": true,
+        "applicability": "After a transition, establish whether the next available action is understandable.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-006",
@@ -196,7 +268,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-8-aesthetic-and-minimalist-design-8",
+        "section": "8: Aesthetic and Minimalist Design",
+        "sectionVerified": true,
+        "applicability": "Inspect conditional or advanced controls that obscure the immediate task.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-007",
@@ -228,7 +318,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-8-aesthetic-and-minimalist-design-8",
+        "section": "8: Aesthetic and Minimalist Design",
+        "sectionVerified": true,
+        "applicability": "Identify competing choices without a usable distinction.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "A count alone is insufficient."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-008",
@@ -260,7 +368,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-6-recognition-rather-than-recall-6",
+        "section": "6: Recognition Rather than Recall",
+        "sectionVerified": true,
+        "applicability": "Capture information shown earlier that must now be remembered or re-entered.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-009",
@@ -292,7 +418,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-2-match-between-the-system-and-the-real-world-2",
+        "section": "2: Match Between the System and the Real World",
+        "sectionVerified": true,
+        "applicability": "Test the destination grouping for a specific information-seeking task.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-010",
@@ -326,7 +470,25 @@
       "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/how-users-read-on-the-web/",
+        "section": "NN/g, How users read on the web",
+        "sectionVerified": false,
+        "applicability": "Compare section headings with the content users need to find.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-011",
@@ -394,7 +556,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://baymard.com/research-articles/checkout-flow-average-form-fields",
+        "section": "Baymard, checkout form fields",
+        "sectionVerified": false,
+        "applicability": "Review grouping and order in a scoped form.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-013",
@@ -426,7 +606,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-7-flexibility-and-efficiency-of-use-7",
+        "section": "7: Flexibility and Efficiency of Use",
+        "sectionVerified": true,
+        "applicability": "Identify an avoidable prerequisite before the first useful action.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-014",
@@ -492,7 +690,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-10-help-and-documentation-10",
+        "section": "10: Help and Documentation",
+        "sectionVerified": true,
+        "applicability": "Capture an empty state and available explanation or recovery action.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-016",
@@ -524,7 +740,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-5-error-prevention-5",
+        "section": "5: Error Prevention",
+        "sectionVerified": true,
+        "applicability": "Inspect prerequisites, format guidance, and safeguards before a foreseeable mistake.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-017",
@@ -610,7 +844,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-6-recognition-rather-than-recall-6",
+        "section": "6: Recognition Rather than Recall",
+        "sectionVerified": true,
+        "applicability": "Attempt to find a named secondary feature from its expected context.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "UX-019",
@@ -675,6 +927,59 @@
       "sourceStatus": "needs-owner-input",
       "evaluationPrompt": "\"Time To First Value\" needs a person: Define first value with the owner. Time representative sessions to that event. A model cannot decide this from page context alone.",
       "valueTier": 3
+    },
+    {
+      "ruleId": "UX-021",
+      "version": "1.0.0-draft",
+      "category": "UX & Workflow Quality",
+      "title": "Interaction Feedback Makes Sense",
+      "description": "Using the interactions Avara performed (menu opened, Back pressed, dialog dismissed), judge whether the visible feedback tells the visitor what happened and how to undo it. Ground every point in the measured interaction.",
+      "source": "Nielsen usability heuristic 1",
+      "sourceType": "research",
+      "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-1-visibility-of-system-status-1",
+      "sourceKey": "NN1",
+      "sourceSection": "1: Visibility of System Status",
+      "severity": "medium",
+      "weight": 6,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Using the interactions Avara performed (menu opened, Back pressed, dialog dismissed), judge whether the visible feedback tells the visitor what happened and how to undo it. Ground every point in the measured interaction. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Make the response to the action visible and undoable: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/#toc-1-visibility-of-system-status-1",
+        "section": "1: Visibility of System Status",
+        "sectionVerified": true,
+        "applicability": "Pages where Avara exercised an interaction (phone menu, main action, dialog).",
+        "evidence": [
+          "measurement"
+        ],
+        "exceptions": [
+          "No interaction exercised: insufficient evidence.",
+          "Whether the interaction works at all is measured separately (MOB-008, UX-014)."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      },
+      "userImpact": "Visitors who cannot tell what an action did repeat it or give up.",
+      "businessImpact": "Some visitors may abandon the task. This is a hypothesis; Avara did not measure completion.",
+      "requiredEvidence": [
+        "a browser measurement"
+      ]
     }
   ]
 }

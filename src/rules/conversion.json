@@ -192,7 +192,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://service-manual.ons.gov.uk/design-system/components/button#how-to-use-this-component",
+        "section": "How to use this component",
+        "sectionVerified": true,
+        "applicability": "Identify a concrete obstacle at the point of conversion; link form and accessibility evidence.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "CONV-006",
@@ -227,7 +243,23 @@
       "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://service-manual.ons.gov.uk/design-system/components/button#how-to-use-this-component",
+        "section": "How to use this component",
+        "sectionVerified": true,
+        "applicability": "Identify a candidate unnecessary field and confirm its business need.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Audit required/optional markings with BAYR."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "CONV-007",
@@ -259,7 +291,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 1
+      "valueTier": 1,
+      "criterion": {
+        "sourceUrl": "https://service-manual.ons.gov.uk/design-system/components/button#how-to-use-this-component",
+        "section": "How to use this component",
+        "sectionVerified": true,
+        "applicability": "Compare price, billing interval and material conditions shown at the decision point.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "CONV-008",
@@ -291,7 +339,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://service-manual.ons.gov.uk/design-system/components/button#how-to-use-this-component",
+        "section": "How to use this component",
+        "sectionVerified": true,
+        "applicability": "Inspect what the visitor receives for this specific commitment.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "CONV-009",
@@ -323,7 +387,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://service-manual.ons.gov.uk/design-system/components/button#how-to-use-this-component",
+        "section": "How to use this component",
+        "sectionVerified": true,
+        "applicability": "Check an objection documented in research or support evidence against available answers.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "CONV-010",
@@ -355,7 +435,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://service-manual.ons.gov.uk/design-system/components/button#how-to-use-this-component",
+        "section": "How to use this component",
+        "sectionVerified": true,
+        "applicability": "Inspect benefit information at a consequential conversion step.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "CONV-011",
@@ -493,7 +589,23 @@
       "enabled": true,
       "sourceStatus": "needs-owner-input",
       "evaluationPrompt": "Interpret the measured evidence for \"Trial Visibility\". Only when a trial is offered, inspect its entry point and discoverable conditions. Do not guess beyond the measurements supplied.",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://service-manual.ons.gov.uk/design-system/components/button#how-to-use-this-component",
+        "section": "How to use this component",
+        "sectionVerified": true,
+        "applicability": "Only when a trial is offered, inspect its entry point and discoverable conditions.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Only when a trial is offered, inspect its entry point and discoverable conditions."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "CONV-015",
@@ -526,6 +638,73 @@
       "sourceStatus": "needs-owner-input",
       "evaluationPrompt": "\"Conversion Confidence\" needs a person: Capture participant understanding of the commitment and outcome. Measured conversion lift requires outcome data. A model cannot decide this from page context alone.",
       "valueTier": 3
+    },
+    {
+      "ruleId": "CONV-016",
+      "version": "1.0.0-draft",
+      "category": "Conversion Readiness",
+      "title": "Primary Action Clear, Labelled And Honest",
+      "description": "Judge whether the visitor can identify one primary action, whether its label says what happens, and whether it leads where the label says (using the measured destination). A prediction that different wording would sell more is a hypothesis, never a finding.",
+      "source": "ONS Design System, Button",
+      "sourceType": "best-practice",
+      "sourceUrl": "https://service-manual.ons.gov.uk/design-system/components/button#how-to-use-this-component",
+      "sourceKey": "ONSBTN",
+      "sourceSection": "How to use this component",
+      "severity": "high",
+      "weight": 10,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Judge whether the visitor can identify one primary action, whether its label says what happens, and whether it leads where the label says (using the measured destination). A prediction that different wording would sell more is a hypothesis, never a finding. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Make one primary action clear, label it with what happens, and make it lead there: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 1,
+      "criterion": {
+        "sourceUrl": "https://service-manual.ons.gov.uk/design-system/components/button#how-to-use-this-component",
+        "section": "How to use this component",
+        "sectionVerified": true,
+        "applicability": "Pages with a main action.",
+        "evidence": [
+          "quote",
+          "measurement"
+        ],
+        "exceptions": [
+          "Several primary actions are a reason to inspect hierarchy, not a failure by themselves.",
+          "A broken destination is measured separately and can lower the automated score."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ],
+        "supplementary": [
+          {
+            "name": "GOV.UK Design System, Button: When to use this component",
+            "url": "https://design-system.service.gov.uk/components/button/",
+            "sectionVerified": true
+          },
+          {
+            "name": "UK Parliament Design System, Button",
+            "url": "https://designsystem.parliament.uk/components/button/",
+            "sectionVerified": false
+          }
+        ]
+      },
+      "userImpact": "Visitors who cannot pick the main action, or are surprised by where it goes, hesitate.",
+      "businessImpact": "Fewer visitors may act. This is a hypothesis; Avara did not measure conversions.",
+      "requiredEvidence": [
+        "an exact quote from the page",
+        "a browser measurement"
+      ]
     }
   ]
 }

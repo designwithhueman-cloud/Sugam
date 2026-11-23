@@ -587,6 +587,120 @@
       "enabled": true,
       "status": "catalogued",
       "valueTier": 3
+    },
+    {
+      "ruleId": "DIFF-011",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Owner-Specified Brand Cues Present",
+      "description": "Check whether the brand cues the owner named (logo, colour, character, phrase) appear in the first screen. Without owner-supplied cues the result is insufficient evidence. Memorability needs audience research; a screenshot cannot establish it.",
+      "source": "Ipsos, Getting Brand Assets Right (2018)",
+      "sourceType": "research",
+      "sourceUrl": "https://www.ipsos.com/en/getting-brand-assets-right",
+      "sourceKey": "IPSOS",
+      "sourceSection": "Getting Brand Assets Right (no sub-sections)",
+      "severity": "low",
+      "weight": 3,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Check whether the brand cues the owner named (logo, colour, character, phrase) appear in the first screen. Without owner-supplied cues the result is insufficient evidence. Memorability needs audience research; a screenshot cannot establish it. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Show the brand cue you named in the first screen: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.ipsos.com/en/getting-brand-assets-right",
+        "section": "Getting Brand Assets Right (no sub-sections)",
+        "sectionVerified": true,
+        "applicability": "Scans where the owner supplied brand cues.",
+        "evidence": [
+          "region",
+          "quote"
+        ],
+        "exceptions": [
+          "No owner cues: insufficient evidence, never unmet.",
+          "Recognition and memorability require audience evidence."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ],
+        "supplementary": [
+          {
+            "name": "Ehrenberg-Bass, Building Distinctive Brand Assets (book listing)",
+            "url": "https://marketingscience.info/learn-with-us/books",
+            "sectionVerified": false
+          }
+        ]
+      },
+      "userImpact": "Visitors may not connect the page with the brand they know.",
+      "businessImpact": "Brand cues may be missed. This is a hypothesis; recognition needs audience research.",
+      "requiredEvidence": [
+        "a screenshot region",
+        "an exact quote from the page"
+      ]
+    },
+    {
+      "ruleId": "DIFF-012",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "A Specific Differentiator Is Stated",
+      "description": "Check whether the page states at least one concrete, checkable way it differs (a number, a named method, a named audience) rather than generic claims. Quote it, or quote the generic claim.",
+      "source": "NN/g, Homepage Design: 5 Fundamental Principles",
+      "sourceType": "research",
+      "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-2-communicate-who-you-are-and-what-you-do-2",
+      "sourceKey": "NNHOME",
+      "sourceSection": "Principle 2: Communicate Who You Are and What You Do",
+      "severity": "low",
+      "weight": 3,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Check whether the page states at least one concrete, checkable way it differs (a number, a named method, a named audience) rather than generic claims. Quote it, or quote the generic claim. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "State one concrete, checkable way you differ: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-2-communicate-who-you-are-and-what-you-do-2",
+        "section": "Principle 2: Communicate Who You Are and What You Do",
+        "sectionVerified": true,
+        "applicability": "Every page with marketing copy.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "A portfolio differentiates through its work samples; quoting a project counts."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      },
+      "userImpact": "Visitors comparing options cannot see why to choose you.",
+      "businessImpact": "The page may read like its competitors. This is a hypothesis; Avara did not measure choice.",
+      "requiredEvidence": [
+        "an exact quote from the page"
+      ]
     }
   ]
 }
