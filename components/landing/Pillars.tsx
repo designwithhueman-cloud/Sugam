@@ -4,7 +4,7 @@
 // with the page's shared motion (components/landing/Reveal.tsx); reduced motion shows them still. Nothing to operate or pause.
 import { Reveal } from './Reveal.tsx';
 import { SHOW_PERSON_NOTE } from './flags.ts';
-import { Menu, UserCheck, Volume2, X } from 'lucide-react';
+import { Check, KeyRound, Menu, UserCheck, Volume2, X } from 'lucide-react';
 
 // A red issue tag, the same in every picture
 const Flag = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
@@ -73,18 +73,46 @@ function Ready() {
   );
 }
 
+// Security: a secret key sitting in the page's code, where anyone can read it
+function Leak() {
+  return (
+    <Frame>
+      <div className="px-3 pb-4 pt-2.5 font-mono text-[0.68rem] leading-relaxed text-neutral-700">
+        <p className="text-neutral-500">// in your page’s code</p>
+        <p className="flex items-center gap-1.5"><KeyRound aria-hidden className="size-3 shrink-0 text-[#b3261e]" /><span className="truncate">key = “sk_••••”</span></p>
+        <span className="mt-2 block h-1.5 w-2/3 rounded-full bg-[#ecebe6]" />
+      </div>
+      <Flag className="absolute -bottom-3 left-3">Anyone can read this key</Flag>
+    </Frame>
+  );
+}
+// Regression: the last fix worked, and something that used to work broke
+function Regress() {
+  const row = (ok: boolean, label: string, tag: string) => (
+    <p className="flex items-center justify-between gap-2 rounded-md bg-[#f4f3ee] px-2 py-1.5 text-[0.68rem] font-semibold text-ink">{label}<span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[0.6rem] ${ok ? 'bg-[#dcf3e7] text-[#174a32]' : 'bg-[#fbe0dc] text-[#8a1c14]'}`}>{ok ? <Check aria-hidden className="size-2.5" strokeWidth={3} /> : <X aria-hidden className="size-2.5" strokeWidth={3} />}{tag}</span></p>
+  );
+  return (
+    <Frame>
+      <div className="space-y-1.5 px-3 pb-4 pt-2.5">{row(true, 'Sign-up form', 'Fixed')}{row(false, 'Checkout', 'Newly broken')}</div>
+      <Flag className="absolute -bottom-3 left-3">Your fix broke checkout</Flag>
+    </Frame>
+  );
+}
+
 const CARDS = [
   { q: 'Is the offer clear?', tags: ['Product clarity', 'Trust'], text: 'A first-time visitor can’t tell what you do or why to trust you, so they leave.', Scene: Offer, tint: 'bg-[#eef8cf]' },
   { q: 'Can visitors take action?', tags: ['UX', 'Conversion'], text: 'The main button is hard to find or competes with others, so visitors give up.', Scene: Action, tint: 'bg-[#efe9ff]' },
   { q: 'Can everyone use it?', tags: ['Mobile', 'Accessibility'], text: 'Faint text, unnamed buttons or no keyboard access shut people out before they start.', Scene: Everyone, tint: 'bg-[#eef8cf]' },
   { q: 'Does the page feel ready?', tags: ['Performance', 'Design', 'Differentiation'], text: 'A slow, jumpy, unfinished or generic-looking page makes visitors doubt you and leave.', Scene: Ready, tint: 'bg-[#efe9ff]' },
+  { q: 'Is anything leaking?', tags: ['Security', 'Leaked keys', 'Open customer data'], text: 'Secret keys, private files or customer data that anyone can read. It only reads, and never changes your site.', Scene: Leak, tint: 'bg-[#fde9e6]' },
+  { q: 'Did your fix break anything?', tags: ['Regression', 'Check again'], text: 'Check again after every change. Avara compares with last time and lists what newly broke first.', Scene: Regress, tint: 'bg-[#eef8cf]' },
 ] as const;
 
-export const SCENES = { Offer, Action, Everyone, Ready };
+export const SCENES = { Offer, Action, Everyone, Ready, Leak, Regress };
 export function Pillars() {
   return (
     <Reveal>
-      <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {CARDS.map((c, i) => (
           <li key={c.q} className="hs-in flex flex-col rounded-[2rem] border border-black/10 bg-white p-3" style={{ animationDelay: `${i * 90}ms` }}>
             <div aria-hidden className={`grid h-44 place-items-center overflow-hidden rounded-[1.5rem] px-4 pb-3 ${c.tint}`}><c.Scene /></div>

@@ -35,7 +35,7 @@ export function LandingPage() {
           <section id="pillars" aria-labelledby="pillars-h" className="scroll-mt-6 px-5 pb-20 sm:px-10 lg:pb-32">
             <p className={kicker}>What we check</p>
             <h2 id="pillars-h" className={`mt-4 ${h2}`}>What else could <span className="text-vio-deep">get in their way</span>?</h2>
-            <p className="mt-5 text-xl leading-relaxed text-neutral-800">A covered button is one problem. Every scan checks all four, <strong className="font-semibold text-ink">on desktop and phone</strong>. Your page gets <strong className="font-semibold text-ink">a score out of 100</strong>, and so does each area. Paid plans add AI-assisted review.</p>
+            <p className="mt-5 text-xl leading-relaxed text-neutral-800">A covered button is one problem. Every scan checks the first four cards, <strong className="font-semibold text-ink">on desktop and phone</strong>. Your page gets <strong className="font-semibold text-ink">a score out of 100</strong>, and so does each area. Two more checks look after you launch: <strong className="font-semibold text-ink">security</strong> and <strong className="font-semibold text-ink">regression</strong>. Paid plans add AI-assisted review.</p>
             <div className="mt-10 lg:mt-12"><Pillars /></div>
           </section>
 
