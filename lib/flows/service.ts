@@ -4,6 +4,7 @@ import { getDb, schema } from '../db/index.ts';
 import { parseFlow, type Flow } from '../../packages/contracts/index.ts';
 import { checkUrl, BlockedUrlError } from '../net/guard.ts';
 import { runOnWorker, WorkerError } from './worker.ts';
+import { settleRun } from '../../packages/flow-engine/insights.ts';
 
 export const MAX_FLOWS_PER_PROJECT = 25;
 const RUN_WINDOW_MS = 600_000, MAX_RUNS_PER_WINDOW = 10;
@@ -57,7 +58,7 @@ export async function startRun(flowId: string, userId: string): Promise<{ ok: tr
 async function finishRun(runId: string, flow: Flow): Promise<void> {
   const db = await getDb();
   try {
-    const result = await runOnWorker(flow);
+    const result = await settleRun(() => runOnWorker(flow));   // a failure is repeated once, so a slow page is not reported as a broken one
     await db.update(schema.flowRuns).set({ status: result.status, result: result as unknown as Record<string, unknown>, finishedAt: new Date() }).where(eq(schema.flowRuns.id, runId));
   } catch (e) {
     const message = e instanceof WorkerError ? e.message : 'The run could not be completed.';

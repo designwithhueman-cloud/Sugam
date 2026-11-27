@@ -3,10 +3,11 @@
 // (plan, membership, policy); this component only calls /api/projects/:id/flows and /api/flows/:id.
 import * as React from 'react';
 import { Button } from '@/components/ui/button.tsx';
+import { compareRuns, plainStep } from '@/packages/flow-engine/insights.ts';
 
 type Row = { id: string; name: string; steps: number; startUrl: string; lastRun: { status: string; at: string } | null };
 type Step = { stepId: string; action: string; status: string; ms: number; urlAfter: string | null; error: string | null; assertions: { passed: boolean; observed: string; assertion: { type: string } }[] };
-type Run = { id: string; status: string; error: string | null; startedAt: string; result: { steps: Step[]; consoleErrors: string[]; failedRequests: { url: string; status: number | null }[]; ms: number } | null };
+type Run = { id: string; status: string; error: string | null; startedAt: string; result: { attempts?: number; flaky?: boolean; steps: Step[]; consoleErrors: string[]; failedRequests: { url: string; status: number | null }[]; ms: number } | null };
 
 const EXAMPLE = JSON.stringify({ name: 'Open the pricing page', startUrl: 'https://example.com/', steps: [{ id: 'pricing', action: 'click', selector: 'a[href="/pricing"]', expect: [{ type: 'url_contains', value: '/pricing' }, { type: 'visible', selector: 'h1' }] }] }, null, 2);
 const LABEL: Record<string, string> = { passed: 'Passed', failed: 'Failed', blocked: 'Blocked by safety rules', error: 'Could not run', running: 'Running', skipped: 'Skipped' };
@@ -16,7 +17,9 @@ const Badge = ({ s }: { s: string }) => <span className={`rounded-full px-2.5 py
 export function FlowsPanel({ projectId, canDelete, initial }: { projectId: string; canDelete: boolean; initial: Row[] }) {
   const [rows, setRows] = React.useState(initial);
   const [json, setJson] = React.useState(EXAMPLE); const [msg, setMsg] = React.useState<string | null>(null); const [busy, setBusy] = React.useState<string | null>(null);
-  const [runs, setRuns] = React.useState<Record<string, Run | undefined>>({}); const [open, setOpen] = React.useState<string | null>(null);
+  const [runs, setRuns] = React.useState<Record<string, Run | undefined>>({}); const [prev, setPrev] = React.useState<Record<string, Run | undefined>>({}); const [open, setOpen] = React.useState<string | null>(null);
+  // the newest run, and the finished run before it, which a before/after comparison needs
+  function take(id: string, list: Run[] | undefined) { const latest = list?.[0]; if (latest) setRuns((x) => ({ ...x, [id]: latest })); setPrev((x) => ({ ...x, [id]: list?.slice(1).find((r) => r.result && (r.status === 'passed' || r.status === 'failed')) })); }
 
   async function api(method: string, path: string, body?: unknown) {
     const r = await fetch(path, { method, headers: { 'content-type': 'application/json' }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
@@ -33,13 +36,13 @@ export function FlowsPanel({ projectId, canDelete, initial }: { projectId: strin
     setMsg(null); setBusy(id); const r = await api('POST', `/api/flows/${id}/runs`); if (!r.ok) { setBusy(null); setMsg(r.data?.message ?? 'The run could not start.'); return; }
     setOpen(id);
     for (let i = 0; i < 120; i++) {
-      const g = await api('GET', `/api/flows/${id}/runs`); const latest = (g.data?.runs as Run[] | undefined)?.[0]; if (latest) setRuns((x) => ({ ...x, [id]: latest }));
+      const g = await api('GET', `/api/flows/${id}/runs`); const list = g.data?.runs as Run[] | undefined; const latest = list?.[0]; take(id, list);
       if (latest && latest.status !== 'running') break; await new Promise((res) => setTimeout(res, 1500));
     }
     setBusy(null); await reload();
   }
   async function remove(id: string) { if (!confirm('Delete this flow and its run history?')) return; const r = await api('DELETE', `/api/flows/${id}`); if (!r.ok) setMsg(r.data?.message ?? 'Could not delete.'); await reload(); }
-  async function show(id: string) { if (open === id) { setOpen(null); return; } setOpen(id); const g = await api('GET', `/api/flows/${id}/runs`); const latest = (g.data?.runs as Run[] | undefined)?.[0]; if (latest) setRuns((x) => ({ ...x, [id]: latest })); }
+  async function show(id: string) { if (open === id) { setOpen(null); return; } setOpen(id); const g = await api('GET', `/api/flows/${id}/runs`); take(id, g.data?.runs as Run[] | undefined); }
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -59,9 +62,12 @@ export function FlowsPanel({ projectId, canDelete, initial }: { projectId: strin
               {open === f.id && <div className="mt-4 border-t border-slate-200 pt-3" data-testid="flow-result">
                 {!r ? <p className="text-sm text-slate-600">No runs yet.</p> : <>
                   <p className="mb-2 flex items-center gap-2 text-sm text-slate-700"><Badge s={r.status} />{r.result ? `${(r.result.ms / 1000).toFixed(1)} s` : ''}{r.error ? ` ${r.error}` : ''}</p>
-                  <ol className="space-y-2">{r.result?.steps.map((s) => <li key={s.stepId} className="rounded-lg bg-slate-50 p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium text-ink">{s.stepId} <span className="font-normal text-slate-600">({s.action})</span></span><Badge s={s.status} /></div>
-                    {s.error && <p className="mt-1 text-slate-800">{s.error}</p>}
-                    {s.assertions.map((a, i) => <p key={i} className="mt-1 text-slate-600">{a.passed ? '✓' : '✗'} {a.assertion.type.replace('_', ' ')}: {a.observed}</p>)}</li>)}</ol>
+                  {r.result?.flaky && <p data-testid="flaky" className="mb-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">This flow did not give the same answer twice, so Avara ran it again. {r.status === 'passed' ? 'It passed on the second try, which means it works sometimes. Treat it as unreliable.' : 'It failed at a different step each time, so the cause is unclear.'}</p>}
+                  {r.result && prev[f.id]?.result && r.status !== 'running' && (() => { const c = compareRuns(prev[f.id]!.result as never, r.result as never); return <div data-testid="flow-compare" data-result={c.result} className={`mb-3 rounded-lg p-3 text-sm ${c.result === 'regressed' ? 'bg-red-50 text-red-900' : c.result === 'fixed' ? 'bg-emerald-50 text-emerald-900' : 'bg-slate-50 text-slate-800'}`}><p className="font-semibold">Compared with the run before</p><p className="mt-1">{c.summary}</p>{c.newConsoleErrors.length > 0 && <p className="mt-1">{c.newConsoleErrors.length} new error(s) on the page.</p>}{c.newFailedRequests.length > 0 && <p className="mt-1">{c.newFailedRequests.length} new request(s) failed.</p>}</div>; })()}
+                  <ol className="space-y-2">{r.result?.steps.map((s) => { const plain = plainStep(s as never); return <li key={s.stepId} className="rounded-lg bg-slate-50 p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium text-ink">{s.stepId} <span className="font-normal text-slate-600">({s.action})</span></span><Badge s={s.status} /></div>
+                    {plain && <p data-testid="plain-step" className="mt-1 text-slate-800">{plain}</p>}
+                    {s.error && <details className="mt-1 text-slate-600"><summary className="cursor-pointer">Technical detail</summary><p className="mt-1 break-words">{s.error}</p></details>}
+                    {s.assertions.map((a, i) => <p key={i} className="mt-1 text-slate-600">{a.passed ? '✓' : '✗'} {a.assertion.type.replace('_', ' ')}: {a.observed}</p>)}</li>; })}</ol>
                   {!!r.result?.consoleErrors.length && <p className="mt-2 text-sm text-slate-600">{r.result.consoleErrors.length} console error(s) on the page.</p>}
                 </>}
               </div>}

@@ -56,6 +56,8 @@ export const RunStatus = z.enum(['passed', 'failed', 'blocked']);
 export const FlowRun = z.object({
   flowId: z.string(), status: RunStatus, startedAt: z.string(), ms: z.number().int().nonnegative(),
   steps: z.array(StepResult),
+  attempts: z.number().int().min(1).max(3).default(1),   // 2 when a failed run was repeated once before being reported
+  flaky: z.boolean().default(false),                       // passed only on the repeat, or failed differently each time: do not trust it
   consoleErrors: z.array(z.string().max(300)).max(50),
   failedRequests: z.array(z.object({ url: z.string().max(300), status: z.number().int().nullable(), reason: z.string().max(120) })).max(50),
 });
