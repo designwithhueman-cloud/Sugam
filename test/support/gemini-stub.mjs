@@ -1,11 +1,23 @@
 // Test-only preload (node --import): answers Gemini generateContent calls locally, so no key or quota is used. GEMINI_STUB=ok|500|400,
-// GEMINI_STUB_DELAY=<ms> before each answer. Every other URL goes to the real fetch. Used by test/report-first.mjs.
+// GEMINI_STUB_DELAY=<ms> before each answer, GEMINI_STUB_GATE=<file> holds the fix writer until the file exists (see below). Every other URL goes to the real fetch. Used by test/report-first.mjs.
 const real = globalThis.fetch; const mode = process.env.GEMINI_STUB || 'ok'; let calls = 0;
 globalThis.fetch = async (url, init) => {
   const u = String(url);
   if (!u.startsWith('https://generativelanguage.googleapis.com/')) return real(url, init);
   calls++; await new Promise((r) => setTimeout(r, Number(process.env.GEMINI_STUB_DELAY || 0))); const keyInUrl = /key=/.test(u); const hasHeader = !!(init?.headers?.['x-goog-api-key']);
   console.log(`[gemini-stub] call ${calls} model=${u.split('/models/')[1]?.split(':')[0]} keyHeader=${hasHeader} keyInUrl=${keyInUrl}`);
+  // GEMINI_STUB_GATE=<file>: a fix-writer call is held until that file exists (the test creates it), so a test can observe "report complete,
+  // fix wording still pending" without racing the clock. GEMINI_STUB_GATE_MAX_MS (default 60000) stops a bug from hanging a run forever.
+  if (process.env.GEMINI_STUB_GATE) {
+    try {
+      const t = JSON.parse(init.body).contents[0].parts.map((p) => p.text || '').join('\n');
+      if (/FIXES \(data\):/.test(t)) {
+        const fs = await import('node:fs'); const gate = process.env.GEMINI_STUB_GATE; const t0 = Date.now(); const max = Number(process.env.GEMINI_STUB_GATE_MAX_MS || 60000);
+        while (!fs.existsSync(gate) && Date.now() - t0 < max) await new Promise((r) => setTimeout(r, 25));
+        console.log(`[gemini-stub] fix-writer gate ${fs.existsSync(gate) ? 'released' : 'timed out'} after ${Date.now() - t0} ms`);
+      }
+    } catch { /* not a request body we can read: not a fix call */ }
+  }
   if (mode === '500') return new Response(JSON.stringify({ error: { message: 'stub server error' } }), { status: 500 });
   if (mode === '400') return new Response(JSON.stringify({ error: { message: 'API key not valid (stub)' } }), { status: 400 });
   const body = JSON.parse(init.body); const text = body.contents[0].parts.map((p) => p.text || '').join('\n');

@@ -1,16 +1,19 @@
 // The AI fix writer through the real product, against a server started with the Gemini stub (test/support/gemini-stub.mjs).
 // Mode is the server's GEMINI_STUB_FIX (ok | bad) or GEMINI_STUB=500; pass the same word here. GEMINI_STUB_LOG must point at the file given.
-// Run: node test/fix-writer-server.mjs <baseUrl> <ok|bad|500|off> [stubLog]
+// Run: node test/fix-writer-server.mjs <baseUrl> <ok|bad|500|off> [stubLog] [gateFile]
+// gateFile: the server's GEMINI_STUB_GATE. The stub holds the fix-writer call until this test creates the file, once it has seen the report complete,
+// so "the fix wording is still pending when the report completes" is observed deterministically in every mode (no sleeps, no stub delay).
 import fs from 'node:fs';
 import { chromium } from 'playwright';
-const [base, mode, log] = [process.argv[2], process.argv[3] || 'ok', process.argv[4]]; const F = 'http://127.0.0.1:4200';
+const [base, mode, log, gate] = [process.argv[2], process.argv[3] || 'ok', process.argv[4], process.argv[5]]; const F = 'http://127.0.0.1:4200';
 const results = []; const check = (n, ok, x = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  [${mode}] ${n}${x ? '  ' + x : ''}`); };
 const c = fs.readFileSync('.data/test-account.txt', 'utf8'); const b = await chromium.launch(); const ctx = await b.newContext(); const p = await ctx.newPage();
 await p.goto(base + '/login'); await p.fill('input[type=email]', c.match(/Email: (\S+)/)[1]); await p.fill('input[type=password]', c.match(/Password: (\S+)/)[1]); await p.press('input[type=password]', 'Enter'); await p.waitForURL(/\/app/);
 if (log) fs.writeFileSync(log, '');
+if (gate) fs.rmSync(gate, { force: true });   // closed: the fix writer is held until the report has been seen complete
 const t0 = Date.now(); const { id } = await (await ctx.request.post(base + '/api/scans', { headers: { origin: base }, data: { url: F + '/launch/unnamed-button.html', goal: 'Book a demo' } })).json();
 let done = null, fixDone = null, atDone = null;
-for (;;) { const s = await (await ctx.request.get(`${base}/api/scans/${id}`)).json(); if (s.status === 'completed' && done == null) { done = Date.now() - t0; atDone = s; } if (done != null && !s.fixPending && fixDone == null) fixDone = Date.now() - t0; if (fixDone != null && !s.aiPending) break; if (s.status === 'failed') break; if (Date.now() - t0 > 240000) break; await new Promise((r) => setTimeout(r, 300)); }
+for (;;) { const s = await (await ctx.request.get(`${base}/api/scans/${id}`)).json(); if (s.status === 'completed' && done == null) { done = Date.now() - t0; atDone = s; if (gate && mode !== 'off') fs.writeFileSync(gate, 'released'); } if (done != null && !s.fixPending && fixDone == null) fixDone = Date.now() - t0; if (fixDone != null && !s.aiPending) break; if (s.status === 'failed') break; if (Date.now() - t0 > 240000) break; await new Promise((r) => setTimeout(r, 300)); }
 check('the report completed', done != null, `report ${(done / 1000).toFixed(1)} s, fix wording settled ${(fixDone / 1000).toFixed(1)} s`);
 if (mode !== 'off') check('the report did not wait for the fix writer (it was still pending when the report completed)', atDone?.fixPending === true);
 const html = await (await ctx.request.get(`${base}/scans/${id}`)).text(); const unesc = html.replace(/\\\\n/g, '\n').replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\u0026/g, '&');
