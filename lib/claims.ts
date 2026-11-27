@@ -35,3 +35,5 @@ export async function claimForUser(userId: string) {
   (await cookies()).delete(COOKIE);
 }
 export async function isClaimed(scanId: string) { return (await claimedScanIds()).includes(scanId); }
+
+export { secret as appSecret };   // also used to sign site-ownership tokens

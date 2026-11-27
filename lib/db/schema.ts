@@ -488,3 +488,24 @@ export const flowRuns = pgTable('flow_runs', {
   startedAt: ts('started_at').notNull().defaultNow(),
   finishedAt: ts('finished_at'),
 }, (t) => [index('flow_runs_flow_idx').on(t.flowId, t.startedAt)]);
+
+// ---------- launch check (exposure checks and site ownership) ----------
+// A project's owner proves control of its live address once per origin. Only then do the extra read-only requests (files, source maps, tables) run.
+export const siteVerifications = pgTable('site_verifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  origin: text('origin').notNull(),
+  method: text('method').notNull(),                       // meta | file
+  verifiedBy: uuid('verified_by').references(() => users.id, { onDelete: 'set null' }),
+  verifiedAt: ts('verified_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('site_verifications_project_origin').on(t.projectId, t.origin)]);
+
+export const exposureRuns = pgTable('exposure_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  url: text('url').notNull(),
+  active: boolean('active').notNull().default(false),     // true when the owner was verified and the extra checks ran
+  results: jsonb('results').notNull().$type<Record<string, unknown>[]>(),   // check results only: never keys, file contents or row values
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: ts('created_at').notNull().defaultNow(),
+}, (t) => [index('exposure_runs_project_idx').on(t.projectId, t.createdAt)]);

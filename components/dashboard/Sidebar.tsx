@@ -2,7 +2,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Layers, BarChart3, Lock, Settings, ChevronDown, LogOut, Menu, X, Check, Plus, Table2, ScanSearch, GitCompare, LayoutDashboard, Workflow } from 'lucide-react';
+import { Home, Layers, BarChart3, Lock, Settings, ChevronDown, LogOut, Menu, X, Check, Plus, Table2, ScanSearch, GitCompare, LayoutDashboard, Workflow, ShieldCheck } from 'lucide-react';
 import { logoutAction } from '@/app/actions.ts';
 import { cn } from '@/lib/utils.ts';
 import { Wordmark } from '@/components/landing/Header.tsx';
@@ -38,6 +38,7 @@ export function Sidebar({ org, orgName, planName, workspaces, sites, user }: { o
     { href: `${pb}/reports`, label: 'Reports', icon: Table2, on: path.startsWith(`${pb}/reports`), sub: true },
     { href: `${pb}/scanner`, label: 'Scanner', icon: ScanSearch, on: path.startsWith(`${pb}/scanner`), sub: true },
     { href: `${pb}/flows`, label: 'Flows', icon: Workflow, on: path.startsWith(`${pb}/flows`), sub: true },
+    { href: `${pb}/launch-check`, label: 'Launch check', icon: ShieldCheck, on: path.startsWith(`${pb}/launch-check`), sub: true },
     { href: `${pb}/compare`, label: 'Before and after', icon: GitCompare, on: path.startsWith(`${pb}/compare`), sub: true },
   ] : [];
   const shared: Item = { href: `${root}/shared`, label: 'Shared reports', icon: BarChart3, on: path.startsWith(`${root}/shared`) };

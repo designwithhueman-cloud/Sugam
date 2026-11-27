@@ -23,6 +23,7 @@ export const Step = z.discriminatedUnion('action', [
   z.object({ ...base, action: z.literal('click'), selector }),
   z.object({ ...base, action: z.literal('fill'), selector, value: z.string().max(500) }),
   z.object({ ...base, action: z.literal('press'), key: z.string().min(1).max(40) }),
+  z.object({ ...base, action: z.literal('reload') }),
   z.object({ ...base, action: z.literal('wait_for'), selector, timeoutMs: z.number().int().min(100).max(15000).default(5000) }),
 ]);
 export type Step = z.infer<typeof Step>;
@@ -47,6 +48,7 @@ export const StepStatus = z.enum(['passed', 'failed', 'blocked', 'skipped']);
 export const StepResult = z.object({
   stepId: z.string(), action: z.string(), status: StepStatus, ms: z.number().int().nonnegative(),
   urlAfter: z.string().nullable(), error: z.string().max(400).nullable(), assertions: z.array(AssertionResult),
+  screenshot: z.string().max(200).nullable().default(null),   // file name of the screenshot taken after the step, when the host asked for them
 });
 export type StepResult = z.infer<typeof StepResult>;
 

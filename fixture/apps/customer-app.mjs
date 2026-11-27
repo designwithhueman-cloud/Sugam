@@ -54,7 +54,7 @@ ${D.has('mobileOverflow') ? '<div style="width:640px;background:#fde;padding:8px
 <label for="email">Email</label><input id="email" name="email" type="email" maxlength="200"><button type="submit" id="save">Save</button></form>
 <p><a href="/dashboard">Back to customers</a></p>`,
     `const f=document.getElementById('customer-form'),t=document.getElementById('toast');
-f.addEventListener('submit',async(e)=>{e.preventDefault();let ok=false;try{const r=await fetch('/api/customers',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:f.name.value,email:f.email.value})});ok=r.ok;}catch{}
+f.addEventListener('submit',async(e)=>{e.preventDefault();let ok=false;try{const r=await fetch('/api/customers',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:f.name.value,email:f.email.value})});ok=r.ok;await r.text();}catch{}
 ${D.has('fakeToast') ? "t.textContent='Customer saved';" : "t.textContent=ok?'Customer saved':'Could not save the customer. Please try again.';"} });`);
 
   const server = http.createServer(async (req, res) => {
