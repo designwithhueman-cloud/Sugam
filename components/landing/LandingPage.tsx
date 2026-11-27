@@ -9,6 +9,7 @@ import { Pillars } from './Pillars.tsx';
 import { Platforms } from './Platforms.tsx';
 import { HowItWorks } from './HowItWorks.tsx';
 import { LandingFaq } from './Faq.tsx';
+import { LaunchCheck } from './LaunchCheck.tsx';
 import { Who } from './Who.tsx';
 import { Agencies } from './Agencies.tsx';
 import { Plans, kicker, h2 } from './Sections.tsx';
@@ -57,6 +58,9 @@ export function LandingPage() {
           {/* How it works: scan, pins, fix: right after the problem */}
           <section id="how" aria-labelledby="how-h"><HowItWorks /></section>
 
+
+          {/* The security half of the promise, and the check-again loop: after how a scan works, before who it is for and pricing */}
+          <LaunchCheck />
 
           {/* A reason to try it now, after the tools: paste a real page */}
           {SHOW_TRY && (
