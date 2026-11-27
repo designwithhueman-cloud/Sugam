@@ -6,6 +6,7 @@ import { getDb, schema } from './db/index.ts';
 import { deletePrefix } from './storage.ts';
 import { roleIn, canManage } from './access.ts';
 import type { User } from './auth.ts';
+import { logError } from './security/redact.ts';
 
 export const ANON_RETENTION_DAYS = () => Math.max(1, Number(process.env.ANON_RETENTION_DAYS || 30));
 
@@ -27,7 +28,7 @@ async function removeScans(ids: string[]): Promise<number> {
   if (!ids.length) return 0;
   const db = await getDb();
   for (let i = 0; i < ids.length; i += 200) await db.delete(schema.scans).where(inArray(schema.scans.id, ids.slice(i, i + 200)));
-  for (const id of ids) { try { await deletePrefix(`scans/${id}`); } catch (e) { console.error('scan files not removed', id, e); } }
+  for (const id of ids) { try { await deletePrefix(`scans/${id}`); } catch (e) { logError(`scan files not removed ${id}`, e); } }
   return ids.length;
 }
 // Rescans point at their original (rescan_of). Deleting an original keeps its rescans, which simply lose the link.

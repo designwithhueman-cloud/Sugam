@@ -1,8 +1,9 @@
 // Calls the isolated browser worker (services/browser-worker). The app never runs a flow's browser in its own process.
 // Env: WORKER_URL (e.g. http://127.0.0.1:8080), WORKER_TOKEN. Without them, runs fail with a clear message instead of falling back.
 import { FlowRun, type Flow } from '../../packages/contracts/index.ts';
+import { redactDeep } from '../security/redact.ts';
 
-export class WorkerError extends Error { constructor(message: string, public code: 'not_configured' | 'busy' | 'refused' | 'timeout' | 'unavailable' | 'bad_response') { super(message); } }
+export class WorkerError extends Error { code: 'not_configured' | 'busy' | 'refused' | 'timeout' | 'unavailable' | 'bad_response'; constructor(message: string, code: WorkerError['code']) { super(message); this.code = code; } }
 
 export async function runOnWorker(flow: Flow): Promise<FlowRun> {
   const url = process.env.WORKER_URL, token = process.env.WORKER_TOKEN;
@@ -16,5 +17,5 @@ export async function runOnWorker(flow: Flow): Promise<FlowRun> {
   if (res.status === 422 || res.status === 400) throw new WorkerError(String(body?.error ?? 'The worker refused this flow.').slice(0, 200), 'refused');
   if (res.status !== 200) throw new WorkerError('The browser worker could not run this flow.', 'unavailable');
   const parsed = FlowRun.safeParse(body); if (!parsed.success) throw new WorkerError('The worker returned an unreadable result.', 'bad_response');
-  return parsed.data;
+  return redactDeep(parsed.data);
 }

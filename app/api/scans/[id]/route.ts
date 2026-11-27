@@ -7,6 +7,7 @@ import { isClaimed } from '@/lib/claims.ts';
 import { aiStillRunning } from '@/lib/report.ts';
 import { getObject } from '@/lib/storage.ts';
 import { scanHas } from '@/lib/entitlements.ts';
+import { redactDeep } from '@/lib/security/redact.ts';
 
 export const dynamic = 'force-dynamic';
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -25,11 +26,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if ((s.status === 'queued' && since > QUEUED_STALE_MS) || ((s.status === 'running' || s.status === 'analyzing') && since > RUNNING_STALE_MS)) {
     const error = { code: 'interrupted', message: 'This scan did not finish. Please run it again.' };
     await db.update(schema.scans).set({ status: 'failed', error, completedAt: new Date() }).where(eq(schema.scans.id, id));
-    return NextResponse.json({ status: 'failed', progress: s.progress, error, url: s.url });
+    return NextResponse.json(redactDeep({ status: 'failed', progress: s.progress, error, url: s.url }));
   }
   // A blocker confirmed during the scan (evidence and fix saved together). The screenshot follows the plan gate used for every screenshot.
   const raw = s.status !== 'failed' ? await getObject(`scans/${id}/early/blocker.json`) : null;
   const early = raw ? (() => { const r = JSON.parse(raw.toString('utf8')); return r; })() : null;
   if (early) early.shotUrl = early.hasShot && (await scanHas(id, 'full_report')) ? `/api/scans/${id}/early-shot` : null;
-  return NextResponse.json({ status: s.status, progress: s.progress, error: s.error, url: s.url, aiPending: aiStillRunning(s), fixPending: s.ai?.fixes?.state === 'pending' && !!s.completedAt && Date.now() - s.completedAt.getTime() < 15 * 60_000, early });
+  return NextResponse.json(redactDeep({ status: s.status, progress: s.progress, error: s.error, url: s.url, aiPending: aiStillRunning(s), fixPending: s.ai?.fixes?.state === 'pending' && !!s.completedAt && Date.now() - s.completedAt.getTime() < 15 * 60_000, early }));
 }

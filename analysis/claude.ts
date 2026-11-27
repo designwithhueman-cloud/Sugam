@@ -13,6 +13,7 @@ import type { ScanOutput } from '../scanner/scanner.ts';
 import { STANDARDS } from '../lib/standards.ts';
 import { aiProvider } from '../src/engines/rule-engine/llm/index.ts';
 import { geminiJson, geminiModel, GeminiUndecided, limited, type GeminiPart } from '../src/engines/rule-engine/llm/GeminiClient.ts';
+import { redactText } from '../lib/security/redact.ts';
 
 export const AI_MODEL = process.env.AVARA_FIX_MODEL || process.env.SUGAM_AI_MODEL || 'claude-opus-5-5';   // AVARA_AI_MODEL is the rule engine's model
 export const aiEnabled = () => process.env.AVARA_AI === 'on' || process.env.SUGAM_AI === 'on';
@@ -122,7 +123,7 @@ export async function enrich(scan: ScanOutput, issues: DraftIssue[]): Promise<En
   const client = new Anthropic();
   const images = req.images.map((b) => ({ type: 'image' as const, source: { type: 'base64' as const, media_type: 'image/jpeg' as const, data: b.toString('base64') } }));
   try {
-    const res = await withTimeout(client.messages.parse({ model: AI_MODEL, max_tokens: 4000, output_config: { format: zodOutputFormat(FixChanges) }, system: req.system, messages: [{ role: 'user', content: [...images, { type: 'text', text: req.text }] }] }), FIX_TIMEOUT());
+    const res = await withTimeout(client.messages.parse({ model: AI_MODEL, max_tokens: 4000, output_config: { format: zodOutputFormat(FixChanges) }, system: redactText(req.system), messages: [{ role: 'user', content: [...images, { type: 'text', text: redactText(req.text) }] }] }), FIX_TIMEOUT());
     if (res.stop_reason === 'refusal' || !res.parsed_output) return done({ used: false, model: AI_MODEL, reason: `AI fix wording returned no usable result (${res.stop_reason}); Avara’s own fixes are shown.`, changed: 0 });
     const r = applyChanges(targets, res.parsed_output);
     return done({ used: r.changed > 0, model: AI_MODEL, changed: r.changed, refused: r.refused });

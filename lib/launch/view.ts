@@ -3,12 +3,13 @@
 import { asc, eq } from 'drizzle-orm';
 import { getDb, schema } from '../db/index.ts';
 import { LAUNCH_ENTRIES, NEEDS_LABEL } from './registry.ts';
+import { redactDeep } from '../security/redact.ts';
 
 export type LaunchCell = { outcome: string; reason: string; target: string | null; evidence: unknown[]; ruleVersion: string };
 export type LaunchLine = { entry: string; hostRuleId: string; title: string; decision: string; needs: string | null; viewports: { desktop?: LaunchCell; mobile?: LaunchCell } };
 export type LaunchReport = { packVersion: string | null; lines: LaunchLine[]; pageState: 'initial'; note: string } | null;
 
-export async function loadLaunch(scanId: string): Promise<LaunchReport> {
+async function loadLaunchRaw(scanId: string): Promise<LaunchReport> {
   const db = await getDb();
   const rows = await db.select().from(schema.launchChecks).where(eq(schema.launchChecks.scanId, scanId)).orderBy(asc(schema.launchChecks.createdAt));
   if (!rows.length) return null;
@@ -21,3 +22,5 @@ export async function loadLaunch(scanId: string): Promise<LaunchReport> {
   const broken = rows.filter((r) => r.entry === 'pack');
   return { packVersion: rows[0].packVersion, lines, pageState: 'initial', note: broken.length ? broken.map((b) => `${b.viewport}: ${b.reason}`).join(' ') : 'Read once per viewport on the page as it first loaded. Zero weight: never counted in scores or rule totals.' };
 }
+
+export async function loadLaunch(scanId: string): Promise<LaunchReport> { return redactDeep(await loadLaunchRaw(scanId)); }

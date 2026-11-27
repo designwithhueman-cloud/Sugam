@@ -2,8 +2,9 @@
 import { eq, inArray, asc } from 'drizzle-orm';
 import { getDb, schema } from '../../../lib/db/index.ts';
 import type { ReviewReport } from '../../../lib/report-types.ts';
+import { redactDeep } from '../../../lib/security/redact.ts';
 
-export async function loadReview(scanId: string, opts: { full: boolean }): Promise<ReviewReport | null> {
+async function loadReviewRaw(scanId: string, opts: { full: boolean }): Promise<ReviewReport | null> {
   const db = await getDb();
   const [res] = await db.select().from(schema.scanResults).where(eq(schema.scanResults.scanId, scanId)); if (!res) return null;
   const cats = await db.select().from(schema.categoryScores).where(eq(schema.categoryScores.scanId, scanId));
@@ -22,3 +23,5 @@ export async function loadReview(scanId: string, opts: { full: boolean }): Promi
     })),
   };
 }
+
+export async function loadReview(scanId: string, opts: { full: boolean }): Promise<ReviewReport | null> { return redactDeep(await loadReviewRaw(scanId, opts)); }

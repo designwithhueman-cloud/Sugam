@@ -4,6 +4,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { LlmClient, LlmVerdict } from '../RuleTypes.ts';
+import { redactText } from '../../../../lib/security/redact.ts';
 
 // The graded review (paid plans): met, partly met, unmet or insufficient evidence per criterion, grounded in an exact quote, a screenshot region
 // or a browser measurement from the context, with one recommendation. result/evidence stay for the engine's existing rules.
@@ -21,14 +22,14 @@ export function createClaudeClient(model = process.env.AVARA_AI_MODEL || 'claude
     async evaluate({ system, rules, context, images }) {
       const imgs = (images ?? []).slice(0, 2).map((i) => ({ type: 'image' as const, source: { type: 'base64' as const, media_type: 'image/jpeg' as const, data: i.data.toString('base64') } }));
       const res = await client.messages.parse({
-        model, max_tokens: 8000, output_config: { format: zodOutputFormat(Verdicts) }, system,
-        messages: [{ role: 'user', content: [...imgs, { type: 'text', text: `RULES (data):\n${JSON.stringify(rules)}\n\nPAGE CONTEXT (data):\n${JSON.stringify(context)}` }] }],
+        model, max_tokens: 8000, output_config: { format: zodOutputFormat(Verdicts) }, system: redactText(system),
+        messages: [{ role: 'user', content: [...imgs, { type: 'text', text: redactText(`RULES (data):\n${JSON.stringify(rules)}\n\nPAGE CONTEXT (data):\n${JSON.stringify(context)}`) }] }],
       });
       if (res.stop_reason === 'refusal' || !res.parsed_output) throw new Error(`no usable result (${res.stop_reason})`);
       return res.parsed_output.verdicts as LlmVerdict[];
     },
     async interpret({ system, failures, context }) {
-      const res = await client.messages.parse({ model, max_tokens: 4000, output_config: { format: zodOutputFormat(Impacts) }, system, messages: [{ role: 'user', content: `FAILURES (data):\n${JSON.stringify(failures)}\n\nCONTEXT (data):\n${JSON.stringify(context)}` }] });
+      const res = await client.messages.parse({ model, max_tokens: 4000, output_config: { format: zodOutputFormat(Impacts) }, system: redactText(system), messages: [{ role: 'user', content: redactText(`FAILURES (data):\n${JSON.stringify(failures)}\n\nCONTEXT (data):\n${JSON.stringify(context)}`) }] });
       return res.parsed_output?.impacts ?? [];
     },
   };

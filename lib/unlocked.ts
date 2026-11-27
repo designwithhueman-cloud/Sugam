@@ -4,6 +4,7 @@ import { asc, eq, inArray } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
 import { plainTitle } from './plain.ts';
 import type { ReportIssue } from './report-types.ts';
+import { redactDeep } from './security/redact.ts';
 
 export type UnlockedFix = {
   id: string; plain: string; technical: string; severity: 'critical' | 'serious' | 'moderate' | 'minor'; wcag: string[];
@@ -24,7 +25,7 @@ export function fromReportIssue(i: ReportIssue): UnlockedFix {
 }
 
 // The top confirmed failure of a scan, straight from the database (used by the anonymous teaser).
-export async function unlockedFindingFor(scanId: string): Promise<UnlockedFix | null> {
+async function unlockedFindingForRaw(scanId: string): Promise<UnlockedFix | null> {
   const db = await getDb();
   const [top] = (await db.select().from(schema.issues).where(eq(schema.issues.scanId, scanId)).orderBy(asc(schema.issues.position))).filter((i) => i.bucket === 'confirmed_failure');
   if (!top) return null;
@@ -35,3 +36,5 @@ export async function unlockedFindingFor(scanId: string): Promise<UnlockedFix | 
     prompt: barePrompt(top.fixes?.aiPrompt.cursor), code: top.fixes ? top.fixes.code : null,
   };
 }
+
+export async function unlockedFindingFor(scanId: string): Promise<UnlockedFix | null> { return redactDeep(await unlockedFindingForRaw(scanId)); }

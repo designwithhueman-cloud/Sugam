@@ -22,6 +22,7 @@ import { detectPatterns } from '../src/context/knowledge/patterns.ts';
 import { ruleLoader } from '../src/engines/rule-engine/RuleLoader.ts';
 import { createLlmClient } from '../src/engines/rule-engine/llm/index.ts';
 import { hasFeature } from './plans.ts';
+import { logError, redactError } from './security/redact.ts';
 import { planForScan } from './entitlements.ts';
 import type { ReviewResult } from '../src/engines/rule-engine/RuleTypes.ts';
 
@@ -31,7 +32,7 @@ export async function runScanJob(scanId: string): Promise<void> {
   if (!scan || scan.status === 'completed' || scan.status === 'failed') return; // done, or given up on (interrupted) while it waited
   // Drizzle queries are lazy: they run only when awaited or then-ed. Progress is fired without awaiting, so it calls then() itself; a failed
   // progress write never stops the scan.
-  const progress = (step: string, percent: number, stages?: import('../scanner/scanner.ts').ScanStages) => db.update(schema.scans).set({ progress: { step, percent, ...(stages ? { stages } : {}) } }).where(eq(schema.scans.id, scanId)).then(() => undefined, (e) => { console.error('progress not saved', scanId, e); });
+  const progress = (step: string, percent: number, stages?: import('../scanner/scanner.ts').ScanStages) => db.update(schema.scans).set({ progress: { step, percent, ...(stages ? { stages } : {}) } }).where(eq(schema.scans.id, scanId)).then(() => undefined, (e) => { logError(`progress not saved ${scanId}`, e); });
   await db.update(schema.scans).set({ status: 'running', startedAt: new Date(), progress: { step: 'Starting browser', percent: 5 } }).where(eq(schema.scans.id, scanId));
   try {
     const out = await scanUrl(scan.url, scan.standard, (s, p, st) => { void progress(s, p, st); }, { goal: scan.goal ?? null, perfRuns: scan.rescanOf ? 3 : 1, onBlocker: (b) => { void saveEarlyBlocker(scanId, b); } });
@@ -59,7 +60,7 @@ export async function runScanJob(scanId: string): Promise<void> {
     const rv = process.env.AVARA_FAIL_ANALYZER === 'review' ? { review: null, error: 'forced failure' } : await runReview(out, a, av, aiLater ? { llm: null, aiPending: true } : aiAllowed ? {} : { llm: null, aiExcluded: true });
     if (!rv.review) analyzers.review = { status: 'failed', message: `The rule review did not complete: ${rv.error ?? 'unknown error'}` }; else analyzers.review = { status: 'ok' };
     // DIFF-002 hero-layout comparison: diagnostic evidence kept beside the scan (never a finding, never scored), read through /api/scans/{id}/diagnostics.
-    try { await putObject(`scans/${scanId}/diagnostics/diff-002.json`, JSON.stringify(heroDiagnostic(out))); } catch (e) { console.error('DIFF-002 diagnostic not stored', scanId, e); }
+    try { await putObject(`scans/${scanId}/diagnostics/diff-002.json`, JSON.stringify(heroDiagnostic(out))); } catch (e) { logError(`DIFF-002 diagnostic not stored ${scanId}`, e); }
 
     // Files first (they live outside the database), then every row in ONE transaction, in a few
     // batched inserts. A failure part-way rolls back, so a scan never keeps half its findings,
@@ -108,7 +109,7 @@ export async function runScanJob(scanId: string): Promise<void> {
       }
       const lr = launchRows(scanId, out); for (const c of chunk(lr)) await tx.insert(schema.launchChecks).values(c);
     });
-    if (rv.review && !aiLater) { try { await detectPatterns(); } catch (e) { console.error('pattern detection failed', e); } }
+    if (rv.review && !aiLater) { try { await detectPatterns(); } catch (e) { logError('pattern detection failed', e); } }
     // A rescan compares each earlier finding with a fresh, comparable check. Failing to run the checks leaves "could not verify", never "fixed".
     if (scan.rescanOf) {
       try {
@@ -135,8 +136,8 @@ export async function runScanJob(scanId: string): Promise<void> {
     if (aiLater && rv.review) void finishAiReview(scanId, productId!, out, a, av);   // not awaited: the queue slot is freed for the next scan
     if (fixTargets) void finishFixWriter(scanId, out, a, issueRows.map((r) => r.id as string), recsByIssue(av, avRows));
   } catch (e) {
-    const err = e instanceof ScanError ? { code: e.code, message: e.message } : { code: (e as { code?: string }).code || 'internal', message: (e as Error).message?.split('\n')[0] || 'The scan failed.' };
-    if (!(e instanceof ScanError)) console.error('scan failed', scanId, e);
+    const err = e instanceof ScanError ? { code: e.code, message: redactError(e) } : { code: (e as { code?: string }).code || 'internal', message: redactError(e) || 'The scan failed.' };
+    if (!(e instanceof ScanError)) logError(`scan failed ${scanId}`, e);
     await db.update(schema.scans).set({ status: 'failed', error: err, completedAt: new Date() }).where(eq(schema.scans.id, scanId));
   }
 }
@@ -160,8 +161,8 @@ export async function finishAiReview(scanId: string, productId: string, out: Par
       }
       await tx.update(schema.scans).set({ ai: mergeAi({ pending: false }) }).where(eq(schema.scans.id, scanId));   // merged in SQL: the fix writer may update the same field
     });
-    if (review) { try { await detectPatterns(); } catch (e) { console.error('pattern detection failed', e); } }
-  } catch (e) { console.error('AI review not saved', scanId, e); }
+    if (review) { try { await detectPatterns(); } catch (e) { logError('pattern detection failed', e); } }
+  } catch (e) { logError(`AI review not saved ${scanId}`, e); }
 }
 
 /** Early reveal of a confirmed blocker: the 320px probe found the main action covered by a fixed or sticky element that cannot be dismissed.
@@ -180,7 +181,7 @@ async function saveEarlyBlocker(scanId: string, b: EarlyBlocker): Promise<void> 
       viewport: { width: b.width, height: b.height }, action: { text, selector: m.selector }, cover: { selector: cover.selector, position: cover.position, text: (cover.text ?? '').slice(0, 120) },
       plainChange: fix.plainChange, prompts: fix.fixes.aiPrompt, hasShot };
     await putObject(`scans/${scanId}/early/blocker.json`, JSON.stringify(rec));
-  } catch (e) { console.error('early blocker not saved', scanId, e); }
+  } catch (e) { logError(`early blocker not saved ${scanId}`, e); }
 }
 
 /** Merges keys into scans.ai in one statement, so the AI review and the fix writer, finishing in either order, never overwrite each other. */
@@ -212,7 +213,7 @@ export async function finishFixWriter(scanId: string, out: ScanOutput, a: { issu
       }
       await tx.update(schema.scans).set({ ai: mergeAi({ used: r.used, model: r.model ?? null, reason: r.reason ?? null, fixes: { state: 'done', changed: r.changed, refused: r.refused ?? 0, rubrics: r.rubrics ?? [], ms: r.ms ?? null } }) }).where(eq(schema.scans.id, scanId));
     });
-  } catch (e) { console.error('AI fix wording not saved', scanId, (e as Error).message); }
+  } catch (e) { logError(`AI fix wording not saved ${scanId}`, e); }
 }
 
 /** Remeasure the main action with each repair's CSS applied, at both phone widths, and rebuild those fixes from the result (in place, so the

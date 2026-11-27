@@ -3,6 +3,7 @@ import { currentUser } from '@/lib/auth.ts';
 import { canViewScan } from '@/lib/access.ts';
 import { isClaimed } from '@/lib/claims.ts';
 import { loadReport } from '@/lib/report.ts';
+import { redactDeep } from '@/lib/security/redact.ts';
 
 export const dynamic = 'force-dynamic';
 // Category scores and findings from the rule engine, with the same strict scores and record-based counts the report page shows (loadReport applies
@@ -20,5 +21,5 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const extra = { pageSummary: report?.pageSummary ?? null, aiReview: report?.aiReview ?? null, locked: !!report?.locked, url: report?.finalUrl || report?.url,
     recommendations: av?.recommendations.map((r) => ({ id: r.id, rank: r.rank, title: r.title, fixLocked: r.fixLocked, fixes: r.fixes })) ?? [],
     findings: av?.findings.map((f) => ({ id: f.id, ruleId: f.ruleId, bucket: f.bucket, category: f.category, viewports: f.evidence ? [...new Set(f.evidence.map((e) => e.viewport).filter(Boolean))] : null })) ?? [] };
-  return review ? NextResponse.json({ ...review, ...extra, launch: report?.launch ?? null }) : NextResponse.json({ error: 'no_review', message: 'This scan has no rule review.' }, { status: 404 });
+  return review ? NextResponse.json(redactDeep({ ...review, ...extra, launch: report?.launch ?? null })) : NextResponse.json({ error: 'no_review', message: 'This scan has no rule review.' }, { status: 404 });
 }

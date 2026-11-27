@@ -5,6 +5,8 @@
 //   - read-only, always: GET requests only. Table checks use the public (anon) key and keep names and column names, never row values.
 //   - a leaked service key is reported and never used.
 import { checkUrl } from '../../lib/net/guard.ts';
+import { KINDS, PRIVATE_KEY, PRIVATE_KEY_MASK, JWT, jwtKind, maskedForm, maskedJwt } from './patterns.ts';
+export { jwtPayload } from './patterns.ts';
 
 export type Severity = 'critical' | 'high' | 'medium';
 export type ExposureResult = { id: 'SEC-011' | 'SEC-012' | 'SEC-013' | 'SEC-014'; title: string; status: 'pass' | 'flag' | 'unverified'; severity: Severity | null; active: boolean; plain: string; fix: string; yourself?: string; evidence: string[] };   // fix: a message to paste into the AI builder; yourself: what only the owner can do
@@ -31,29 +33,19 @@ export async function guardedGet(url: string, init: { headers?: Record<string, s
 }
 
 // ---- secrets in code ----
-type SecretKind = { name: string; severity: Severity; re: RegExp };
-const SECRET_KINDS: SecretKind[] = [
-  { name: 'Stripe live secret key', severity: 'critical', re: /\b[sr]k_live_[0-9a-zA-Z]{20,}\b/g },
-  { name: 'Anthropic API key', severity: 'critical', re: /\bsk-ant-[A-Za-z0-9_-]{30,}\b/g },
-  { name: 'OpenAI API key', severity: 'critical', re: /\bsk-(?:proj-)?[A-Za-z0-9_-]{40,}\b/g },
-  { name: 'AWS access key', severity: 'critical', re: /\bAKIA[0-9A-Z]{16}\b/g },
-  { name: 'GitHub token', severity: 'critical', re: /\bgh[pousr]_[A-Za-z0-9]{36,}\b/g },
-  { name: 'Slack token', severity: 'high', re: /\bxox[baprs]-[A-Za-z0-9-]{20,}\b/g },
-  { name: 'Private key', severity: 'critical', re: /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/g },
-];
-const JWT = /\beyJ[A-Za-z0-9_-]{8,}\.eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g;
-export function jwtPayload(t: string): Record<string, unknown> | null { try { return JSON.parse(Buffer.from(t.split('.')[1], 'base64url').toString('utf8')); } catch { return null; } }
-
-export type Secret = { kind: string; severity: Severity; preview: string };
+export type Secret = { kind: string; severity: Severity; preview: string; location: string };
 export type Keys = { secrets: Secret[]; anon: { token: string; ref: string }[] };
-/** Finds leaked secrets and the public database key in code text. Previews only; a service key is classified and never returned whole. */
-export function scanCode(code: string): Keys {
+/** Finds leaked secrets and the public database key in code text, on the RAW text (classification comes before masking). A result carries the
+ *  kind, where it was found and a masked form (well-known prefix only), never the value. A service key is classified and never returned whole. */
+export function scanCode(code: string, location = 'the page'): Keys {
   const secrets: Secret[] = []; const anon: Keys['anon'] = []; const seen = new Set<string>();
-  for (const k of SECRET_KINDS) for (const m of code.matchAll(k.re)) if (!seen.has(m[0])) { seen.add(m[0]); secrets.push({ kind: k.name, severity: k.severity, preview: k.name === 'Private key' ? 'a private key block' : mask(m[0]) }); }
+  const add = (kind: string, severity: Severity, preview: string) => secrets.push({ kind, severity, preview, location });
+  for (const k of KINDS) if (k.leak) for (const m of code.matchAll(k.re)) if (!seen.has(m[0])) { seen.add(m[0]); add(k.name, k.severity, maskedForm(k, m[0])); }
+  for (const m of code.matchAll(PRIVATE_KEY)) if (!seen.has(m[0])) { seen.add(m[0]); add('Private key', 'critical', PRIVATE_KEY_MASK); }
   for (const m of code.matchAll(JWT)) {
-    if (seen.has(m[0])) continue; seen.add(m[0]); const p = jwtPayload(m[0]); if (!p) continue;
-    if (p.role === 'service_role') secrets.push({ kind: 'Supabase service key (full database access)', severity: 'critical', preview: mask(m[0]) });
-    else if (p.role === 'anon' && typeof p.ref === 'string') anon.push({ token: m[0], ref: p.ref });
+    if (seen.has(m[0])) continue; seen.add(m[0]); const j = jwtKind(m[0]);
+    if (j.id === 'jwt_service') add(j.name, 'critical', maskedJwt());
+    else if (j.id === 'jwt_anon' && j.ref) anon.push({ token: m[0], ref: j.ref });
   }
   return { secrets, anon };
 }
@@ -82,7 +74,10 @@ export async function auditSite(url: string, o: AuditOptions): Promise<ExposureR
 
   const srcs = scriptSrcs(home.body, home.url).slice(0, 12); const code: { url: string; text: string }[] = [{ url: home.url, text: home.body }];
   for (const s of srcs) { const r = await guardedGet(s, {}, f); if (r && r.status === 200) code.push({ url: s, text: r.body }); }
-  const all = code.map((c) => c.text).join('\n'); const keys = scanCode(all);
+  const all = code.map((c) => c.text).join('\n');
+  const where = (u: string) => { try { return u === home.url ? 'the home page HTML' : new URL(u).pathname; } catch { return 'the page'; } };
+  const keys: Keys = { secrets: [], anon: [] }; const seenSecret = new Set<string>();
+  for (const c of code) { const k = scanCode(c.text, where(c.url)); for (const x of k.secrets) { const id = `${x.kind}|${x.preview}|${x.location}`; if (!seenSecret.has(id)) { seenSecret.add(id); keys.secrets.push(x); } } for (const a of k.anon) if (!keys.anon.some((y) => y.token === a.token)) keys.anon.push(a); }
 
   const out: ExposureResult[] = [];
   out.push(keys.secrets.length
@@ -90,7 +85,7 @@ export async function auditSite(url: string, o: AuditOptions): Promise<ExposureR
         plain: 'Anyone who opens your site can read these secret keys in its code and use them as if they were you. Treat them as already stolen.',
         fix: 'Remove every secret key from the frontend code. Keep secrets only on the server, using environment variables. Do not change anything else.',
         yourself: 'Replace (rotate) each exposed key in that provider’s dashboard. The old keys are compromised, so removing them from the code is not enough.',
-        evidence: keys.secrets.map((s) => `${s.kind}: ${s.preview}`) }
+        evidence: keys.secrets.map((s) => `${s.kind}: ${s.preview} (in ${s.location})`) }
     : { id: 'SEC-011', title: 'Secret keys in your site’s code', status: 'pass', severity: null, active: false, plain: 'No secret keys were found in your site’s code.', fix: '', evidence: [`Read ${code.length} file${code.length === 1 ? '' : 's'}.`] });
 
   if (!o.active) {

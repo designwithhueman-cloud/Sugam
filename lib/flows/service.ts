@@ -5,6 +5,7 @@ import { parseFlow, type Flow } from '../../packages/contracts/index.ts';
 import { checkUrl, BlockedUrlError } from '../net/guard.ts';
 import { runOnWorker, WorkerError } from './worker.ts';
 import { settleRun } from '../../packages/flow-engine/insights.ts';
+import { logError, redactDeep, sensitiveFillProblem } from '../security/redact.ts';
 
 export const MAX_FLOWS_PER_PROJECT = 25;
 const RUN_WINDOW_MS = 600_000, MAX_RUNS_PER_WINDOW = 10;
@@ -15,7 +16,10 @@ export async function createFlow(projectId: string, userId: string, input: unkno
   const body = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
   const parsed = parseFlow({ ...body, id: 'pending' });   // the real id is the row id, set below
   if (!parsed.ok) return { ok: false, status: 400, error: 'invalid_flow', message: parsed.error };
-  try { await checkUrl(parsed.flow.startUrl); } catch (e) { if (e instanceof BlockedUrlError) return { ok: false, status: 400, error: 'blocked_url', message: e.message }; throw e; }
+  const sensitive = sensitiveFillProblem(parsed.flow as unknown as Parameters<typeof sensitiveFillProblem>[0]);   // before anything is stored: no credentials, keys, card or ID numbers
+  if (sensitive) return { ok: false, status: 400, error: 'sensitive_value', message: sensitive.reason };
+  try { parsed.flow.startUrl = (await checkUrl(parsed.flow.startUrl)).toString(); } catch (e) { if (e instanceof BlockedUrlError) return { ok: false, status: 400, error: 'blocked_url', message: e.message }; throw e; }   // the stored address has secret parameters removed
+  parsed.flow = redactDeep(parsed.flow);
   const db = await getDb();
   const have = await db.select({ id: schema.flows.id }).from(schema.flows).where(eq(schema.flows.projectId, projectId));
   if (have.length >= MAX_FLOWS_PER_PROJECT) return { ok: false, status: 409, error: 'limit', message: `A project can keep ${MAX_FLOWS_PER_PROJECT} flows.` };
@@ -58,11 +62,11 @@ export async function startRun(flowId: string, userId: string): Promise<{ ok: tr
 async function finishRun(runId: string, flow: Flow): Promise<void> {
   const db = await getDb();
   try {
-    const result = await settleRun(() => runOnWorker(flow));   // a failure is repeated once, so a slow page is not reported as a broken one
+    const result = redactDeep(await settleRun(() => runOnWorker(flow)));   // the page's console text, request addresses and step messages are masked before they are stored   // a failure is repeated once, so a slow page is not reported as a broken one
     await db.update(schema.flowRuns).set({ status: result.status, result: result as unknown as Record<string, unknown>, finishedAt: new Date() }).where(eq(schema.flowRuns.id, runId));
   } catch (e) {
     const message = e instanceof WorkerError ? e.message : 'The run could not be completed.';
-    if (!(e instanceof WorkerError)) console.error('flow run failed', runId, (e as Error).message);
+    if (!(e instanceof WorkerError)) logError(`flow run failed ${runId}`, e);
     await db.update(schema.flowRuns).set({ status: 'error', error: message, finishedAt: new Date() }).where(eq(schema.flowRuns.id, runId)).catch(() => {});
   }
 }

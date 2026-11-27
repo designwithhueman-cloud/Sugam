@@ -7,6 +7,7 @@ import { currentUser } from '@/lib/auth.ts';
 import { sameOrigin } from '@/lib/access.ts';
 import { addClaim } from '@/lib/claims.ts';
 import { clientIp } from '@/lib/ip.ts';
+import { redactText } from '@/lib/security/redact.ts';
 
 export const dynamic = 'force-dynamic';
 const hits = new Map<string, number[]>();
@@ -33,7 +34,8 @@ export async function POST(req: Request) {
   const db = await getDb();
   // The main goal is optional and builder-confirmed: plain text, trimmed and capped.
   const goal = typeof body.goal === 'string' ? body.goal.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || null : null;
-  const [scan] = await db.insert(schema.scans).values({ url, standard, goal, createdBy: user?.id ?? null }).returning({ id: schema.scans.id });
+  const goalSafe = goal ? redactText(goal) : goal;   // a pasted key does not become part of the stored goal
+  const [scan] = await db.insert(schema.scans).values({ url, standard, goal: goalSafe, createdBy: user?.id ?? null }).returning({ id: schema.scans.id });
   await enqueueScan(scan.id);
   if (!user) await addClaim(scan.id);
   return NextResponse.json({ id: scan.id }, { status: 202 });

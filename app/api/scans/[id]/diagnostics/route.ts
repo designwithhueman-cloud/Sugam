@@ -3,6 +3,7 @@ import { currentUser } from '@/lib/auth.ts';
 import { canViewScan } from '@/lib/access.ts';
 import { scanHas } from '@/lib/entitlements.ts';
 import { getObject } from '@/lib/storage.ts';
+import { redactDeep } from '@/lib/security/redact.ts';
 
 export const dynamic = 'force-dynamic';
 // Diagnostic detector output stored by the scan worker (today: DIFF-002 hero-layout comparison). Not part of the report and never scored.
@@ -15,5 +16,5 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   if (!(await scanHas(id, 'full_report'))) return NextResponse.json({ error: 'plan', message: 'Diagnostics need a paid plan.' }, { status: 402 });
   const raw = await getObject(`scans/${id}/diagnostics/diff-002.json`);
   const diff002 = raw ? JSON.parse(raw.toString('utf8')) : { ruleId: 'DIFF-002', status: 'not-run', reason: 'This scan was run before the DIFF-002 comparison was stored. Rescan to produce it.', weight: 0, publish: false };
-  return NextResponse.json({ scanId: id, visibility: 'diagnostic: not shown in reports, not scored', diagnostics: { 'DIFF-002': diff002 } }, { headers: { 'cache-control': 'no-store' } });
+  return NextResponse.json(redactDeep({ scanId: id, visibility: 'diagnostic: not shown in reports, not scored', diagnostics: { 'DIFF-002': diff002 } }), { headers: { 'cache-control': 'no-store' } });
 }

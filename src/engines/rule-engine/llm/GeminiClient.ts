@@ -5,6 +5,7 @@
 // "inconclusive". Only a configuration error (bad key, unknown model) throws, which the evaluator reports as "AI unavailable".
 import { z } from 'zod';
 import type { LlmClient, LlmVerdict, WebsiteContext } from '../RuleTypes.ts';
+import { redactText } from '../../../../lib/security/redact.ts';
 
 // The graded review (paid plans): met, partly met, unmet or insufficient evidence per criterion, grounded in an exact quote, a screenshot region
 // or a browser measurement from the context, with one recommendation. result/evidence stay for the engine's existing rules.
@@ -48,14 +49,16 @@ export async function limited<T>(fn: () => Promise<T>, first = false): Promise<T
 export async function geminiJson(model: string, system: string, parts: GeminiPart[], schema: Record<string, unknown>, retried = false): Promise<unknown> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set');
+  // Last line of defence: whatever reaches here, a secret-shaped value is masked before it leaves the server (images are passed through untouched).
+  const safeSystem = redactText(system); const safeParts = parts.map((p) => ('text' in p && typeof p.text === 'string' ? { ...p, text: redactText(p.text) } : p)) as GeminiPart[];
   let res: Response;
   try {
     res = await fetch(`${API}/${encodeURIComponent(model)}:generateContent`, {
       method: 'POST', signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: { 'content-type': 'application/json', 'x-goog-api-key': key },   // the key travels in a header, never in the URL
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents: [{ role: 'user', parts }],
+        systemInstruction: { parts: [{ text: safeSystem }] },
+        contents: [{ role: 'user', parts: safeParts }],
         generationConfig: { responseMimeType: 'application/json', responseJsonSchema: schema, temperature: 0 },
       }),
     });

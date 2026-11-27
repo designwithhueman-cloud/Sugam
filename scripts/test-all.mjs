@@ -13,7 +13,7 @@ const APP_PORT = 3390, SEED_PORT = 3398, LC_PORT = 4331;
 const STUB = path.join(ROOT, 'test', 'support', 'gemini-stub.mjs');
 
 // ---------------- the three groups ----------------
-export const IN_PROCESS = ['avara-catalog', 'code-evidence', 'continuity-detectors', 'coverage', 'coverage-matrix', 'cta-regression', 'data-lifecycle', 'detector-pack', 'detector-pack-v3', 'detector-spec', 'detector-trace', 'detectors', 'diff-002', 'fix-enrichment', 'fix-format', 'fix-tools', 'fix-writer', 'fixture-apps', 'flow-contracts', 'flow-engine', 'flow-insights', 'gemini-path', 'batch-detectors', 'launch-pack', 'milestone1', 'not-run-reasons', 'phone-widths', 'policy-engine', 'readiness', 'rule-engine', 'scanner-accuracy', 'score-admission', 'scoring', 'security-exposure', 'tracks', 'value-detectors', 'ai-review', 'test-all-runner'];
+export const IN_PROCESS = ['avara-catalog', 'code-evidence', 'continuity-detectors', 'coverage', 'coverage-matrix', 'cta-regression', 'data-lifecycle', 'detector-pack', 'detector-pack-v3', 'detector-spec', 'detector-trace', 'detectors', 'diff-002', 'fix-enrichment', 'fix-format', 'fix-tools', 'fix-writer', 'fixture-apps', 'flow-contracts', 'flow-engine', 'flow-insights', 'gemini-path', 'batch-detectors', 'launch-pack', 'milestone1', 'not-run-reasons', 'phone-widths', 'policy-engine', 'readiness', 'rule-engine', 'scanner-accuracy', 'score-admission', 'scoring', 'security-exposure', 'tracks', 'value-detectors', 'ai-review', 'redaction', 'redaction-pipeline', 'test-all-runner'];
 const stubEnv = (extra = {}) => (c) => ({ AVARA_AI: 'on', AVARA_AI_PROVIDER: 'gemini', GEMINI_API_KEY: 'stub', NODE_OPTIONS: `--import ${STUB}`, GEMINI_STUB_LOG: c.file('stub.log'), ...extra });
 const gated = (mode, fix) => ({ server: (c) => ({ ...stubEnv({ GEMINI_STUB: mode === '500' ? '500' : 'ok', GEMINI_STUB_FIX: fix, GEMINI_STUB_GATE: c.file('gate') })(c) }) });
 // id, test file, arguments (b = the server's address), and the server's own settings when they differ from the default (AI off).
@@ -25,6 +25,7 @@ export const SERVER = [
   { id: 'launch-report', test: 'launch-report', args: (c) => [c.base] }, { id: 'security', test: 'security', args: (c) => [c.base] }, { id: 'tools', test: 'tools', args: (c) => [c.base] },
   { id: 'workspace-evidence', test: 'workspace-evidence', args: (c) => [c.base] }, { id: 'crawl', test: 'crawl', args: () => [], env: (c) => ({ BASE: c.base }) },
   { id: 'phone-product', test: 'phone-product', args: (c) => ['check', c.base] },
+  { id: 'redaction-server', test: 'redaction-server', args: (c) => [c.base], server: () => ({ ALLOW_PRIVATE_HOSTS: '127.0.0.1:4342' }), testEnv: () => ({ ALLOW_PRIVATE_HOSTS: '127.0.0.1:4342' }) },
   { id: 'diff-002-api', test: 'diff-002-api', args: (c) => [c.base], server: () => ({ AVARA_DIFF002_REFERENCES: 'fixture/site/diff002/references.json' }) },
   { id: 'launch-check-api', test: 'launch-check-api', args: (c) => [c.base], server: () => ({ ALLOW_PRIVATE_HOSTS: `127.0.0.1:${LC_PORT}`, LC_TEST_SUPABASE_BASE: `http://127.0.0.1:${LC_PORT}` }), testEnv: () => ({ ALLOW_PRIVATE_HOSTS: `127.0.0.1:${LC_PORT}` }) },
   { id: 'ai-review-server', test: 'ai-review-server', args: (c) => [c.base, c.file('stub.log')], server: (c) => stubEnv({ GEMINI_STUB: 'review' })(c) },

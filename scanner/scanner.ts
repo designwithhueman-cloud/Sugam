@@ -15,6 +15,8 @@ import { startEgressProxy } from './egress-proxy.ts';
 import { BOXES, PAGE_METRICS, HEURISTICS, EXTRA, FOCUS_SNAPSHOT, MOTION } from './inpage.ts';
 import { STANDARDS, type StandardId } from '../lib/standards.ts';
 import { checkUrl, BlockedUrlError } from '../lib/net/guard.ts';
+import { withMaskedPage, noticeShot } from './mask-screenshot.ts';
+import { redactDeep, redactScanOutput } from '../lib/security/redact.ts';
 import { probeActions, runWorkflow, type ActionProbe, type Candidate, type Classification, type Measurement } from './avara.ts';
 
 /** A blocker confirmed by the 320px main-action probe while the scan is still running: the action is unusable because a fixed or sticky
@@ -71,7 +73,7 @@ export type Extra = {
 export type Motion = { hasReducedMotionRule: boolean; readableSheets: number; unreadableSheets: number; running: (NodeRef & { changed?: string[] })[]; still?: number; unsampled?: number };
 export type ViewportResult = {
   name: ViewportId; width: number; height: number; pageWidth: number; pageHeight: number;
-  screenshot: Buffer; viewportShot: Buffer; truncated: boolean;
+  screenshot: Buffer; viewportShot: Buffer; truncated: boolean; screenshotOmitted?: boolean;
   axe: { violations: AxeResult[]; incomplete: AxeResult[]; passes: { id: string; help: string; tags: string[] }[] };
   heuristics: Heuristics; keyboard: FocusStep[]; motion: Motion | null; boxes: Record<string, Box | null>;
   avara: ActionProbe | null; avaraError?: string;   // the main-action probe for this screen size
@@ -96,7 +98,7 @@ export type ScanOutput = {
   narrow?: NarrowResult | null;
 };
 export type NarrowResult = {
-  name: 'narrow'; width: number; height: number; pageWidth: number; pageHeight: number; screenshot: Buffer; viewportShot: Buffer; truncated: boolean;
+  name: 'narrow'; width: number; height: number; pageWidth: number; pageHeight: number; screenshot: Buffer; viewportShot: Buffer; screenshotOmitted?: boolean; truncated: boolean;
   avara: ActionProbe | null; avaraError?: string; reflow: Heuristics['reflow']; boxes: Record<string, Box | null>;
 };
 export class ScanError extends Error { code: string; constructor(code: string, message: string) { super(message); this.code = code; } }
@@ -190,7 +192,7 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     if (onBlocker && vp.name === 'mobile') {
       const c = avara?.candidates[0]; const cls = c?.classification, m = c?.measurement;
       if (c && cls && m && cls.level === 'unusable' && !cls.unproven && cls.causes[0]?.kind === 'covered' && m.cover && !m.cover.dismissible && /^(fixed|sticky)$/.test(m.cover.position ?? '')) {
-        try { onBlocker({ viewport: 'mobile', width: vp.width, height: vp.height, candidate: c.candidate, measurement: m, classification: cls, shot: await page.screenshot({ type: 'jpeg', quality: 75 }) }); } catch { /* the full report still has it */ }
+        try { const r = await withMaskedPage(page, () => page.screenshot({ type: 'jpeg', quality: 75 })); if (!r.omitted && r.value) onBlocker(redactDeep({ viewport: 'mobile' as const, width: vp.width, height: vp.height, candidate: c.candidate, measurement: m, classification: cls, shot: r.value })); } catch { /* the full report still has it */ }   // a secret that cannot be hidden: no early image at all
       }
     }
 
@@ -214,8 +216,13 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
     const metrics = await page.evaluate(`${PAGE_METRICS}()`) as { width: number; height: number; title: string };
     const shotHeight = Math.min(metrics.height, MAX_SHOT_HEIGHT);
     await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); scrollTo(0, 0); });
-    const screenshot = await page.screenshot({ type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: Math.max(vp.width, metrics.width), height: shotHeight } });
-    const viewportShot = await page.screenshot({ type: 'jpeg', quality: 70 }); onStage?.('screenshots');
+    // Visible secrets are hidden for the screenshots only, then the page is put back (measurements and findings use the real page). If one cannot be
+    // hidden, a plain notice is stored instead of the image.
+    const shots = await withMaskedPage(page, async () => ({ screenshot: await page.screenshot({ type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: Math.max(vp.width, metrics.width), height: shotHeight } }), viewportShot: await page.screenshot({ type: 'jpeg', quality: 70 }) }));
+    let screenshot: Buffer, viewportShot: Buffer; let screenshotOmitted = false;
+    if (shots.omitted) { screenshotOmitted = true; screenshot = await noticeShot(context, Math.max(vp.width, metrics.width), shotHeight); viewportShot = await noticeShot(context, vp.width, vp.height); limitations.push(`The ${vp.name} screenshots were replaced with a notice: a secret value was visible on the page and could not be hidden.`); }
+    else { ({ screenshot, viewportShot } = shots.value!); if (shots.hidden) limitations.push(`${shots.hidden} secret value${shots.hidden === 1 ? '' : 's'} visible on the ${vp.name} page ${shots.hidden === 1 ? 'was' : 'were'} hidden in its screenshots.`); }
+    onStage?.('screenshots');
 
     const axe: AxeResults = await new AxeBuilder({ page }).withTags(STANDARDS[std].axeTags).analyze();
     // Launch checks on the same navigation, viewport and axe run, while the page is still in its initial state (before the keyboard trace,
@@ -311,7 +318,7 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
       finalUrl: landedUrl, title: metrics.title, axeVersion: axe.testEngine.version,
       result: {
         name: vp.name, width: vp.width, height: vp.height, pageWidth: Math.max(vp.width, metrics.width), pageHeight: shotHeight, launch, stable, nameChecks,
-        screenshot, viewportShot, truncated: metrics.height > MAX_SHOT_HEIGHT,
+        screenshot, viewportShot, screenshotOmitted, truncated: metrics.height > MAX_SHOT_HEIGHT,
         axe: { violations: axe.violations, incomplete: axe.incomplete, passes: axe.passes.map((p) => ({ id: p.id, help: p.help, tags: p.tags })) },
         heuristics, keyboard, motion, boxes, avara, avaraError, pageContext, mobileProbe, orientation, textResize, validation, fragments, signals, navMenu, interaction, journey,
       },
@@ -321,7 +328,7 @@ async function runViewport(browser: Browser, proxyUrl: string, url: string, vp: 
 
 /** The focused 320px pass: open the page, measure the main action (covered, clipped, off-screen, too small), and read reflow and sideways
  *  overflow, all in the page's first-load state. No axe run, keyboard trace, workflow or launch checks: those belong to the 390px phone. */
-async function runNarrow(browser: Browser, proxyUrl: string, url: string, goal: string | null, onBlocker?: (b: EarlyBlocker) => void): Promise<NarrowResult> {
+async function runNarrow(browser: Browser, proxyUrl: string, url: string, goal: string | null, limitations: string[], onBlocker?: (b: EarlyBlocker) => void): Promise<NarrowResult> {
   const vp = NARROW;
   const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: 1, isMobile: false, reducedMotion: 'no-preference', serviceWorkers: 'block', acceptDownloads: false, proxy: { server: proxyUrl } });
   try {
@@ -333,18 +340,20 @@ async function runNarrow(browser: Browser, proxyUrl: string, url: string, goal: 
     try { avara = await probeActions(page, 'mobile', vp.width, goal, false); } catch (e) { avaraError = (e as Error).message.split('\n')[0]; }
     const c = avara?.candidates[0]; const cls = c?.classification, m = c?.measurement;
     if (onBlocker && c && cls && m && cls.level === 'unusable' && !cls.unproven && cls.causes[0]?.kind === 'covered' && m.cover && !m.cover.dismissible && /^(fixed|sticky)$/.test(m.cover.position ?? '')) {
-      try { onBlocker({ viewport: 'mobile', width: vp.width, height: vp.height, candidate: c.candidate, measurement: m, classification: cls, shot: await page.screenshot({ type: 'jpeg', quality: 75 }) }); } catch { /* the full report still has it */ }
+      try { const r = await withMaskedPage(page, () => page.screenshot({ type: 'jpeg', quality: 75 })); if (!r.omitted && r.value) onBlocker(redactDeep({ viewport: 'mobile' as const, width: vp.width, height: vp.height, candidate: c.candidate, measurement: m, classification: cls, shot: r.value })); } catch { /* the full report still has it */ }   // a secret that cannot be hidden: no early image at all
     }
     const h = await page.evaluate(`${HEURISTICS}(${JSON.stringify({ reflow: true })})`) as Heuristics;
     const metrics = await page.evaluate(`${PAGE_METRICS}()`) as { width: number; height: number; title: string };
     const shotHeight = Math.min(metrics.height, MAX_SHOT_HEIGHT);
     await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); scrollTo(0, 0); });
-    const screenshot = await page.screenshot({ type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: Math.max(vp.width, metrics.width), height: shotHeight } });
-    const viewportShot = await page.screenshot({ type: 'jpeg', quality: 70 });
+    const shots = await withMaskedPage(page, async () => ({ screenshot: await page.screenshot({ type: 'jpeg', quality: 72, fullPage: true, clip: { x: 0, y: 0, width: Math.max(vp.width, metrics.width), height: shotHeight } }), viewportShot: await page.screenshot({ type: 'jpeg', quality: 70 }) }));
+    let screenshot: Buffer, viewportShot: Buffer; let screenshotOmitted = false;
+    if (shots.omitted) { screenshotOmitted = true; screenshot = await noticeShot(context, Math.max(vp.width, metrics.width), shotHeight); viewportShot = await noticeShot(context, vp.width, vp.height); limitations.push('The 320px screenshots were replaced with a notice: a secret value was visible on the page and could not be hidden.'); }
+    else { ({ screenshot, viewportShot } = shots.value!); if (shots.hidden) limitations.push(`${shots.hidden} secret value${shots.hidden === 1 ? '' : 's'} visible at 320px ${shots.hidden === 1 ? 'was' : 'were'} hidden in its screenshots.`); }
     const sels = (h.reflow?.offenders ?? []).map((o) => o.selector).slice(0, 50);
     const boxes = sels.length ? await page.evaluate(`${BOXES}(${JSON.stringify(sels)})`) as Record<string, Box | null> : {};
     for (const b of Object.values(boxes)) if (b && b.y + b.height > shotHeight) b.visible = false;
-    return { name: 'narrow', width: vp.width, height: vp.height, pageWidth: Math.max(vp.width, metrics.width), pageHeight: shotHeight, screenshot, viewportShot, truncated: metrics.height > MAX_SHOT_HEIGHT, avara, avaraError, reflow: h.reflow, boxes };
+    return { name: 'narrow', width: vp.width, height: vp.height, pageWidth: Math.max(vp.width, metrics.width), pageHeight: shotHeight, screenshot, viewportShot, screenshotOmitted, truncated: metrics.height > MAX_SHOT_HEIGHT, avara, avaraError, reflow: h.reflow, boxes };
   } finally { await context.close().catch(() => {}); }
 }
 
@@ -372,7 +381,7 @@ export async function scanUrl(url: string, standard: StandardId, onProgress?: (s
     onProgress?.('Opening your page on desktop and a phone', 10, stages);
     // The first confirmed blocker wins, whichever phone width finds it first.
     let blockerSent = false; const once = opts.onBlocker ? (b: EarlyBlocker) => { if (blockerSent) return; blockerSent = true; opts.onBlocker!(b); } : undefined;
-    const narrowRun = runNarrow(browser, proxy.url, url, opts.goal ?? null, once).then((n) => n, (e: Error) => { limitations.push(`The 320px pass did not complete: ${e.message.split('\n')[0]}`); return null; });
+    const narrowRun = runNarrow(browser, proxy.url, url, opts.goal ?? null, limitations, once).then((n) => n, (e: Error) => { limitations.push(`The 320px pass did not complete: ${e.message.split('\n')[0]}`); return null; });
     const settled = await Promise.allSettled(VIEWPORTS.map(async (vp) => { const r = await runViewport(browser, proxy.url, url, vp, standard, limitations, opts.goal ?? null, once, stageOf(vp)); stageOf(vp)('done'); return r; }));
     const narrow = await narrowRun;
     onProgress?.('Collecting results', 80, stages);
@@ -398,7 +407,7 @@ export async function scanUrl(url: string, standard: StandardId, onProgress?: (s
       try { perf = await runLighthouse(finalUrl, opts.perfRuns ?? 1); analyzers.performance = { status: 'ok', ms: Date.now() - t0 }; }
       catch (e) { analyzers.performance = { status: 'failed', message: `Lighthouse did not complete: ${(e as Error).message.split('\n')[0].slice(0, 160)}` }; limitations.push('The performance check did not complete, so this report has no performance findings.'); }
     }
-    return { url, finalUrl, title, standard, engine: { axe: axeVersion, browser: `Chrome ${browser.version()}`, viewports: [...VIEWPORTS.map((v) => `${v.name} ${v.width}x${v.height}`), ...(narrow ? [`narrow ${NARROW.width}x${NARROW.height}`] : [])] }, viewports: out, limitations, perf, analyzers, goal: opts.goal ?? null, narrow };
+    return redactScanOutput({ url, finalUrl, title, standard, engine: { axe: axeVersion, browser: `Chrome ${browser.version()}`, viewports: [...VIEWPORTS.map((v) => `${v.name} ${v.width}x${v.height}`), ...(narrow ? [`narrow ${NARROW.width}x${NARROW.height}`] : [])] }, viewports: out, limitations, perf, analyzers, goal: opts.goal ?? null, narrow  });
   } finally {
     await browser.close().catch(() => {});
     await proxy.close();

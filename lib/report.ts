@@ -17,6 +17,7 @@ import { ruleLoader } from '../src/engines/rule-engine/RuleLoader.ts';
 const ruleWeight = new Map(ruleLoader().loadAllRules({ includeDisabled: true }).map((r) => [r.ruleId, r.weight]));
 import { collapsedContainer, collapsedNote, fixCaps } from './avara/evidence-check.ts';
 import { loadReview } from '../src/services/findings-service/index.ts';
+import { redactDeep } from './security/redact.ts';
 
 export const hashToken = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
 
@@ -113,7 +114,7 @@ function withExample(i: { ruleId: string; title: string; whatToChange: string; i
   } catch { return f; }
 }
 
-export async function loadReport(scanId: string, opts: { shareToken?: string } = {}): Promise<Report | null> {
+async function loadReportRaw(scanId: string, opts: { shareToken?: string } = {}): Promise<Report | null> {
   const db = await getDb();
   const [scan] = await db.select().from(schema.scans).where(eq(schema.scans.id, scanId));
   if (!scan) return null;
@@ -168,3 +169,6 @@ export async function loadReport(scanId: string, opts: { shareToken?: string } =
   // Entitlements are applied here so no caller can hand a locked report to the browser by accident.
   return hasFeature(await planForScan(scanId), 'full_report') ? report : redactReport(report);
 }
+
+/** The report as shown, exported and shared. Rows stored before masking existed are masked here, on read. */
+export async function loadReport(scanId: string, opts: { shareToken?: string } = {}): Promise<Report | null> { return redactDeep(await loadReportRaw(scanId, opts)); }
