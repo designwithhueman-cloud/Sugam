@@ -5,7 +5,7 @@ import { chromium } from 'playwright';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 const base = process.argv[2] || 'http://localhost:3100';
-const email = process.env.SETUP_EMAIL || 'agency-test@example.com'; const acctName = process.env.SETUP_NAME || 'Test Agency'; const credFile = process.env.SETUP_FILE || '.data/test-account.txt'; const pw = crypto.randomBytes(9).toString('base64url');
+const email = process.env.SETUP_EMAIL || 'agency-test@example.com'; const acctName = process.env.SETUP_NAME || 'Test Agency'; const credFile = process.env.SETUP_FILE || '.data/test-account.txt'; const pw = process.env.SETUP_PASSWORD || crypto.randomBytes(9).toString('base64url');   // SETUP_PASSWORD: seed an account with a known password (the test runner uses this)
 const b = await chromium.launch({ channel: 'chrome' }); const page = await (await b.newContext()).newPage();
 await page.goto(base + '/signup');
 await page.fill('#name', acctName); await page.fill('#email', email); await page.fill('#password', pw);
@@ -13,10 +13,10 @@ await page.locator('#password').evaluate((e) => e.form.requestSubmit()); await p
 fs.mkdirSync('.data', { recursive: true });
 const slug = (await page.locator('a[href^="/app/"]').first().getAttribute('href')).split('/')[2];
 fs.writeFileSync(credFile, `Local test account (dev only)\nEmail: ${email}\nPassword: ${pw}\nSlug: ${slug}\n`, { mode: 0o600 });
-await page.goto(`${base}/app/${slug}`);
+await page.goto(`${base}/app/${slug}/projects`);   // the add-project form lives on the Projects page, not the workspace overview
 await page.fill('#p-cname', 'Launchpad Inc'); await page.fill('#p-name', 'Launchpad marketing site'); await page.fill('#p-live', 'http://127.0.0.1:4200/');
 await page.locator('#p-name').evaluate((e) => e.form.requestSubmit()); await page.waitForTimeout(2500);
-const proj = await page.locator('a[href*="/projects/"]').first().getAttribute('href');
+const proj = (await page.locator('a[href*="/projects/"]').first().getAttribute('href')).match(/^\/app\/[^/]+\/projects\/[0-9a-f-]{36}/)[0];   // the project's own path, whichever of its pages the first link points at
 await page.goto(base + proj + '/scanner'); await page.getByRole('button', { name: 'Start scan' }).click();
 await page.waitForURL('**/scans/**'); const id = page.url().split('/scans/')[1];
 for (let i = 0; i < 60; i++) { const s = await (await page.request.get(`${base}/api/scans/${id}`)).json().catch(() => ({})); if (s.status === 'completed' || s.status === 'failed') { console.log('workspace', slug, 'scan', s.status); break; } await page.waitForTimeout(2000); }

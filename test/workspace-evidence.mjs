@@ -15,7 +15,7 @@ check('signed in to an Agency Pro workspace', /This workspace is on the Agency P
 
 // One project per run would fill the 15-site limit, so the fixture project is reused when it exists.
 const NAME = 'Detector fixtures v3';
-await page.goto(`${base}/app/${slug}`);
+await page.goto(`${base}/app/${slug}/projects`);   // the add-project form lives on the Projects page, not the workspace overview
 let proj = await page.locator('a[href*="/projects/"]', { hasText: NAME }).first().getAttribute('href').catch(() => null);
 if (!proj) {
   await page.fill('#p-cname', 'Avara test fixtures').catch(() => {}); await page.fill('#p-name', NAME);
