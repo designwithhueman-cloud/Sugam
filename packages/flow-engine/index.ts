@@ -11,7 +11,7 @@ import { createPolicy, type PolicyOptions } from '../policy-engine/index.ts';
 import { FlowRun, type Assertion, type AssertionResult, type Flow, type Step, type StepResult } from '../contracts/index.ts';
 
 export type StepDecision = { allow: true } | { allow: false; reason: string };
-export type RunOptions = { policy?: Omit<PolicyOptions, 'startUrl'>; beforeStep?: (step: Step, page: Page) => Promise<StepDecision> | StepDecision; stepTimeoutMs?: number; maxMs?: number };
+export type RunOptions = { policy?: Omit<PolicyOptions, 'startUrl'>; beforeStep?: (step: Step, page: Page) => Promise<StepDecision> | StepDecision; stepTimeoutMs?: number; maxMs?: number };   // maxMs: budget for the steps, checked between steps
 
 async function check(page: Page, a: Assertion): Promise<AssertionResult> {
   try {
@@ -53,12 +53,13 @@ export async function runFlow(flow: Flow, opts: RunOptions = {}): Promise<FlowRu
     page.on('console', (m) => { if (m.type() === 'error' && consoleErrors.length < 50) consoleErrors.push(m.text().slice(0, 300)); });
     page.on('requestfailed', (r) => { if (failedRequests.length < 50) failedRequests.push({ url: r.url().slice(0, 300), status: null, reason: (r.failure()?.errorText ?? 'failed').slice(0, 120) }); });
     page.on('response', (r) => { if (r.status() >= 400 && failedRequests.length < 50) failedRequests.push({ url: r.url().slice(0, 300), status: r.status(), reason: 'HTTP error' }); });
+    const stepsStart = Date.now();   // the step budget starts once the browser is up; the worker's hard limit covers launch
     const all: Step[] = [{ id: 'start', action: 'goto', url: flow.startUrl, expect: [] }, ...flow.steps];
     const policy = createPolicy({ ...opts.policy, startUrl: flow.startUrl }); let stopped: 'failed' | 'blocked' | null = null;
     for (const s of all) {
       const ts = Date.now(); const rec = (status: StepResult['status'], error: string | null, assertions: AssertionResult[] = []) => steps.push({ stepId: s.id, action: s.action, status, ms: Date.now() - ts, urlAfter: page.url() === 'about:blank' ? null : page.url(), error, assertions });
       if (stopped) { rec('skipped', null); continue; }
-      if (Date.now() - t0 > maxMs) { rec('failed', 'The flow ran past its time limit.'); stopped = 'failed'; continue; }
+      if (Date.now() - stepsStart > maxMs) { rec('failed', 'The flow ran past its time limit.'); stopped = 'failed'; continue; }
       if (s !== all[0]) {   // the first load is the guarded start address, not a flow step
         const p = await policy(s, page); if (!p.allow) { rec('blocked', p.reason); stopped = 'blocked'; continue; }
         const v = opts.beforeStep ? await opts.beforeStep(s, page) : { allow: true as const }; if (!v.allow) { rec('blocked', v.reason); stopped = 'blocked'; continue; }

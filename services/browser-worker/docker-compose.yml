@@ -1,0 +1,19 @@
+# Run from the repository root:  WORKER_TOKEN=<16+ random characters> docker compose -f services/browser-worker/docker-compose.yml up --build
+services:
+  browser-worker:
+    build: { context: ../.., dockerfile: services/browser-worker/Dockerfile }
+    image: avara-browser-worker
+    environment:
+      WORKER_TOKEN: ${WORKER_TOKEN:?set WORKER_TOKEN}
+    ports: ["127.0.0.1:8080:8080"]   # loopback only: put the app, not the internet, in front of it
+    user: pwuser
+    read_only: true
+    tmpfs: ["/tmp:size=256m"]
+    shm_size: 256m
+    mem_limit: 1g
+    memswap_limit: 1g
+    cpus: 1.0
+    pids_limit: 256
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
