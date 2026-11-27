@@ -465,3 +465,26 @@ export const launchChecks = pgTable('launch_checks', {
   evidence: jsonb('evidence').$type<unknown[]>().notNull(),
   createdAt: ts('created_at').notNull().defaultNow(),
 }, (t) => [index('launch_checks_scan_idx').on(t.scanId)]);
+
+// ---------- saved flows (milestones 1-4: packages/contracts, packages/flow-engine, services/browser-worker) ----------
+// `definition` is a packages/contracts Flow whose id is this row's id. A run's `result` is a FlowRun produced by the browser worker.
+export const flows = pgTable('flows', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  definition: jsonb('definition').notNull().$type<Record<string, unknown>>(),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: ts('created_at').notNull().defaultNow(),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+}, (t) => [index('flows_project_idx').on(t.projectId)]);
+
+export const flowRuns = pgTable('flow_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
+  status: text('status').notNull().default('running'),   // running | passed | failed | blocked | error
+  result: jsonb('result').$type<Record<string, unknown>>(),
+  error: text('error'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  startedAt: ts('started_at').notNull().defaultNow(),
+  finishedAt: ts('finished_at'),
+}, (t) => [index('flow_runs_flow_idx').on(t.flowId, t.startedAt)]);

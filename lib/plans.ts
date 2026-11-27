@@ -2,12 +2,12 @@
 // the upgrade page and the locked report views, so copy and entitlements cannot drift apart.
 // Prices are placeholders until billing is connected.
 export type PlanId = 'free' | 'site' | 'agency';
-export type Feature = 'full_report' | 'share_links' | 'team_members' | 'ai_checks';
+export type Feature = 'full_report' | 'share_links' | 'team_members' | 'ai_checks' | 'saved_flows';
 
 export const PLAN_FEATURES: Record<PlanId, Feature[]> = {
   free: [],
-  site: ['full_report', 'ai_checks'],
-  agency: ['full_report', 'share_links', 'team_members', 'ai_checks'],
+  site: ['full_report', 'ai_checks', 'saved_flows'],
+  agency: ['full_report', 'share_links', 'team_members', 'ai_checks', 'saved_flows'],
 };
 // Sites and clients a workspace can hold. Enforced when adding them (app/actions.ts).
 export const LIMITS: Record<PlanId, { sites: number; clients: number }> = { free: { sites: 1, clients: 1 }, site: { sites: 1, clients: 1 }, agency: { sites: 15, clients: 15 } };
