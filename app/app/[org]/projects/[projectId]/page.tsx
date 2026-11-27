@@ -9,6 +9,8 @@ import { getDb, schema } from '@/lib/db/index.ts';
 import { requireUser } from '@/lib/auth.ts';
 import { orgForSlug, projectAccess } from '@/lib/access.ts';
 import { siteStats } from '@/lib/dashboard.ts';
+import { loadReadiness } from '@/lib/readiness-data.ts';
+import { ReadinessBanner } from '@/components/dashboard/ReadinessView.tsx';
 import { loadReport } from '@/lib/report.ts';
 import { buildView, type Item } from '@/lib/review-view.ts';
 import { STANDARDS } from '@/lib/standards.ts';
@@ -34,6 +36,8 @@ export default async function ProjectOverview({ params }: { params: Promise<{ or
   const p = pa.project; const db = await getDb();
   const [client] = await db.select().from(schema.clients).where(eq(schema.clients.id, p.clientId));
   const s = await siteStats(p.id);
+  const [org0] = await db.select({ plan: schema.organizations.plan }).from(schema.organizations).where(eq(schema.organizations.id, p.organizationId));
+  const readiness = await loadReadiness(p, org, org0?.plan ?? 'free');
   const root = `/app/${org}`, base = `${root}/projects/${p.id}`;
   const report = s.latest ? await loadReport(s.latest.id) : null;
   const view = report ? buildView(report, report.locked ? 'free' : 'paid') : null;
@@ -54,6 +58,8 @@ export default async function ProjectOverview({ params }: { params: Promise<{ or
           <Link href={`${base}/scanner`} className={btnPrimary}><Play aria-hidden className="size-4" />Run a new scan</Link>
         </div>
       </PageHead>
+
+      <div className="mb-6"><ReadinessBanner r={readiness} compact href={`${base}/ready`} /></div>
 
       {!s.latest || !view ? (
         <Panel aria-labelledby="none-h" className="p-5 sm:p-7">

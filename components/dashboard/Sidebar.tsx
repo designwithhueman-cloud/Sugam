@@ -2,7 +2,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Layers, BarChart3, Lock, Settings, ChevronDown, LogOut, Menu, X, Check, Plus, Table2, ScanSearch, GitCompare, LayoutDashboard, Workflow, ShieldCheck } from 'lucide-react';
+import { Home, Layers, BarChart3, Lock, Settings, ChevronDown, LogOut, Menu, X, Check, Plus, Table2, ScanSearch, GitCompare, LayoutDashboard, Workflow, ShieldCheck, Rocket } from 'lucide-react';
 import { logoutAction } from '@/app/actions.ts';
 import { cn } from '@/lib/utils.ts';
 import { Wordmark } from '@/components/landing/Header.tsx';
@@ -34,6 +34,7 @@ export function Sidebar({ org, orgName, planName, workspaces, sites, user }: { o
     { href: `${root}/projects`, label: 'Client projects', icon: Layers, on: path === `${root}/projects` },
   ];
   const project: Item[] = site ? [
+    { href: `${pb}/ready`, label: 'Ready to launch?', icon: Rocket, on: path.startsWith(`${pb}/ready`), sub: true },
     { href: pb, label: 'Project overview', icon: LayoutDashboard, on: path === pb, sub: true },
     { href: `${pb}/reports`, label: 'Reports', icon: Table2, on: path.startsWith(`${pb}/reports`), sub: true },
     { href: `${pb}/scanner`, label: 'Scanner', icon: ScanSearch, on: path.startsWith(`${pb}/scanner`), sub: true },
