@@ -23,7 +23,7 @@ export default async function Flows({ params }: { params: Promise<{ org: string;
     <main id="main" className={projectMain}>
       <ProjectHead org={org} project={pa.project} current="Flows" title="Saved flows" sub="Replay a short path through your site, like opening a menu or reaching a form, and see exactly which step breaks." />
       {allowed
-        ? <FlowsPanel projectId={projectId} canDelete={canManage(pa.role)} initial={flows} initialProposals={proposals} siteUrl={pa.project.liveUrl || pa.project.stagingUrl} />
+        ? <FlowsPanel projectId={projectId} canDelete={canManage(pa.role)} initial={flows} initialProposals={proposals} siteUrl={pa.project.liveUrl || pa.project.stagingUrl} canCompare={!!pa.project.liveUrl && !!pa.project.stagingUrl} />
         : <div className="rounded-xl border border-slate-200 bg-white p-6"><h2 className="text-lg font-semibold text-ink">Saved flows are part of Creator and Agency</h2><p className="mt-2 max-w-prose text-slate-600">Free scans check one page with built-in checks. Saved flows replay several steps in a real browser. <Link className="font-semibold text-pine-800 underline" href="/upgrade">See plans</Link></p></div>}
     </main>
   );

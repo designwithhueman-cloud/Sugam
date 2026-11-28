@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button.tsx';
 import { blockedSummary, compareRuns, plainStep } from '@/packages/flow-engine/insights.ts';
+import { Badge, StepList } from './flow-steps.tsx';
 import { describeAssertion } from '@/packages/flow-engine/journeys.ts';
 import type { Assertion, DiscoveryResult, Journey } from '@/packages/contracts/index.ts';
 
@@ -11,17 +12,17 @@ type Row = { id: string; name: string; version: number; steps: number; startUrl:
 type Proposal = { id: string; flowId: string; kind: string; reason: string };
 type Disc = { id: string; status: string; error: string | null; startUrl: string; result: DiscoveryResult | null; saved: Record<string, { flowId: string; name: string }> };
 type Cond = { a: Assertion; keep: boolean };
+type CmpSide = { status: string; failedStep: string | null; failure: string | null; inconclusive: string | null };
+type CmpRun = { id: string; status: string; error: string | null; result: { steps: Step[] } | null } | null;
+type Cmp = { id: string; version: number; status: string; verdict: string | null; detail: { headline: string; detail: string; published: CmpSide; preview: CmpSide } | null; publishedOrigin: string; previewOrigin: string; published: CmpRun; preview: CmpRun };
 const PURPOSE: Record<string, string> = { booking: 'Booking', signup: 'Sign-up', pricing: 'Pricing', contact: 'Contact', login: 'Sign-in page (opened, never signed in)', other: 'Page' };
 type Step = { stepId: string; action: string; status: string; ms: number; urlAfter: string | null; error: string | null; assertions: { passed: boolean; observed: string; assertion: { type: string } }[] };
 type Run = { id: string; version?: number; status: string; error: string | null; startedAt: string; result: { attempts?: number; flaky?: boolean; steps: Step[]; consoleErrors: string[]; failedRequests: { url: string; status: number | null }[]; ms: number } | null };
 
 const EXAMPLE = JSON.stringify({ name: 'Open the pricing page', startUrl: 'https://example.com/', steps: [{ id: 'pricing', action: 'click', selector: 'a[href="/pricing"]', expect: [{ type: 'url_contains', value: '/pricing' }, { type: 'visible', selector: 'h1' }] }] }, null, 2);
-const LABEL: Record<string, string> = { passed: 'Passed', failed: 'Failed', blocked: 'Could not verify', error: 'Could not run', running: 'Running', skipped: 'Skipped' };
-const STEP_LABEL: Record<string, string> = { blocked: 'Skipped for safety', skipped: 'Not checked' };   // a step label never says “Failed” for a step Avara chose not to do
-const TONE: Record<string, string> = { passed: 'bg-emerald-50 text-emerald-900', failed: 'bg-red-50 text-red-900', blocked: 'bg-amber-50 text-amber-900', error: 'bg-slate-100 text-slate-800', running: 'bg-blue-50 text-blue-900', skipped: 'bg-slate-100 text-slate-600' };
-const Badge = ({ s, step }: { s: string; step?: boolean }) => <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONE[s] ?? TONE.error}`}>{(step && STEP_LABEL[s]) || LABEL[s] || s}</span>;
 
-export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [], siteUrl = null }: { projectId: string; canDelete: boolean; initial: Row[]; initialProposals?: Proposal[]; siteUrl?: string | null }) {
+export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [], siteUrl = null, canCompare = false }: { projectId: string; canDelete: boolean; initial: Row[]; initialProposals?: Proposal[]; siteUrl?: string | null; canCompare?: boolean }) {
+  const [cmp, setCmp] = React.useState<Record<string, Cmp | undefined>>({}); const [cmpBusy, setCmpBusy] = React.useState<string | null>(null);
   const [rows, setRows] = React.useState(initial); const [proposals, setProposals] = React.useState<Proposal[]>(initialProposals);
   const [disc, setDisc] = React.useState<Disc | null>(null); const [finding, setFinding] = React.useState(false); const [conds, setConds] = React.useState<Record<string, Cond[]>>({}); const [extra, setExtra] = React.useState<Record<string, string>>({}); const [jname, setJname] = React.useState<Record<string, string>>({});
   const [json, setJson] = React.useState(EXAMPLE); const [msg, setMsg] = React.useState<string | null>(null); const [busy, setBusy] = React.useState<string | null>(null);
@@ -51,6 +52,14 @@ export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [
     setMsg('Saved.'); const g = await api('GET', `/api/discoveries/${disc.id}`); if (g.ok) setDisc(g.data!.discovery as Disc); await reload();
   }
   async function decide(p: Proposal, decision: 'accept' | 'dismiss') { setBusy(`p-${p.id}`); const r = await api('POST', `/api/proposals/${p.id}`, { decision }); setBusy(null); setMsg(r.ok ? (decision === 'accept' ? 'The change was approved as a new version.' : 'The change was dismissed. The approved flow is unchanged.') : (r.data?.message ?? 'Could not apply that.')); await reload(); }
+
+  // ---- compare the same approved version on the published site and on the preview (manual) ----
+  async function loadCmp(id: string) { const g = await api('GET', `/api/flows/${id}/comparisons`); const c = (g.data?.comparisons as Cmp[] | undefined)?.[0]; if (c) setCmp((x) => ({ ...x, [id]: c })); return c; }
+  async function compare(id: string) {
+    setMsg(null); setCmpBusy(id); const r = await api('POST', `/api/flows/${id}/comparisons`); if (!r.ok) { setCmpBusy(null); setMsg(r.data?.message ?? 'Could not start the comparison.'); return; }
+    for (let i = 0; i < 160; i++) { const c = await loadCmp(id); if (c && c.id === r.data!.id && c.status === 'done') break; await new Promise((res) => setTimeout(res, 1500)); }
+    setCmpBusy(null);
+  }
   async function create() {
     setMsg(null); let body: unknown; try { body = JSON.parse(json); } catch { setMsg('That is not valid JSON.'); return; }
     setBusy('create'); const r = await api('POST', `/api/projects/${projectId}/flows`, body); setBusy(null);
@@ -67,7 +76,7 @@ export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [
     setBusy(null); await reload();
   }
   async function remove(id: string) { if (!confirm('Delete this flow and its run history?')) return; const r = await api('DELETE', `/api/flows/${id}`); if (!r.ok) setMsg(r.data?.message ?? 'Could not delete.'); await reload(); }
-  async function show(id: string) { if (open === id) { setOpen(null); return; } setOpen(id); const g = await api('GET', `/api/flows/${id}/runs`); take(id, g.data?.runs as Run[] | undefined); }
+  async function show(id: string) { if (open === id) { setOpen(null); return; } setOpen(id); if (canCompare) void loadCmp(id); const g = await api('GET', `/api/flows/${id}/runs`); take(id, g.data?.runs as Run[] | undefined); }
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -82,9 +91,20 @@ export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [
                 <div className="flex items-center gap-2">{f.lastRun && <Badge s={f.lastRun.status} />}
                   <Button size="sm" variant="outline" onClick={() => show(f.id)} aria-expanded={open === f.id}>{open === f.id ? 'Hide result' : 'Last result'}</Button>
                   <Button size="sm" disabled={busy === f.id} onClick={() => run(f.id)}>{busy === f.id ? 'Running…' : 'Run'}</Button>
+                  {canCompare && <Button size="sm" variant="outline" disabled={cmpBusy === f.id} onClick={() => compare(f.id)}>{cmpBusy === f.id ? 'Comparing…' : 'Compare preview with published'}</Button>}
                   {canDelete && <Button size="sm" variant="ghost" onClick={() => remove(f.id)} aria-label={`Delete ${f.name}`}>Delete</Button>}</div>
               </div>
               {proposals.filter((p) => p.flowId === f.id).map((p) => <div key={p.id} data-testid="flow-proposal" data-kind={p.kind} className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"><p className="font-semibold">{p.kind === 'changed' ? 'Your site changed: review the proposed change' : 'This journey was not found on your site'}</p><p className="mt-1">{p.reason}</p><p className="mt-1">Your approved flow (version {f.version}) keeps running until you accept a change.</p><div className="mt-2 flex gap-2">{p.kind === 'changed' && <Button size="sm" disabled={busy === `p-${p.id}`} onClick={() => decide(p, 'accept')}>Approve as version {f.version + 1}</Button>}<Button size="sm" variant="outline" disabled={busy === `p-${p.id}`} onClick={() => decide(p, 'dismiss')}>Keep the approved flow</Button></div></div>)}
+              {cmp[f.id]?.status === 'done' && cmp[f.id]!.detail && (() => { const c = cmp[f.id]!; const d = c.detail!; const tone = c.verdict === 'preview_regression' ? 'bg-red-50 text-red-900' : c.verdict === 'passed_both' ? 'bg-emerald-50 text-emerald-900' : c.verdict === 'inconclusive' ? 'bg-amber-50 text-amber-900' : 'bg-slate-50 text-slate-800';
+                return <div data-testid="env-compare" data-verdict={c.verdict} className="mt-3 rounded-lg border border-slate-200 p-3 text-sm">
+                  <div className={`rounded-lg p-3 ${tone}`}><p className="font-semibold">Published vs preview, version {c.version}: {d.headline}</p><p className="mt-1">{d.detail}</p></div>
+                  <div className="mt-3 grid gap-3 lg:grid-cols-2">{(['published', 'preview'] as const).map((env) => { const run = c[env]; const sd = d[env]; return (
+                    <div key={env} data-testid={`env-${env}`} data-status={sd.status} className="min-w-0 rounded-lg border border-slate-200 p-3">
+                      <p className="flex flex-wrap items-center gap-2 font-semibold text-ink">{env === 'published' ? 'Published' : 'Preview'}<Badge s={run?.status ?? 'error'} /></p><p className="break-all text-xs text-slate-600">{env === 'published' ? c.publishedOrigin : c.previewOrigin}</p>
+                      {sd.inconclusive && <p data-testid="env-inconclusive" className="mt-2 rounded-lg bg-amber-50 p-2 text-amber-900">Not usable as evidence: {sd.inconclusive}</p>}
+                      {run?.result ? <div className="mt-2"><StepList steps={run.result.steps} /></div> : <p className="mt-2 text-slate-600">{run?.error ?? 'No result.'}</p>}
+                    </div>); })}</div>
+                </div>; })()}
               {open === f.id && <div className="mt-4 border-t border-slate-200 pt-3" data-testid="flow-result">
                 {!r ? <p className="text-sm text-slate-600">No runs yet.</p> : <>
                   <p className="mb-2 flex items-center gap-2 text-sm text-slate-700"><Badge s={r.status} /><span data-testid="run-version" className="text-slate-600">version {r.version ?? 1}</span>{r.result ? `${(r.result.ms / 1000).toFixed(1)} s` : ''}{r.error ? ` ${r.error}` : ''}</p>
@@ -92,10 +112,7 @@ export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [
                   {r.status === 'blocked' && r.result && (() => { const b = blockedSummary(r.result as never); return b ? <div data-testid="flow-unverified" className="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"><p className="font-semibold">Could not verify this flow</p><p className="mt-1">{b.sentence}</p>{b.notChecked > 0 && <p className="mt-1">{b.notChecked} later step{b.notChecked === 1 ? '' : 's'} not checked. Check this part by hand, or on a copy of your site.</p>}</div> : null; })()}
                   {r.result && !prev[f.id]?.result && r.status !== 'running' && <p data-testid="flow-first-run" className="mb-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-800">This is the first run of version {r.version ?? 1}, so there is no earlier run of this version to compare it with.</p>}
                   {r.result && prev[f.id]?.result && r.status !== 'running' && (() => { const c = compareRuns(prev[f.id]!.result as never, r.result as never); return <div data-testid="flow-compare" data-result={c.result} className={`mb-3 rounded-lg p-3 text-sm ${c.result === 'regressed' ? 'bg-red-50 text-red-900' : c.result === 'fixed' || c.result === 'now_verified' ? 'bg-emerald-50 text-emerald-900' : c.result.startsWith('could_not_verify') ? 'bg-amber-50 text-amber-900' : 'bg-slate-50 text-slate-800'}`}><p className="font-semibold">Compared with the run before</p><p className="mt-1">{c.result === 'could_not_verify' ? 'No regression or recovery can be reported, because the flow did not run to the end.' : c.summary}</p>{c.newConsoleErrors.length > 0 && <p className="mt-1">{c.newConsoleErrors.length} new error(s) on the page.</p>}{c.newFailedRequests.length > 0 && <p className="mt-1">{c.newFailedRequests.length} new request(s) failed.</p>}</div>; })()}
-                  <ol className="space-y-2">{r.result?.steps.map((s) => { const plain = plainStep(s as never); return <li key={s.stepId} className="rounded-lg bg-slate-50 p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium text-ink">{s.stepId} <span className="font-normal text-slate-600">({s.action})</span></span><Badge s={s.status} step /></div>
-                    {plain && <p data-testid="plain-step" className="mt-1 text-slate-800">{plain}</p>}
-                    {s.error && <details className="mt-1 text-slate-600"><summary className="cursor-pointer">Technical detail</summary><p className="mt-1 break-words">{s.error}</p></details>}
-                    {s.assertions.map((a, i) => <p key={i} className="mt-1 text-slate-600">{a.passed ? '✓' : '✗'} {a.assertion.type.replace('_', ' ')}: {a.observed}</p>)}</li>; })}</ol>
+                  <StepList steps={r.result?.steps ?? []} />
                   {!!r.result?.consoleErrors.length && <p className="mt-2 text-sm text-slate-600">{r.result.consoleErrors.length} console error(s) on the page.</p>}
                 </>}
               </div>}

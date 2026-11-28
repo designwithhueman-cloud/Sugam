@@ -1,6 +1,6 @@
 // Fixture for journey discovery: a small marketing site with a two-click booking journey (Home → Book a call → Choose a time → calendar), duplicate links to
 // the same page, links discovery must never follow (delete, log out, an external site, mail, a file), and switchable states:
-//   state.mode = 'ok' | 'broken-calendar' (the calendar is gone from the last page) | 'broken-link' (“Choose a time” leads to a missing page) | 'changed' (the home link is renamed and moved to /schedule)
+//   state.mode = 'ok' | 'blocked-link' (the “Choose a time” link is worded “Buy now”, which a saved flow will not click) | 'broken-calendar' (the calendar is gone from the last page) | 'broken-link' (“Choose a time” leads to a missing page) | 'changed' (the home link is renamed and moved to /schedule)
 // `server.hits` records every path requested, so a test can prove which pages were never visited.
 import http from 'node:http';
 
@@ -16,7 +16,7 @@ export function createJourneySite({ mode = 'ok' } = {}) {
     if (p === '/') return send(200, nav(shell('Acme Studio', '<h1>Acme Studio</h1><p>We make things.</p>', book)));
     if (p === '/pricing') return send(200, nav(shell('Pricing', '<h1>Pricing</h1><p>Simple plans.</p>', book)));
     if (p === '/about') return send(200, nav(shell('About', '<h1>About us</h1><p>A small team.</p>', book)));
-    if (p === '/book' || p === '/book/' || p === '/schedule') return send(200, nav(shell(bookText, `<h1>${bookText}</h1><p>Pick a slot with our team.</p><a href="${p.startsWith('/sch') ? '/schedule' : '/book'}/${state.mode === 'broken-link' ? 'missing' : 'calendar'}">Choose a time</a>`, book)));
+    if (p === '/book' || p === '/book/' || p === '/schedule') return send(200, nav(shell(bookText, `<h1>${bookText}</h1><p>Pick a slot with our team.</p><a href="${p.startsWith('/sch') ? '/schedule' : '/book'}/${state.mode === 'broken-link' ? 'missing' : 'calendar'}">${state.mode === 'blocked-link' ? 'Buy now' : 'Choose a time'}</a>`, book)));
     if (p === '/book/calendar' || p === '/schedule/calendar') return (state.slowCalendarMs ? (fn) => setTimeout(fn, state.slowCalendarMs) : (fn) => fn())(() => send(200, nav(shell('Pick a time', state.mode === 'broken-calendar' ? '<h1>Pick a time</h1><p>Sorry, no times are available.</p>' : '<h1>Pick a time</h1><div id="booking-calendar" role="grid" aria-label="Booking calendar"><button type="button">Mon 10:00</button><button type="button">Tue 14:00</button></div>', book))));
     if (p === '/delete' || p === '/logout' || p === '/brochure.pdf') return send(200, '<h1>Done</h1>');
     return send(404, '<h1>Not found</h1>');

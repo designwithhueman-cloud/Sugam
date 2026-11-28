@@ -1,5 +1,5 @@
 // Saved flows for a project: create, list, delete, and run (the browser work happens in the worker; see ./worker.ts).
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import { getDb, schema } from '../db/index.ts';
 import { parseFlow, type Flow } from '../../packages/contracts/index.ts';
 import { checkUrl, BlockedUrlError } from '../net/guard.ts';
@@ -43,7 +43,7 @@ export async function getFlow(flowId: string) {
 }
 
 export async function listRuns(flowId: string) {
-  const db = await getDb(); return db.select().from(schema.flowRuns).where(eq(schema.flowRuns.flowId, flowId)).orderBy(desc(schema.flowRuns.startedAt)).limit(20);
+  const db = await getDb(); return db.select().from(schema.flowRuns).where(and(eq(schema.flowRuns.flowId, flowId), isNull(schema.flowRuns.environment))).orderBy(desc(schema.flowRuns.startedAt)).limit(20);   // runs that are half of a published-vs-preview comparison are not part of this history
 }
 
 /** Starts a run and returns its id at once; the worker call finishes in the background and updates the row. */
@@ -51,7 +51,7 @@ export async function startRun(flowId: string, userId: string): Promise<{ ok: tr
   const now = Date.now(); const mine = (recent.get(userId) ?? []).filter((t) => now - t < RUN_WINDOW_MS);
   if (mine.length >= MAX_RUNS_PER_WINDOW) return { ok: false, status: 429, error: 'rate_limited', message: 'Too many flow runs. Please wait a few minutes.' };
   const db = await getDb(); const f = await getFlow(flowId); if (!f) return { ok: false, status: 404, error: 'not_found', message: 'Flow not found.' };
-  const [active] = await db.select({ id: schema.flowRuns.id }).from(schema.flowRuns).where(and(eq(schema.flowRuns.flowId, flowId), eq(schema.flowRuns.status, 'running'))).limit(1);
+  const [active] = await db.select({ id: schema.flowRuns.id }).from(schema.flowRuns).where(and(eq(schema.flowRuns.flowId, flowId), eq(schema.flowRuns.status, 'running'))).limit(1);   // any run, comparison halves included: the worker runs one job at a time
   if (active) return { ok: false, status: 409, error: 'already_running', message: 'This flow is already running.' };
   const parsed = parseFlow(f.definition); if (!parsed.ok) return { ok: false, status: 422, error: 'invalid_flow', message: parsed.error };
   mine.push(now); recent.set(userId, mine);

@@ -523,6 +523,7 @@ export const flowRuns = pgTable('flow_runs', {
   id: uuid('id').primaryKey().defaultRandom(),
   flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
   status: text('status').notNull().default('running'),   // running | passed | failed | blocked | error
+  environment: text('environment'),                 // null for an ordinary run; 'published' or 'preview' for one half of a comparison (kept out of run history)
   version: integer('version').notNull().default(1),   // the approved flow version this run was started with; it never changes, even if a newer version is approved while the run is in flight
   result: jsonb('result').$type<Record<string, unknown>>(),
   error: text('error'),
@@ -530,6 +531,23 @@ export const flowRuns = pgTable('flow_runs', {
   startedAt: ts('started_at').notNull().defaultNow(),
   finishedAt: ts('finished_at'),
 }, (t) => [index('flow_runs_flow_idx').on(t.flowId, t.startedAt)]);
+
+/** One manual comparison of a flow version on the project's published and preview addresses. The two runs are flow_runs rows with an environment. */
+export const flowComparisons = pgTable('flow_comparisons', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull(),
+  status: text('status').notNull().default('running'),   // running | done
+  publishedRunId: uuid('published_run_id').references(() => flowRuns.id, { onDelete: 'set null' }),
+  previewRunId: uuid('preview_run_id').references(() => flowRuns.id, { onDelete: 'set null' }),
+  publishedOrigin: text('published_origin').notNull(),
+  previewOrigin: text('preview_origin').notNull(),
+  verdict: text('verdict'),                         // see packages/flow-engine/environments.ts
+  detail: jsonb('detail').$type<Record<string, unknown>>(),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: ts('created_at').notNull().defaultNow(),
+  finishedAt: ts('finished_at'),
+}, (t) => [index('flow_comparisons_flow_idx').on(t.flowId, t.createdAt)]);
 
 // ---------- launch check (exposure checks and site ownership) ----------
 // A project's owner proves control of its live address once per origin. Only then do the extra read-only requests (files, source maps, tables) run.
