@@ -309,6 +309,7 @@
    "tests": [
     "avara-catalog.mjs",
     "avara.mjs",
+    "batch-runner.mjs",
     "crawl.mjs",
     "detector-pack-v3.mjs",
     "detector-trace.mjs",
@@ -486,6 +487,7 @@
     "nav/fragment-target"
    ],
    "tests": [
+    "batch-runner.mjs",
     "detector-pack.mjs",
     "scanner-accuracy.mjs"
    ],
@@ -532,6 +534,7 @@
     "video-caption"
    ],
    "tests": [
+    "batch-runner.mjs",
     "scanner-accuracy.mjs"
    ],
    "fixture": "fixture-proven",
@@ -583,6 +586,7 @@
     "nav/fragment-target"
    ],
    "tests": [
+    "batch-runner.mjs",
     "detector-pack.mjs",
     "scanner-accuracy.mjs"
    ],
@@ -757,6 +761,7 @@
    "tests": [
     "avara-catalog.mjs",
     "avara.mjs",
+    "batch-runner.mjs",
     "crawl.mjs",
     "detector-pack-v3.mjs",
     "detector-trace.mjs",
@@ -2375,6 +2380,7 @@
     "sugam/form-error-not-linked"
    ],
    "tests": [
+    "batch-runner.mjs",
     "scanner-accuracy.mjs"
    ],
    "fixture": "fixture-proven",

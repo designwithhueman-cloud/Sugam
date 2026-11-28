@@ -1,0 +1,7 @@
+{
+  "_readme": "Copy this file, replace the sites with sites you own, and run: npm run batch -- run <your file> .data/batch --allow-remote [--allow-active]. owned:true runs the probing Launch checks (private files, source maps, open tables): use it only for sites you own, and pass --allow-active to confirm that. planted is optional: list known problems on a site you control to measure what the tools miss.",
+  "name": "owned sites",
+  "sites": [
+    { "id": "my-site", "url": "https://example.com/", "owned": false, "note": "replace with your own address", "planted": [] }
+  ]
+}

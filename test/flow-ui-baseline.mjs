@@ -9,7 +9,7 @@ const SITE = 4210, WORKER = 18096, APP = 3392, TOKEN = 'flow-ui-token-' + Math.r
 let broken = false;
 const pages = { '/': () => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Acme</title></head><body><main><h1>Acme</h1><a id="go" href="${broken ? '/missing' : '/signup'}">Get started</a></main></body></html>`,
   '/signup': () => `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Sign up</title></head><body><main><h1 id="signup-title">Create your account</h1></main></body></html>` };
-const site = http.createServer((req, res) => { const f = pages[new URL(req.url, 'http://x').pathname]; if (!f) { res.writeHead(404, { 'content-type': 'text/html' }); res.end('<h1>Not found</h1>'); return; } res.writeHead(200, { 'content-type': 'text/html' }); res.end(f()); });
+const hits404 = []; const site = http.createServer((req, res) => { const f = pages[new URL(req.url, 'http://x').pathname]; if (!f) { hits404.push(new URL(req.url, 'http://x').pathname); res.writeHead(404, { 'content-type': 'text/html' }); res.end('<h1>Not found</h1>'); return; } res.writeHead(200, { 'content-type': 'text/html' }); res.end(f()); });
 await new Promise((r) => site.listen(SITE, '127.0.0.1', r));
 const procs = []; const stopAll = () => { for (const p of procs) try { p.kill(); } catch { /* gone */ } site.close(); };
 process.on('exit', stopAll);
@@ -28,7 +28,10 @@ await p.fill('#flow-json', JSON.stringify(flow, null, 2)); await p.getByRole('bu
 const row = p.locator('[data-testid=flow-row]', { hasText: 'Visitor reaches sign-up' });
 const runOnce = async () => { await row.getByRole('button', { name: 'Run', exact: true }).click(); await row.getByRole('button', { name: 'Running…' }).waitFor({ timeout: 10000 }).catch(() => {}); await row.getByRole('button', { name: 'Run', exact: true }).waitFor({ timeout: 150000 }); const r = p.locator('[data-testid=flow-result]').first(); await r.waitFor({ timeout: 20000 }); return { text: (await r.innerText()).replace(/\s+/g, ' '), compare: await p.locator('[data-testid=flow-compare]').first().getAttribute('data-result').catch(() => null), compareText: await p.locator('[data-testid=flow-compare]').first().innerText().catch(() => null), badge: (await row.locator('span').filter({ hasText: /^(Passed|Failed|Blocked|passed|failed|blocked)/ }).first().innerText().catch(() => '')) }; };
 
+const flowId = (await (await p.request.get(`http://127.0.0.1:${APP}/api/projects/${snap.projects.agency}/flows`)).json()).flows.find((f) => f.name === flow.name).id;
+const lastRun = async () => (await (await p.request.get(`http://127.0.0.1:${APP}/api/flows/${flowId}/runs`)).json()).runs[0]?.result;
 const r1 = await runOnce(); console.log('  run 1 →', r1.text.slice(0, 200));
+{ const r = await lastRun(); console.log('  paths the site answered 404 during run 1:', JSON.stringify(hits404)); console.log('  run 1 console errors:', JSON.stringify(r?.consoleErrors), ' failed requests:', JSON.stringify(r?.failedRequests)); globalThis.run1 = r; }
 check('run 1 (site working): the page says the flow passed', /pass/i.test(r1.text) && !/fail/i.test(r1.text.split('click-get-started')[0]), r1.badge);
 broken = true;
 const r2 = await runOnce(); console.log('  run 2 →', r2.text.slice(0, 300), '| compare:', r2.compare, r2.compareText?.replace(/\s+/g, ' ').slice(0, 200));
