@@ -4,6 +4,7 @@
 // remembered on this device.
 import * as React from 'react';
 import { CopyButton } from '@/components/CopyButton.tsx';
+import { useScanScope } from './scan-scope.tsx';
 import type { AvaraFix } from '@/lib/report-types.ts';
 import { TOOLS, GROUP_LABEL, fixForTool, readFix, type ToolGroup } from '@/lib/fix-tools.ts';
 
@@ -12,7 +13,8 @@ const LEGACY: Record<string, string> = { code: 'react' };   // a choice remember
 const wrap = '[overflow-wrap:anywhere]';
 const pre = `whitespace-pre-wrap rounded-xl bg-white p-3 font-mono text-sm leading-relaxed sm:p-4 sm:text-[15px] ${wrap}`;
 
-export function FixPanel({ fixes, id }: { fixes: AvaraFix[]; id: string }) {
+export function FixPanel({ fixes, id, findingId }: { fixes: AvaraFix[]; id: string; findingId?: string }) {
+  const scanId = useScanScope();
   const usable = fixes.some((f) => f.kind === 'prompt');
   const [tool, setTool] = React.useState('lovable');
   React.useEffect(() => { try { const s = localStorage.getItem(KEY); const t = s ? LEGACY[s] ?? s : null; if (t && TOOLS.some((x) => x.id === t)) setTool(t); } catch { /* remembered choice is optional */ } }, []);
@@ -38,7 +40,7 @@ export function FixPanel({ fixes, id }: { fixes: AvaraFix[]; id: string }) {
       ) : (<>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-lg font-semibold text-ink">{fx.intro}{fx.example && <span className="ml-2 rounded-full bg-white px-2.5 py-0.5 align-middle text-sm font-semibold text-[#432099]" data-testid="example-badge">Example</span>}</p>
-          <CopyButton text={fx.copyText} label={fx.copyLabel} className="min-h-12 rounded-full border-0 bg-ink px-5 text-white hover:bg-neutral-800" />
+          <CopyButton text={fx.copyText} label={fx.copyLabel} track={scanId && findingId ? { scanId, findingId } : undefined} className="min-h-12 rounded-full border-0 bg-ink px-5 text-white hover:bg-neutral-800" />
         </div>
         {fx.hint && <p className={`text-base text-neutral-700 ${wrap}`} data-testid="fix-hint">{fx.hint}</p>}
         {fx.text && <pre tabIndex={0} role="region" aria-label={`Prompt for ${fx.tool.name}`} data-testid="fix-text" className={`max-h-80 overflow-y-auto ${pre}`}>{fx.text}</pre>}

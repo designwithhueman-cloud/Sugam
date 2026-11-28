@@ -93,7 +93,7 @@ export function AvaraPanel({ report, readOnly = false, hideFirstFix = false }: {
               {r.rank > 1 && <p className={`mt-1 text-base text-neutral-800 ${wrap}`}>{r.sentence}</p>}
               {r.categories.length > 1 && <p className="mt-1 text-base text-neutral-700">One change fixes {members.length} findings across {r.categories.length} categories.</p>}
               {r.fixes && r.fixes.length > 0 && !(hideFirstFix && r.rank === 1) && (
-                <div className="mt-4 rounded-[1.5rem] border-2 border-[#9fcf3a] bg-[#f3fbd9] p-3 sm:p-5"><AvaraFixTabs fixes={r.fixes} id={String(r.rank)} /></div>)}
+                <div className="mt-4 rounded-[1.5rem] border-2 border-[#9fcf3a] bg-[#f3fbd9] p-3 sm:p-5"><AvaraFixTabs fixes={r.fixes} id={String(r.rank)} findingId={r.id} /></div>)}
               {r.fixLocked && <p className="mt-3 text-base text-neutral-700">The fix for this action is part of a paid plan. Your first fix is free.</p>}
               {r.owner && (
                 <dl className="mt-3 grid gap-x-4 gap-y-1 rounded-xl bg-[#f6f5f1] p-3 text-base sm:grid-cols-[10rem_minmax(0,1fr)]" data-testid="trace">

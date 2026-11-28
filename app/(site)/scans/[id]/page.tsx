@@ -3,6 +3,7 @@ import { asc, eq } from 'drizzle-orm';
 import { getDb, schema } from '@/lib/db/index.ts';
 import { redactDeep } from '@/lib/security/redact.ts';
 import { loadReport } from '@/lib/report.ts';
+import { ScanScope } from '@/components/report/scan-scope.tsx';
 import { ReviewPage } from '@/components/report/ReviewPage.tsx';
 import { ReportView } from '@/components/report/ReportView.tsx';
 import { LaunchChecks } from '@/components/report/LaunchChecks.tsx';
@@ -52,13 +53,13 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
   if (!report) notFound();
   const access = !allowed ? 'anonymous' : report.locked ? 'free' : 'paid';
   return (
-    <>
+    <ScanScope value={id}>
       <ReviewPage report={report} access={access} />
       {access === 'paid' && (
         <div className="px-5 pb-16 sm:px-10"><div className="mx-auto max-w-7xl"><ReportView report={report} initialIssueId={issue} /></div></div>
       )}
       {access === 'paid' && report.launch && <LaunchChecks launch={report.launch} />}
       {deletable && <DeleteScan id={id} anonymous={!scan.createdBy && !scan.projectId} />}
-    </>
+    </ScanScope>
   );
 }

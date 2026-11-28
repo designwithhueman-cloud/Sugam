@@ -551,3 +551,16 @@ export const exposureRuns = pgTable('exposure_runs', {
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
   createdAt: ts('created_at').notNull().defaultNow(),
 }, (t) => [index('exposure_runs_project_idx').on(t.projectId, t.createdAt)]);
+
+// ---------- product events (first-party, no cookies, no user id) ----------
+// One row says "a fix prompt was copied for this finding in this scan". Only ids: no address, no prompt text, no key, no user. The row belongs to the
+// scan: deleting the scan (or the account that owns it, or an anonymous scan after its retention period) deletes its events. Copying the same finding
+// again does not add a row. The rest of the funnel is not stored twice: scan_completed is scans.completed_at, rescan_started is a scan whose rescan_of is
+// the original, and finding_fixed is rescan_outcomes.outcome = 'fixed'.
+export const productEvents = pgTable('product_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  kind: text('kind').notNull(),                                                                       // prompt_copied
+  scanId: uuid('scan_id').notNull().references(() => scans.id, { onDelete: 'cascade' }),
+  findingRef: uuid('finding_ref').notNull(),                                                          // an issue, finding or recommendation id of that scan
+  createdAt: ts('created_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('product_events_once').on(t.scanId, t.kind, t.findingRef)]);

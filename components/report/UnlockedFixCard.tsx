@@ -12,7 +12,7 @@ import { splitFix, promptOnly } from '@/lib/fix-text.ts';
 const wrap = '[overflow-wrap:anywhere]';
 const codeCls = `max-w-full whitespace-pre-wrap rounded-2xl bg-[#f6f5f1] p-4 font-mono text-[15px] leading-relaxed text-ink ${wrap}`;
 
-export function UnlockedFixCard({ fix }: { fix: UnlockedFix }) {
+export function UnlockedFixCard({ fix, scanId }: { fix: UnlockedFix; scanId?: string }) {
   return (
     <section aria-labelledby="unlocked-h" className="min-w-0 rounded-[2rem] border-2 border-ink bg-white p-4 shadow-[0_10px_0_-2px_#d9f56e] sm:p-8">
       <p className="flex flex-wrap items-center gap-x-3 gap-y-2 text-base font-semibold">
@@ -28,7 +28,7 @@ export function UnlockedFixCard({ fix }: { fix: UnlockedFix }) {
       <div className="mt-8 rounded-[1.75rem] border-2 border-[#9fcf3a] bg-[#f3fbd9] p-3 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <h3 className="text-xl font-semibold text-ink">Paste this into your AI builder</h3>
-          <CopyButton text={promptOnly(fix.prompt)} label="prompt" className="min-h-12 w-full justify-center whitespace-nowrap rounded-full border-0 bg-ink px-4 text-lg text-white hover:bg-neutral-800 sm:w-auto" />
+          <CopyButton text={promptOnly(fix.prompt)} track={scanId ? { scanId, findingId: fix.id } : undefined} label="prompt" className="min-h-12 w-full justify-center whitespace-nowrap rounded-full border-0 bg-ink px-4 text-lg text-white hover:bg-neutral-800 sm:w-auto" />
         </div>
         <pre tabIndex={0} role="region" aria-label="Prompt for your AI builder" className={`mt-4 max-h-[26rem] overflow-y-auto whitespace-pre-wrap rounded-2xl bg-white p-3 font-mono text-sm leading-relaxed text-ink sm:p-4 sm:text-[15px] ${wrap}`}>{promptOnly(fix.prompt)}</pre>
         {splitFix(fix.prompt).verify && <p className={`mt-3 text-base text-neutral-800 ${wrap}`} data-testid="how-to-check"><span className="font-semibold text-ink">How to check it: </span>{splitFix(fix.prompt).verify}</p>}

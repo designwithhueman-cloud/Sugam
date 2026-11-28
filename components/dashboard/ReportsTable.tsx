@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { X, Download, Share2, Link2, Eye, ArrowDown, ArrowUp, ArrowUpDown, Contrast, Mic, Keyboard, AudioLines, LayoutGrid } from 'lucide-react';
 import type { Report, ReportIssue } from '@/lib/report-types.ts';
+import { ScanScope } from '@/components/report/scan-scope.tsx';
 import { IssueCard } from '@/components/report/IssueCard.tsx';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs.tsx';
 import { FIX_LABELS, SEV_STATUS, SEV_ICON } from './SegmentedBar.tsx';
@@ -193,7 +194,7 @@ function Row({ locked, planLocked, issue, group, status, decision, projectId, op
               <p className="mt-3 flex flex-wrap items-center gap-2 text-sm text-bark"><Lock aria-hidden className="size-4" />The {issue.instanceCount} affected element{issue.instanceCount === 1 ? '' : 's'}, screenshots and the repair unlock with a paid plan. <Link className="font-semibold text-pine-800 underline" href="/upgrade">See plans</Link></p>
             </div>
           ) : <>
-          <IssueCard issue={issue} selected={false} instanceIndex={0} hasPin={!planLocked} onLocate={() => router.push(`/scans/${scanId}?issue=${issue.id}`)} />
+          <ScanScope value={scanId}><IssueCard issue={issue} selected={false} instanceIndex={0} hasPin={!planLocked} onLocate={() => router.push(`/scans/${scanId}?issue=${issue.id}`)} /></ScanScope>
           {!planLocked && (<section className="mt-3 rounded-2xl border border-slate-200 bg-white p-4" aria-labelledby={`dec-${issue.id}`}>
             <h4 id={`dec-${issue.id}`} className="font-semibold">Human verification</h4>
             {decision ? <p className="mt-1 text-sm text-slate-700">{decision.decision === 'confirmed' ? 'Confirmed as a real issue' : 'Marked not an issue'} by {decision.by || 'a former member'} on {new Date(decision.at).toLocaleDateString()}{decision.note ? `: "${decision.note}"` : '.'} This decision applies to later scans of the same markup.</p>

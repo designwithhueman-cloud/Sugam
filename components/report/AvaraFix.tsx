@@ -14,6 +14,6 @@ const bare = (p: string) => (p.includes('\n\n') ? p.slice(p.indexOf('\n\n') + 2)
 const wrap = '[overflow-wrap:anywhere]';
 
 /** Every tool, one view: the same fix panel the report uses (components/report/FixPanel.tsx). */
-export function AvaraFixTabs({ fixes, id }: { fixes: AvaraFix[]; id: string }) {
-  return <FixPanel fixes={fixes} id={id} />;
+export function AvaraFixTabs({ fixes, id, findingId }: { fixes: AvaraFix[]; id: string; findingId?: string }) {
+  return <FixPanel fixes={fixes} id={id} findingId={findingId} />;
 }

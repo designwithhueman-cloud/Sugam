@@ -6,7 +6,7 @@ import type { AvaraFix } from '@/lib/report-types.ts';
 import { FixPanel } from './FixPanel.tsx';
 import { RescanButton } from './RescanButton.tsx';
 
-export function SeeFix({ id, fixes, scanId, lockedNote, canRescan }: { id: string; fixes: AvaraFix[] | null; scanId: string; lockedNote: string; canRescan: boolean }) {
+export function SeeFix({ id, fixes, scanId, lockedNote, canRescan, findingId }: { findingId?: string; id: string; fixes: AvaraFix[] | null; scanId: string; lockedNote: string; canRescan: boolean }) {
   const [open, setOpen] = React.useState(false);
   return (
     <div>
@@ -18,7 +18,7 @@ export function SeeFix({ id, fixes, scanId, lockedNote, canRescan }: { id: strin
         {canRescan && <RescanButton scanId={scanId} label="Rescan after fixing" />}
       </div>
       <div id={`fixpanel-${id}`} hidden={!open} className="mt-5">
-        {fixes?.length ? <FixPanel fixes={fixes} id={id} /> : <p className="rounded-2xl bg-[#f6f5f1] p-4 text-base text-neutral-800">{lockedNote}</p>}
+        {fixes?.length ? <FixPanel fixes={fixes} id={id} findingId={findingId} /> : <p className="rounded-2xl bg-[#f6f5f1] p-4 text-base text-neutral-800">{lockedNote}</p>}
       </div>
     </div>
   );

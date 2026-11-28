@@ -110,7 +110,7 @@ export const IssueCard = React.forwardRef<HTMLElement, Props>(function IssueCard
             {f && (
               <div>
                 <Label>How to fix it</Label>
-                <div className="mt-2"><FixPanel fixes={fixesFromSet(f)} id={`issue-${issue.id}`} /></div>
+                <div className="mt-2"><FixPanel fixes={fixesFromSet(f)} id={`issue-${issue.id}`} findingId={issue.id} /></div>
               </div>
             )}
             {issue.helpUrl && <a href={issue.helpUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-1 text-[13px] font-semibold text-ink underline underline-offset-2">Rule documentation (Deque) <ExternalLink aria-hidden className="size-3" /><span className="sr-only">(opens in a new tab)</span></a>}

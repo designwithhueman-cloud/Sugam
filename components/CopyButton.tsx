@@ -5,7 +5,9 @@ import { cn } from '@/lib/utils.ts';
 
 // Copies text and says so, in the button and in one polite status message. If the browser
 // blocks the clipboard it says that too, instead of pretending it worked.
-export function CopyButton({ text, label, className = '' }: { text: string; label: string; className?: string }) {
+export type CopyTrack = { scanId: string; findingId: string };
+/** `track`: when a fix is copied for a finding of a scan, tell the server once (ids only, never the text; a failure is ignored). */
+export function CopyButton({ text, label, className = '', track }: { text: string; label: string; className?: string; track?: CopyTrack }) {
   const [state, setState] = React.useState<'idle' | 'done' | 'failed'>('idle');
   const timer = React.useRef<ReturnType<typeof setTimeout>>(undefined);
   React.useEffect(() => () => clearTimeout(timer.current), []);
@@ -13,7 +15,7 @@ export function CopyButton({ text, label, className = '' }: { text: string; labe
     <>
       <button type="button" className={cn('inline-flex min-h-11 items-center gap-2 rounded-lg border-2 px-3.5 text-base font-semibold', className)}
         onClick={async () => {
-          try { await navigator.clipboard.writeText(text); setState('done'); } catch { setState('failed'); }
+          try { await navigator.clipboard.writeText(text); setState('done'); if (track) void fetch(`/api/scans/${encodeURIComponent(track.scanId)}/events`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind: 'prompt_copied', findingId: track.findingId }), keepalive: true }).catch(() => {}); } catch { setState('failed'); }
           clearTimeout(timer.current); timer.current = setTimeout(() => setState('idle'), 2500);
         }}>
         {state === 'done' ? <Check aria-hidden className="size-4" /> : <Copy aria-hidden className="size-4" />}

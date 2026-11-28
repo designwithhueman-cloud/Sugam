@@ -40,6 +40,7 @@ export default function Privacy() {
           'If you make an account: your email address, your name if you give one, and a salted hash of your password (never the password itself).',
           'Workspaces, clients and sites you create, the scans you run, their results and screenshots, share links you create (stored as hashes), and the review notes you write.',
           'If you join the waiting list for paid plans: your email address and the plan you asked about.',
+          'When you copy a fix from a report: a record that a fix was copied for that finding of that scan, and when. It holds only the scan’s and the finding’s identifiers. See “What we count” below.',
           'Your internet address is used to limit how many scans one visitor can start. That limit is kept in memory and is not written to the database.',
         ]} />
       </section>
@@ -52,6 +53,16 @@ export default function Privacy() {
           'Backups of the database and screenshots are kept for up to 14 days, so deleted data leaves the backups within 14 days.',
         ]} />
       </section>
+      <section><H>What we count</H>
+        <p className="mb-3">To learn whether the fixes Avara writes are used, Avara records one thing: that a fix was copied for a finding in a scan. This is counted by Avara’s own server, with no cookie, no tracking script and no third party.</p>
+        <UL items={[
+          'Each record holds the scan’s identifier, the finding’s identifier and the time. It does not hold your name, email, account, internet address, the address of your site, the text you copied, or any key.',
+          'Copying the same fix again does not add a record, so the count is of findings, not clicks.',
+          'The record belongs to the scan. It is deleted when the scan is deleted: when you delete it, when you delete your account or workspace, and, for scans started without an account, automatically after the same number of days as the scan itself.',
+          'Whether a scan was finished, whether it was rescanned, and whether a rescan found a finding fixed are not extra records: they are part of the scan’s own results, and are deleted with it.',
+          'Shared (read-only) reports do not record anything.',
+        ]} />
+      </section>
       <section><H>What is public</H>
         <p>Avara publishes overall patterns across all scans, such as the share of scanned pages where a check failed. These contain percentages and rule names only: no addresses, page content, screenshots or account details.</p>
       </section>
@@ -61,7 +72,7 @@ export default function Privacy() {
           <><b className="text-ink">sugam_session</b>: keeps you signed in.</>,
           <><b className="text-ink">sugam_claims</b>: a signed list of the anonymous scans started in this browser, so you can see your own results without an account.</>,
         ]} />
-        <p className="mt-3">There are no advertising or analytics scripts on the site, and the fonts are served from Avara itself.</p>
+        <p className="mt-3">There are no advertising or analytics scripts on the site, and the fonts are served from Avara itself. The one count described above is made by Avara’s own server and sets no cookie.</p>
       </section>
       <section><H>The AI step</H>
         <p>Avara can ask an AI model to refine explanations and fixes. This is off unless the operator turns it on. When it is on, the findings, the code of flagged elements, the keyboard trace and the screenshots for that scan are sent to the provider below to produce the result.</p>

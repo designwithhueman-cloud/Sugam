@@ -33,7 +33,7 @@ export function FreeReport({ report, upgradeHref = '/upgrade?plan=site', readOnl
         </div>
 
         {avaraVisible(report.avara) && <div className="mt-8"><AvaraPanel report={report} readOnly={readOnly} hideFirstFix={!!unlocked} /></div>}
-        {unlocked && <div className="mt-8"><UnlockedFixCard fix={fromReportIssue(unlocked)} /></div>}
+        {unlocked && <div className="mt-8"><UnlockedFixCard fix={fromReportIssue(unlocked)} scanId={readOnly ? undefined : report.id} /></div>}
 
         <section aria-labelledby="types-h" className="mt-8 overflow-hidden rounded-[1.75rem] border border-black/10 bg-white">
           <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-black/10 px-6 py-5">

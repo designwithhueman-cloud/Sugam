@@ -50,7 +50,7 @@ const dup = (i: Item) => { const t = norm(i.title), s = norm(i.sentence); return
 function FixBody({ item }: { item: Item }) {
   return (
     <div className="space-y-4">
-      {item.fixes?.length && !item.locked ? <FixPanel fixes={item.fixes} id={item.id} />
+      {item.fixes?.length && !item.locked ? <FixPanel fixes={item.fixes} id={item.id} findingId={item.id} />
         : item.fixText && !item.locked ? <div className="space-y-3 rounded-2xl bg-[#f3fbd9] p-4"><div className="flex flex-wrap items-center justify-between gap-3"><p className="text-lg font-semibold text-ink">{item.kind === 'review' ? 'What to look at' : 'The change'}</p><CopyButton text={promptOnly(item.fixText)} label="change" className="min-h-12 rounded-full border-0 bg-ink px-5 text-white hover:bg-neutral-800" /></div><p className={`whitespace-pre-wrap text-base text-ink ${wrap}`}>{promptOnly(item.fixText)}</p>{splitFix(item.fixText).verify && <p className={`text-base text-neutral-800 ${wrap}`}><span className="font-semibold text-ink">How to check it: </span>{splitFix(item.fixText).verify}</p>}</div>
         : <p className="rounded-xl bg-[#f6f5f1] p-3 text-base text-neutral-800">{LOCK}</p>}
       <Technical item={item} />
@@ -133,7 +133,7 @@ export function ReviewPage({ report, access, mode = 'owner' }: { report: Report;
                 <h2 id="first-h" className={`mt-3 text-balance text-[1.9rem] font-semibold leading-[1.1] tracking-[-0.025em] text-ink sm:text-4xl ${wrap}`} data-testid="headline">{p.title}</h2>
                 <p className={`mt-3 text-base text-neutral-800 sm:mt-4 sm:text-lg ${wrap}`} data-testid="location"><span className="font-semibold text-ink">Where: </span>{p.location}</p>
                 <p className={`mt-3 max-w-2xl text-lg leading-relaxed text-ink sm:text-xl ${wrap}`} data-testid="sentence">{p.sentence}</p>
-                <div className="mt-5 sm:mt-7"><SeeFix id="primary" fixes={p.fixes} scanId={report.id} lockedNote={LOCK} canRescan={canRescan} /></div>
+                <div className="mt-5 sm:mt-7"><SeeFix id="primary" findingId={p.id} fixes={p.fixes} scanId={report.id} lockedNote={LOCK} canRescan={canRescan} /></div>
                 {p.sharedBy > 0 && <p className="mt-4 text-base text-neutral-700">One change fixes this and {p.sharedBy} related finding{p.sharedBy === 1 ? '' : 's'}.</p>}
               </div>
               {(p.shot ?? topShot) && <ScreenshotCrop shot={(p.shot ?? topShot)!} />}
