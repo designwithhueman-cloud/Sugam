@@ -75,7 +75,8 @@ check('no raw secret in any file the run wrote (the leaked keys are masked)', !a
   const fp = rows.find((r) => r.kind === 'scan'); fp.reviewer_verdict = 'false_positive'; fp.reviewer_notes = 'checked by hand: this is fine'; const un = rows.filter((r) => r.kind === 'scan')[1]; un.reviewer_verdict = 'unsure';
   fs.writeFileSync(path.join(dir, 'findings.csv'), toCsv(FINDING_COLUMNS, rows));
   const rep = buildReport(dir); const md = rep.markdown;
-  check('the report lists every check with its labels and says “insufficient labels” where there are fewer than 10 decisive ones', /insufficient labels \(\d+ of 10\)/.test(md) && /\| SEC-011 \| launch \|/.test(md));
+  check('the report is titled “False alarms among reviewed findings” and states the formula', /## False alarms among reviewed findings/.test(buildReport(dir).markdown) && /false alarms ÷ \(confirmed \+ false alarms\)/.test(buildReport(dir).markdown));
+  check('the report lists every check with its labels and says “insufficient labels” where there are fewer than 10 decisive ones', /insufficient labels \(\d+ of 10 reviewed\)/.test(md) && /\| SEC-011 \| launch \|/.test(md));
   check('the report lists unreviewed and unsure counts per check', new RegExp(`\\| ${fp.check_id.replace(/[/]/g, '\\/')} \\| scan \\| \\d+ \\| \\d+ \\| 0 \\| 1 \\|`).test(md) || /\| 1 \| (\d+) \|/.test(md));
   check('the report lists checks that could not run, and says ownership-gated checks are not measured on sites we do not own', /## Checks that could not run/.test(md) && /ownership_gated/.test(md) && /not measured on sites we do not own/.test(md));
   check('planted bugs: found ones are counted and the impossible ones are listed as missed (a not-owned site cannot find private files; an unknown rule cannot be found)', /## Planted bugs/.test(md) && /leaky-notowned: SEC-012/.test(md) && /ai-builder-bad: sugam\/does-not-exist/.test(md) && !/leaky-owned: SEC-01/.test(md) && /\| SEC-011 \| 2 \| 2 \| 100% \|/.test(md));
@@ -85,7 +86,7 @@ check('no raw secret in any file the run wrote (the leaked keys are masked)', !a
   const extra = Array.from({ length: 13 }, (_, i) => ({ ...tpl, finding_id: `x${i}`, site_id: `fx${i}`, reviewer_verdict: i < 2 ? 'false_positive' : 'correct' })); extra.push({ ...tpl, finding_id: 'xu', reviewer_verdict: 'unsure' });
   const mine = rows.filter((r) => r.check_id !== tpl.check_id); fs.writeFileSync(path.join(d2, 'findings.csv'), toCsv(FINDING_COLUMNS, [...mine, ...extra]));
   const md = buildReport(d2).markdown; const line = md.split('\n').find((l) => l.startsWith(`| ${tpl.check_id} |`));
-  check('a check with 13 decisive labels and 1 unsure shows 2 false positives, 15% with a Wilson interval, and the unsure count', /\| 14 \| 0 \| 11 \| 2 \| 1 \| 15% \(4% to 42%\) \|/.test(line ?? ''), line?.slice(0, 160)); }
+  check('a check with 13 decisive labels and 1 unsure shows 2 false alarms (numerator), 13 reviewed (denominator = 11 confirmed + 2), 1 unsure excluded, and 15% = 2 / 13 with a Wilson interval', /\| 14 \| 0 \| 11 \| 2 \| 13 \| 1 \| 15% = 2 \/ 13 \(4% to 42%\) \|/.test(line ?? ''), line?.slice(0, 160)); }
 { const d3 = path.join(out, 'badlabel'); fs.cpSync(dir, d3, { recursive: true }); const rows = parseCsv(fs.readFileSync(path.join(d3, 'findings.csv'), 'utf8')); rows[0].reviewer_verdict = 'yes'; fs.writeFileSync(path.join(d3, 'findings.csv'), toCsv(FINDING_COLUMNS, rows));
   const r = buildReport(d3); check('a verdict typed in some other word is flagged in the report and not counted', r.invalid.length === 1 && /not correct, false_positive or unsure/.test(r.markdown)); }
 

@@ -16,9 +16,9 @@ export function buildReport(runDir: string, labelsFile?: string): Report {
   const L: string[] = [`# Accuracy report ${meta.runId}`, '', `${meta.sites.length} site(s), ${findings.length} finding(s), ${findings.filter((f) => f.reviewer_verdict.trim() !== '').length} labeled.`, ''];
   if (invalid.length) L.push(`**${invalid.length} row(s) have a verdict that is not correct, false_positive or unsure and were not counted:** ${invalid.slice(0, 10).map((x) => `${x.finding_id} (“${x.value}”)`).join(', ')}`, '');
 
-  L.push('## False positives per check', '', `A rate is shown only with at least ${MIN_LABELS} decisive labels (correct + false_positive). “Unsure” is reported but never counted as right or wrong. Interval: Wilson 95%.`, '',
-    '| Check | Kind | Findings | Unreviewed | Correct | False positive | Unsure | False-positive rate (95% interval) |', '|---|---|---:|---:|---:|---:|---:|---|',
-    ...checks.map((c) => `| ${c.check} | ${c.kind} | ${c.findings} | ${c.unlabeled} | ${c.correct} | ${c.falsePositive} | ${c.unsure} | ${c.enough ? `${pct(c.fpRate!)} (${pct(c.lo!)} to ${pct(c.hi!)})` : `insufficient labels (${c.decisive} of ${MIN_LABELS})`} |`), '');
+  L.push('## False alarms among reviewed findings', '', `Rate = false alarms ÷ (confirmed + false alarms). Confirmed = reviewer_verdict “correct”; false alarm = “false_positive”. “Unsure” and unreviewed findings are not in the numerator or the denominator. A rate is shown only when the denominator is at least ${MIN_LABELS}. Interval: Wilson 95%.`, '',
+    '| Check | Kind | Findings | Unreviewed | Confirmed | False alarms (numerator) | Reviewed = confirmed + false alarms (denominator) | Unsure (excluded) | False alarms among reviewed findings (95% interval) |', '|---|---|---:|---:|---:|---:|---:|---:|---|',
+    ...checks.map((c) => `| ${c.check} | ${c.kind} | ${c.findings} | ${c.unlabeled} | ${c.correct} | ${c.falsePositive} | ${c.decisive} | ${c.unsure} | ${c.enough ? `${pct(c.fpRate!)} = ${c.falsePositive} / ${c.decisive} (${pct(c.lo!)} to ${pct(c.hi!)})` : `insufficient labels (${c.decisive} of ${MIN_LABELS} reviewed)`} |`), '');
 
   L.push('## Checks that could not run', '');
   const gated = notRun.filter((r) => r.category === 'ownership_gated');

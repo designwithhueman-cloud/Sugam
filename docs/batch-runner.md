@@ -28,7 +28,7 @@ One row per check that did not run on a site, with a category: `ownership_gated`
 **Ownership-gated checks are not measured on sites we do not own.** Private files (SEC-012), source maps (SEC-013) and open database tables (SEC-014) are probed only when the manifest marks a site `owned`. Measure them on the deliberately broken test apps (`fixture/apps/leaky-app.mjs`) with planted bugs, where the right answer is known.
 
 ## report.md
-- Per check: findings, unreviewed, correct, false positive, unsure, and the false-positive rate with a Wilson 95% interval. The rate uses decisive labels only (correct + false positive), and is shown only with at least 10 of them; otherwise the row says “insufficient labels”. Unsure is reported and never counted either way.
+- Per check, under the heading **False alarms among reviewed findings**: findings, unreviewed, confirmed (`correct`), false alarms (`false_positive`, the numerator), reviewed (confirmed + false alarms, the denominator), unsure, and the rate = false alarms ÷ reviewed with a Wilson 95% interval. It is shown only when the denominator is at least 10; otherwise the row says “insufficient labels”. Unsure and unreviewed findings are in neither the numerator nor the denominator.
 - Checks that could not run, grouped by reason.
 - Planted bugs: per check, how many listed problems were found, and a list of the missed ones. A planted bug counts as found when the site has a finding for that check (and one whose selector contains the entry's selector, if given).
 - Verdicts other than the three above are listed and not counted (exit code 2 from the command).
