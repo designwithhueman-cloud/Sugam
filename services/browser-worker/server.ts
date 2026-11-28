@@ -7,6 +7,7 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import { parseFlow } from '../../packages/contracts/index.ts';
 import { runFlow } from '../../packages/flow-engine/index.ts';
+import { discover } from '../../packages/flow-engine/discover.ts';
 import { redactText, redactDeep } from '../../lib/security/redact.ts';   // every log line and response leaves this process masked
 
 const TOKEN = process.env.WORKER_TOKEN ?? '';
@@ -22,12 +23,21 @@ const send = (res: http.ServerResponse, status: number, body: unknown) => { cons
 http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/health') return send(res, 200, { ok: true });
-    if (req.method !== 'POST' || req.url !== '/run') return send(res, 404, { error: 'Not found.' });
+    if (req.method !== 'POST' || (req.url !== '/run' && req.url !== '/discover')) return send(res, 404, { error: 'Not found.' });
     if (!authorised(req.headers.authorization)) return send(res, 401, { error: 'Unauthorised.' });
     if (Number(req.headers['content-length'] ?? 0) > MAX_BODY) return send(res, 413, { error: 'The flow is too large.' });
     const chunks: Buffer[] = []; let size = 0;
     for await (const c of req) { size += (c as Buffer).length; if (size > MAX_BODY) return send(res, 413, { error: 'The flow is too large.' }); chunks.push(c as Buffer); }
     let input: unknown; try { input = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { return send(res, 400, { error: 'The body is not valid JSON.' }); }
+    if (req.url === '/discover') {   // journey discovery: one address in, candidate journeys out. Same limits as a flow run: one job at a time, a hard time limit.
+      const startUrl = (input as { startUrl?: unknown } | null)?.startUrl; if (typeof startUrl !== 'string' || startUrl.length > 2000) return send(res, 400, { error: 'startUrl is required.' });
+      if (running >= MAX_JOBS) return send(res, 429, { error: 'The worker is busy. Try again shortly.' });
+      running++; const hardD = setTimeout(() => { console.error('discovery passed its hard limit; exiting so the container restarts clean'); try { send(res, 504, { error: 'Looking for journeys took too long and was stopped.' }); } finally { setTimeout(() => process.exit(1), 200); } }, 60000);
+      try { const d = await discover(startUrl, { maxMs: 45000 }); console.log(redactText(`discovery ${d.journeys.length} journeys, ${d.pagesVisited} pages, ${d.ms}ms`)); if (!res.writableEnded) send(res, 200, redactDeep(d)); }
+      catch (e) { console.error(redactText(`discovery refused or failed: ${(e as Error).message.split('\n')[0].slice(0, 160)}`)); if (!res.writableEnded) send(res, 422, { error: redactText((e as Error).message.split('\n')[0].slice(0, 200)) }); }
+      finally { clearTimeout(hardD); running--; }
+      return;
+    }
     const parsed = parseFlow(input); if (!parsed.ok) return send(res, 400, { error: redactText(parsed.error) });
     if (running >= MAX_JOBS) return send(res, 429, { error: 'The worker is busy. Try again shortly.' });
     running++;

@@ -69,3 +69,19 @@ export function parseFlow(input: unknown): { ok: true; flow: Flow } | { ok: fals
   if (r.success) return { ok: true, flow: r.data };
   const i = r.error.issues[0]; return { ok: false, error: `${i.path.join('.') || 'flow'}: ${i.message}` };
 }
+
+// ---- journey discovery (M1): what the worker found from one address ----
+export const JourneyPurpose = z.enum(['booking', 'signup', 'pricing', 'contact', 'login', 'other']);
+export type JourneyPurpose = z.infer<typeof JourneyPurpose>;
+export const Journey = z.object({
+  id: z.string().max(40), key: z.string().max(300), purpose: JourneyPurpose, title: z.string().max(120),
+  steps: z.array(Step).min(1).max(5),                  // click steps from the start page; the last step's `expect` is the suggested success condition
+  observed: z.array(z.string().max(200)).max(8),       // the same steps in plain words
+  finalUrl: z.string().max(2000), finalTitle: z.string().max(200),
+});
+export type Journey = z.infer<typeof Journey>;
+export const DiscoveryResult = z.object({
+  startUrl: z.string().max(2000), ms: z.number().int().nonnegative(), pagesVisited: z.number().int().nonnegative(),
+  journeys: z.array(Journey).max(12), skipped: z.array(z.object({ reason: z.string().max(80), count: z.number().int().nonnegative() })).max(20), limits: z.array(z.string().max(120)).max(10),
+});
+export type DiscoveryResult = z.infer<typeof DiscoveryResult>;

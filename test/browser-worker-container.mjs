@@ -82,5 +82,12 @@ try {
     check('the refused job was logged by the container, and answered with an error', /refused or failed/.test(text) && a.status === 422, `${a.status}`);
     check('no raw canary in the container logs or in the answer', leaked(text).length === 0 && leaked(JSON.stringify(a.body ?? '')).length === 0, leaked(text).length ? `${leaked(text).length} leaked` : '');
     check('…the log still says which job was refused (masked, not deleted)', /job .{0,12}••••/.test(text)); }
+  // ---- journey discovery runs inside the same container, under the same limits ----
+  { start('aw-disc', 18085, { ALLOW_PRIVATE_HOSTS: 'host.docker.internal:4200' }); await up(18085);
+    const d = await fetch('http://127.0.0.1:18085/discover', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` }, body: JSON.stringify({ startUrl: 'http://host.docker.internal:4200/flows/start.html' }) }); const body = await d.json().catch(() => null);
+    check('discovery in the container finds a journey from one address', d.status === 200 && Array.isArray(body?.journeys) && body.journeys.length >= 1 && body.pagesVisited >= 2, `${d.status} ${JSON.stringify(body?.journeys?.map((j) => j.title))}`);
+    const noAuth = await fetch('http://127.0.0.1:18085/discover', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ startUrl: 'http://host.docker.internal:4200/' }) });
+    const priv = await fetch('http://127.0.0.1:18085/discover', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${TOKEN}` }, body: JSON.stringify({ startUrl: 'http://169.254.169.254/latest/' }) });
+    check('discovery needs the token, and refuses a cloud-metadata address', noAuth.status === 401 && priv.status === 422, `${noAuth.status} ${priv.status}`); }
 } finally { bad.close(); for (const n of names) dkTry('rm', '-f', n); }
 const failed = results.filter((x) => !x).length; console.log(failed ? `\n${failed} FAILED` : '\nAll passed'); process.exit(failed ? 1 : 0);

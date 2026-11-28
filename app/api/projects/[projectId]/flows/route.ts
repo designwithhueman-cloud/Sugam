@@ -5,6 +5,7 @@ import { currentUser } from '@/lib/auth.ts';
 import { projectAccess, sameOrigin } from '@/lib/access.ts';
 import { hasFeature } from '@/lib/plans.ts';
 import { createFlow, listFlows } from '@/lib/flows/service.ts';
+import { pendingProposals } from '@/lib/flows/discovery.ts';
 
 export const dynamic = 'force-dynamic';
 const err = (status: number, error: string, message: string) => NextResponse.json({ error, message }, { status });
@@ -19,7 +20,8 @@ async function gate(projectId: string) {
 
 export async function GET(_req: Request, ctx: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await ctx.params; const g = await gate(projectId); if ('res' in g) return g.res;
-  return NextResponse.json({ flows: await listFlows(projectId) });
+  const flows = await listFlows(projectId);
+  return NextResponse.json({ flows, proposals: await pendingProposals(flows.map((f) => f.id)) });
 }
 
 export async function POST(req: Request, ctx: { params: Promise<{ projectId: string }> }) {

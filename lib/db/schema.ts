@@ -472,11 +472,51 @@ export const flows = pgTable('flows', {
   id: uuid('id').primaryKey().defaultRandom(),
   projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
-  definition: jsonb('definition').notNull().$type<Record<string, unknown>>(),
+  definition: jsonb('definition').notNull().$type<Record<string, unknown>>(),   // the approved version: runs always use this
+  version: integer('version').notNull().default(1),
+  journeyKey: text('journey_key'),                  // set for flows saved from a discovered journey; rediscovery matches on it
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
   createdAt: ts('created_at').notNull().defaultNow(),
   updatedAt: ts('updated_at').notNull().defaultNow(),
 }, (t) => [index('flows_project_idx').on(t.projectId)]);
+
+/** Every approved version of a flow, with who approved it. flows.definition is a copy of the newest. */
+export const flowVersions = pgTable('flow_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull(),
+  definition: jsonb('definition').notNull().$type<Record<string, unknown>>(),
+  note: text('note'),
+  approvedBy: uuid('approved_by').references(() => users.id, { onDelete: 'set null' }),
+  approvedAt: ts('approved_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('flow_versions_flow_version').on(t.flowId, t.version)]);
+
+/** One run of journey discovery from a project's address. `result` is a packages/contracts DiscoveryResult. */
+export const flowDiscoveries = pgTable('flow_discoveries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  startUrl: text('start_url').notNull(),
+  status: text('status').notNull().default('running'),   // running | done | error
+  result: jsonb('result').$type<Record<string, unknown>>(),
+  error: text('error'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: ts('created_at').notNull().defaultNow(),
+  finishedAt: ts('finished_at'),
+}, (t) => [index('flow_discoveries_project_idx').on(t.projectId, t.createdAt)]);
+
+/** A change rediscovery found for a saved flow. Never applied until the owner accepts it. */
+export const flowProposals = pgTable('flow_proposals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
+  discoveryId: uuid('discovery_id').references(() => flowDiscoveries.id, { onDelete: 'set null' }),
+  kind: text('kind').notNull(),                          // changed | missing
+  proposed: jsonb('proposed').$type<Record<string, unknown>>(),   // the new definition, for `changed`
+  reason: text('reason').notNull(),
+  status: text('status').notNull().default('pending'),   // pending | accepted | dismissed
+  createdAt: ts('created_at').notNull().defaultNow(),
+  decidedBy: uuid('decided_by').references(() => users.id, { onDelete: 'set null' }),
+  decidedAt: ts('decided_at'),
+}, (t) => [index('flow_proposals_flow_idx').on(t.flowId, t.status)]);
 
 export const flowRuns = pgTable('flow_runs', {
   id: uuid('id').primaryKey().defaultRandom(),

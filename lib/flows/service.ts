@@ -12,7 +12,7 @@ const RUN_WINDOW_MS = 600_000, MAX_RUNS_PER_WINDOW = 10;
 const recent = new Map<string, number[]>();   // per user, in this process
 
 export type Created = { ok: true; id: string } | { ok: false; status: number; error: string; message: string };
-export async function createFlow(projectId: string, userId: string, input: unknown): Promise<Created> {
+export async function createFlow(projectId: string, userId: string, input: unknown, opts: { journeyKey?: string; note?: string } = {}): Promise<Created> {
   const body = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
   const parsed = parseFlow({ ...body, id: 'pending' });   // the real id is the row id, set below
   if (!parsed.ok) return { ok: false, status: 400, error: 'invalid_flow', message: parsed.error };
@@ -23,8 +23,9 @@ export async function createFlow(projectId: string, userId: string, input: unkno
   const db = await getDb();
   const have = await db.select({ id: schema.flows.id }).from(schema.flows).where(eq(schema.flows.projectId, projectId));
   if (have.length >= MAX_FLOWS_PER_PROJECT) return { ok: false, status: 409, error: 'limit', message: `A project can keep ${MAX_FLOWS_PER_PROJECT} flows.` };
-  const [row] = await db.insert(schema.flows).values({ projectId, name: parsed.flow.name, definition: { ...parsed.flow, id: 'pending' }, createdBy: userId }).returning({ id: schema.flows.id });
+  const [row] = await db.insert(schema.flows).values({ projectId, name: parsed.flow.name, definition: { ...parsed.flow, id: 'pending' }, createdBy: userId, journeyKey: opts.journeyKey ?? null }).returning({ id: schema.flows.id });
   await db.update(schema.flows).set({ definition: { ...parsed.flow, id: row.id } }).where(eq(schema.flows.id, row.id));
+  await db.insert(schema.flowVersions).values({ flowId: row.id, version: 1, definition: { ...parsed.flow, id: row.id }, note: opts.note ?? null, approvedBy: userId });
   return { ok: true, id: row.id };
 }
 
@@ -32,7 +33,7 @@ export async function listFlows(projectId: string) {
   const db = await getDb();
   const flows = await db.select().from(schema.flows).where(eq(schema.flows.projectId, projectId)).orderBy(desc(schema.flows.createdAt));
   const out = [];
-  for (const f of flows) { const [last] = await db.select({ id: schema.flowRuns.id, status: schema.flowRuns.status, startedAt: schema.flowRuns.startedAt }).from(schema.flowRuns).where(eq(schema.flowRuns.flowId, f.id)).orderBy(desc(schema.flowRuns.startedAt)).limit(1); out.push({ id: f.id, name: f.name, definition: f.definition, createdAt: f.createdAt, lastRun: last ?? null }); }
+  for (const f of flows) { const [last] = await db.select({ id: schema.flowRuns.id, status: schema.flowRuns.status, startedAt: schema.flowRuns.startedAt }).from(schema.flowRuns).where(eq(schema.flowRuns.flowId, f.id)).orderBy(desc(schema.flowRuns.startedAt)).limit(1); out.push({ id: f.id, name: f.name, version: f.version, journeyKey: f.journeyKey, definition: f.definition, createdAt: f.createdAt, lastRun: last ?? null }); }
   return out;
 }
 
@@ -69,4 +70,22 @@ async function finishRun(runId: string, flow: Flow): Promise<void> {
     if (!(e instanceof WorkerError)) logError(`flow run failed ${runId}`, e);
     await db.update(schema.flowRuns).set({ status: 'error', error: message, finishedAt: new Date() }).where(eq(schema.flowRuns.id, runId)).catch(() => {});
   }
+}
+
+// ---- versions: the owner's approved expectation, kept as a history. A flow always runs its newest approved version. ----
+export async function listVersions(flowId: string) {
+  const db = await getDb(); return db.select().from(schema.flowVersions).where(eq(schema.flowVersions.flowId, flowId)).orderBy(desc(schema.flowVersions.version));
+}
+/** Approves a new definition for a flow as its next version. The definition is parsed and checked like a new flow; nothing else about the flow changes. */
+export async function approveVersion(flowId: string, userId: string, definition: unknown, note: string | null): Promise<{ ok: true; version: number } | { ok: false; status: number; error: string; message: string }> {
+  const f = await getFlow(flowId); if (!f) return { ok: false, status: 404, error: 'not_found', message: 'Flow not found.' };
+  const parsed = parseFlow({ ...(definition as object), id: f.id }); if (!parsed.ok) return { ok: false, status: 400, error: 'invalid_flow', message: parsed.error };
+  const sensitive = sensitiveFillProblem(parsed.flow as unknown as Parameters<typeof sensitiveFillProblem>[0]); if (sensitive) return { ok: false, status: 400, error: 'sensitive_value', message: sensitive.reason };
+  try { parsed.flow.startUrl = (await checkUrl(parsed.flow.startUrl)).toString(); } catch (e) { if (e instanceof BlockedUrlError) return { ok: false, status: 400, error: 'blocked_url', message: e.message }; throw e; }
+  const flow = redactDeep(parsed.flow); const db = await getDb(); const version = f.version + 1;
+  await db.transaction(async (tx) => {
+    await tx.insert(schema.flowVersions).values({ flowId: f.id, version, definition: flow as unknown as Record<string, unknown>, note, approvedBy: userId });
+    await tx.update(schema.flows).set({ definition: flow as unknown as Record<string, unknown>, name: flow.name, version, updatedAt: new Date() }).where(eq(schema.flows.id, f.id));
+  });
+  return { ok: true, version };
 }

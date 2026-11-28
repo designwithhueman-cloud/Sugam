@@ -4,8 +4,14 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button.tsx';
 import { blockedSummary, compareRuns, plainStep } from '@/packages/flow-engine/insights.ts';
+import { describeAssertion } from '@/packages/flow-engine/journeys.ts';
+import type { Assertion, DiscoveryResult, Journey } from '@/packages/contracts/index.ts';
 
-type Row = { id: string; name: string; steps: number; startUrl: string; lastRun: { status: string; at: string } | null };
+type Row = { id: string; name: string; version: number; steps: number; startUrl: string; lastRun: { status: string; at: string } | null };
+type Proposal = { id: string; flowId: string; kind: string; reason: string };
+type Disc = { id: string; status: string; error: string | null; startUrl: string; result: DiscoveryResult | null; saved: Record<string, { flowId: string; name: string }> };
+type Cond = { a: Assertion; keep: boolean };
+const PURPOSE: Record<string, string> = { booking: 'Booking', signup: 'Sign-up', pricing: 'Pricing', contact: 'Contact', login: 'Sign-in page (opened, never signed in)', other: 'Page' };
 type Step = { stepId: string; action: string; status: string; ms: number; urlAfter: string | null; error: string | null; assertions: { passed: boolean; observed: string; assertion: { type: string } }[] };
 type Run = { id: string; status: string; error: string | null; startedAt: string; result: { attempts?: number; flaky?: boolean; steps: Step[]; consoleErrors: string[]; failedRequests: { url: string; status: number | null }[]; ms: number } | null };
 
@@ -15,8 +21,9 @@ const STEP_LABEL: Record<string, string> = { blocked: 'Skipped for safety', skip
 const TONE: Record<string, string> = { passed: 'bg-emerald-50 text-emerald-900', failed: 'bg-red-50 text-red-900', blocked: 'bg-amber-50 text-amber-900', error: 'bg-slate-100 text-slate-800', running: 'bg-blue-50 text-blue-900', skipped: 'bg-slate-100 text-slate-600' };
 const Badge = ({ s, step }: { s: string; step?: boolean }) => <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONE[s] ?? TONE.error}`}>{(step && STEP_LABEL[s]) || LABEL[s] || s}</span>;
 
-export function FlowsPanel({ projectId, canDelete, initial }: { projectId: string; canDelete: boolean; initial: Row[] }) {
-  const [rows, setRows] = React.useState(initial);
+export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [], siteUrl = null }: { projectId: string; canDelete: boolean; initial: Row[]; initialProposals?: Proposal[]; siteUrl?: string | null }) {
+  const [rows, setRows] = React.useState(initial); const [proposals, setProposals] = React.useState<Proposal[]>(initialProposals);
+  const [disc, setDisc] = React.useState<Disc | null>(null); const [finding, setFinding] = React.useState(false); const [conds, setConds] = React.useState<Record<string, Cond[]>>({}); const [extra, setExtra] = React.useState<Record<string, string>>({}); const [jname, setJname] = React.useState<Record<string, string>>({});
   const [json, setJson] = React.useState(EXAMPLE); const [msg, setMsg] = React.useState<string | null>(null); const [busy, setBusy] = React.useState<string | null>(null);
   const [runs, setRuns] = React.useState<Record<string, Run | undefined>>({}); const [prev, setPrev] = React.useState<Record<string, Run | undefined>>({}); const [open, setOpen] = React.useState<string | null>(null);
   // the newest run, and the finished run before it, which a before/after comparison needs
@@ -26,7 +33,23 @@ export function FlowsPanel({ projectId, canDelete, initial }: { projectId: strin
     const r = await fetch(path, { method, headers: { 'content-type': 'application/json' }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
     return { ok: r.ok, status: r.status, data: (await r.json().catch(() => null)) as Record<string, any> | null };
   }
-  async function reload() { const r = await api('GET', `/api/projects/${projectId}/flows`); if (r.ok) setRows((r.data!.flows as any[]).map((f) => ({ id: f.id, name: f.name, steps: f.definition?.steps?.length ?? 0, startUrl: f.definition?.startUrl ?? '', lastRun: f.lastRun ? { status: f.lastRun.status, at: f.lastRun.startedAt } : null }))); }
+  async function reload() { const r = await api('GET', `/api/projects/${projectId}/flows`); if (r.ok) { setProposals((r.data!.proposals as Proposal[]) ?? []); setRows((r.data!.flows as any[]).map((f) => ({ id: f.id, name: f.name, version: f.version ?? 1, steps: f.definition?.steps?.length ?? 0, startUrl: f.definition?.startUrl ?? '', lastRun: f.lastRun ? { status: f.lastRun.status, at: f.lastRun.startedAt } : null }))); } }
+
+  // ---- journey discovery: find candidate journeys from the site's address, let the owner say what success means, save them as flows ----
+  const seed = (d: Disc) => { const c: Record<string, Cond[]> = {}; for (const j of d.result?.journeys ?? []) c[j.id] = ((j.steps[j.steps.length - 1] as { expect?: Assertion[] }).expect ?? []).map((a) => ({ a, keep: true })); setConds((x) => ({ ...c, ...x })); };
+  React.useEffect(() => { let off = false; (async () => { const g = await api('GET', `/api/projects/${projectId}/discoveries`); const d = g.data?.discovery as Disc | null | undefined; if (!off && d?.status === 'done') { setDisc(d); seed(d); } })(); return () => { off = true; }; }, [projectId]);   // eslint-disable-line react-hooks/exhaustive-deps
+  async function findJourneys() {
+    setMsg(null); setFinding(true); const r = await api('POST', `/api/projects/${projectId}/discoveries`, {}); if (!r.ok) { setFinding(false); setMsg(r.data?.message ?? 'Could not start.'); return; }
+    for (let i = 0; i < 80; i++) { const g = await api('GET', `/api/discoveries/${r.data!.id}`); const d = g.data?.discovery as Disc | undefined; if (d && d.status !== 'running') { setDisc(d); if (d.status === 'done') seed(d); else setMsg(d.error ?? 'Looking for journeys did not complete.'); break; } await new Promise((res) => setTimeout(res, 1500)); }
+    setFinding(false); await reload();
+  }
+  async function saveJourney(j: Journey) {
+    if (!disc) return; const keep = (conds[j.id] ?? []).filter((c) => c.keep).map((c) => c.a); const add = (extra[j.id] ?? '').trim(); if (add) keep.push({ type: 'text_contains', text: add });
+    setBusy(`j-${j.id}`); const r = await api('POST', `/api/discoveries/${disc.id}/accept`, { journeyId: j.id, name: (jname[j.id] ?? '').trim() || undefined, success: keep.length ? keep : undefined }); setBusy(null);
+    if (!r.ok) { setMsg(r.data?.message ?? 'Could not save this journey.'); return; }
+    setMsg('Saved.'); const g = await api('GET', `/api/discoveries/${disc.id}`); if (g.ok) setDisc(g.data!.discovery as Disc); await reload();
+  }
+  async function decide(p: Proposal, decision: 'accept' | 'dismiss') { setBusy(`p-${p.id}`); const r = await api('POST', `/api/proposals/${p.id}`, { decision }); setBusy(null); setMsg(r.ok ? (decision === 'accept' ? 'The change was approved as a new version.' : 'The change was dismissed. The approved flow is unchanged.') : (r.data?.message ?? 'Could not apply that.')); await reload(); }
   async function create() {
     setMsg(null); let body: unknown; try { body = JSON.parse(json); } catch { setMsg('That is not valid JSON.'); return; }
     setBusy('create'); const r = await api('POST', `/api/projects/${projectId}/flows`, body); setBusy(null);
@@ -54,12 +77,13 @@ export function FlowsPanel({ projectId, canDelete, initial }: { projectId: strin
           {rows.map((f) => { const r = runs[f.id]; return (
             <li key={f.id} data-testid="flow-row" className="rounded-xl border border-slate-200 bg-white p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-0"><p className="truncate font-semibold text-ink">{f.name}</p><p className="truncate text-sm text-slate-600" title={f.startUrl}>{f.steps} step{f.steps === 1 ? '' : 's'} · {f.startUrl}</p></div>
+                <div className="min-w-0"><p className="truncate font-semibold text-ink">{f.name}{f.version > 1 && <span data-testid="flow-version" className="ml-2 text-xs font-normal text-slate-600">version {f.version}</span>}</p><p className="truncate text-sm text-slate-600" title={f.startUrl}>{f.steps} step{f.steps === 1 ? '' : 's'} · {f.startUrl}</p></div>
                 <div className="flex items-center gap-2">{f.lastRun && <Badge s={f.lastRun.status} />}
                   <Button size="sm" variant="outline" onClick={() => show(f.id)} aria-expanded={open === f.id}>{open === f.id ? 'Hide result' : 'Last result'}</Button>
                   <Button size="sm" disabled={busy === f.id} onClick={() => run(f.id)}>{busy === f.id ? 'Running…' : 'Run'}</Button>
                   {canDelete && <Button size="sm" variant="ghost" onClick={() => remove(f.id)} aria-label={`Delete ${f.name}`}>Delete</Button>}</div>
               </div>
+              {proposals.filter((p) => p.flowId === f.id).map((p) => <div key={p.id} data-testid="flow-proposal" data-kind={p.kind} className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"><p className="font-semibold">{p.kind === 'changed' ? 'Your site changed: review the proposed change' : 'This journey was not found on your site'}</p><p className="mt-1">{p.reason}</p><p className="mt-1">Your approved flow (version {f.version}) keeps running until you accept a change.</p><div className="mt-2 flex gap-2">{p.kind === 'changed' && <Button size="sm" disabled={busy === `p-${p.id}`} onClick={() => decide(p, 'accept')}>Approve as version {f.version + 1}</Button>}<Button size="sm" variant="outline" disabled={busy === `p-${p.id}`} onClick={() => decide(p, 'dismiss')}>Keep the approved flow</Button></div></div>)}
               {open === f.id && <div className="mt-4 border-t border-slate-200 pt-3" data-testid="flow-result">
                 {!r ? <p className="text-sm text-slate-600">No runs yet.</p> : <>
                   <p className="mb-2 flex items-center gap-2 text-sm text-slate-700"><Badge s={r.status} />{r.result ? `${(r.result.ms / 1000).toFixed(1)} s` : ''}{r.error ? ` ${r.error}` : ''}</p>
@@ -76,6 +100,27 @@ export function FlowsPanel({ projectId, canDelete, initial }: { projectId: strin
             </li>); })}
         </ul>
       </section>
+      <div className="min-w-0 space-y-6">
+      <section aria-labelledby="disc-h" className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+        <h2 id="disc-h" className="text-lg font-semibold text-ink">Find journeys on your site</h2>
+        <p className="mt-1 text-sm text-slate-600">Avara follows the public links on {siteUrl ? <span className="break-all font-medium">{siteUrl}</span> : 'your site'} (same site only, nothing submitted, nothing signed in) and suggests short journeys, like booking a call. You decide what counts as success, and Avara checks it.</p>
+        <div className="mt-3"><Button onClick={findJourneys} disabled={finding || !siteUrl}>{finding ? 'Looking…' : disc ? 'Look again' : 'Find journeys'}</Button>{!siteUrl && <span className="ml-3 text-sm text-slate-600">Add your live address to the project first.</span>}</div>
+        {disc?.status === 'done' && disc.result && <div data-testid="discovery" className="mt-4 space-y-4">
+          <p className="text-sm text-slate-600">Looked at {disc.result.pagesVisited} page{disc.result.pagesVisited === 1 ? '' : 's'}; found {disc.result.journeys.length} journey{disc.result.journeys.length === 1 ? '' : 's'}.{disc.result.limits.length > 0 && ` Stopped at the ${disc.result.limits.join(' and ')}.`}</p>
+          {disc.result.journeys.map((j) => { const saved = disc.saved[j.key]; const cs = conds[j.id] ?? []; return (
+            <div key={j.id} data-testid="journey" data-purpose={j.purpose} className="rounded-lg border border-slate-200 p-3">
+              <p className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-800">{PURPOSE[j.purpose]}</span><span className="font-semibold text-ink">{j.title}</span></p>
+              <ol className="mt-2 list-decimal pl-5 text-sm text-slate-800">{j.observed.map((o, i) => <li key={i}>{o}</li>)}</ol>
+              {saved ? <p className="mt-2 text-sm text-emerald-900">Saved as “{saved.name}”.</p> : <>
+                <p className="mt-3 text-sm font-medium text-ink">What counts as success? Untick or edit anything that is wrong.</p>
+                <ul className="mt-1 space-y-1">{cs.map((c, i) => <li key={i} className="flex items-start gap-2 text-sm"><input type="checkbox" aria-label={describeAssertion(c.a)} checked={c.keep} onChange={(e) => setConds((x) => ({ ...x, [j.id]: cs.map((y, k) => (k === i ? { ...y, keep: e.target.checked } : y)) }))} className="mt-1" />
+                  {c.a.type === 'text_contains' ? <label className="flex-1">The page says <input value={c.a.text} onChange={(e) => setConds((x) => ({ ...x, [j.id]: cs.map((y, k) => (k === i ? { ...y, a: { type: 'text_contains', text: e.target.value } } : y)) }))} className="ml-1 w-56 max-w-full rounded border border-slate-300 px-1.5 py-0.5" /></label> : <span className="flex-1">{describeAssertion(c.a)}</span>}</li>)}</ul>
+                <label className="mt-2 block text-sm">Also, the page says <input value={extra[j.id] ?? ''} onChange={(e) => setExtra((x) => ({ ...x, [j.id]: e.target.value }))} placeholder="for example: Booking confirmed" className="ml-1 w-56 max-w-full rounded border border-slate-300 px-1.5 py-0.5" /></label>
+                <label className="mt-2 block text-sm">Name <input value={jname[j.id] ?? j.title} onChange={(e) => setJname((x) => ({ ...x, [j.id]: e.target.value }))} className="ml-1 w-64 max-w-full rounded border border-slate-300 px-1.5 py-0.5" /></label>
+                <div className="mt-3"><Button size="sm" disabled={busy === `j-${j.id}`} onClick={() => saveJourney(j)}>{busy === `j-${j.id}` ? 'Saving…' : 'Save as flow'}</Button></div></>}
+            </div>); })}
+        </div>}
+      </section>
       <section aria-labelledby="new-h" className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
         <h2 id="new-h" className="text-lg font-semibold text-ink">New flow</h2>
         <p className="mt-1 text-sm text-slate-600">Steps are open, click, fill, press and wait. A flow never signs in, submits forms, buys, deletes or leaves your site. If a safety rule stops a flow, Avara shows which steps passed and what still needs checking.</p>
@@ -84,6 +129,7 @@ export function FlowsPanel({ projectId, canDelete, initial }: { projectId: strin
         <div className="mt-3 flex items-center gap-3"><Button onClick={create} disabled={busy === 'create'}>{busy === 'create' ? 'Saving…' : 'Save flow'}</Button><Button variant="ghost" onClick={() => setJson(EXAMPLE)}>Reset example</Button></div>
         {msg && <p role="status" className="mt-3 text-sm text-slate-800">{msg}</p>}
       </section>
+      </div>
     </div>
   );
 }
