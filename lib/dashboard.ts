@@ -3,12 +3,13 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { strictScore } from './score-display.ts';
 import { getDb, schema } from './db/index.ts';
+import { redactDeep } from './security/redact.ts';
 import { compareScans } from './compare.ts';
 import { groupOf, pillarOf, PILLAR_KEYS } from './groups.ts';
 
 export async function siteStats(projectId: string) {
   const db = await getDb();
-  const scans = await db.select().from(schema.scans).where(and(eq(schema.scans.projectId, projectId), eq(schema.scans.status, 'completed'))).orderBy(desc(schema.scans.completedAt)).limit(30);
+  const scans = redactDeep(await db.select().from(schema.scans).where(and(eq(schema.scans.projectId, projectId), eq(schema.scans.status, 'completed'))).orderBy(desc(schema.scans.completedAt)).limit(30));
   const latest = scans.find((s) => s.environment === 'live') ?? scans[0] ?? null;
   if (!latest) return { latest: null, previous: null, byPillar: null, byFix: null, bySeverity: null, buckets: null, change: null, scans, fixFirst: [], undecided: 0, decided: 0 };
   const decisions = new Map((await db.select().from(schema.reviewDecisions).where(eq(schema.reviewDecisions.projectId, projectId))).map((d) => [d.componentKey, d.decision]));

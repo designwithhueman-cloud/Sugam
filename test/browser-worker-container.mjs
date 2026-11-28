@@ -1,7 +1,8 @@
 // Browser worker in a real container (milestone 4). Starts the image with the same limits as docker-compose.yml and tries to break them.
 // Needs: Docker running, the image built (docker build -f services/browser-worker/Dockerfile -t avara-browser-worker .), and the fixture
 // server (node fixture/server.mjs, port 4200). Run: node --experimental-strip-types test/browser-worker-container.mjs   (takes about 2 minutes)
-import { execFileSync, spawn } from 'node:child_process'; import http from 'node:http';
+import { execFileSync, spawn, spawnSync } from 'node:child_process'; import http from 'node:http';
+import { makeCanaries, RAW } from './support/canaries.mjs';
 process.env.PATH += ':/Applications/Docker.app/Contents/Resources/bin';
 const results = []; const check = (n, ok, x = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${x ? '  ' + x : ''}`); }; const info = (n) => console.log(`INFO  ${n}`);
 const dk = (...a) => execFileSync('docker', a, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim(); const dkTry = (...a) => { try { return { ok: true, out: dk(...a) }; } catch (e) { return { ok: false, out: String(e.stderr || e.message).trim() }; } };
@@ -73,5 +74,13 @@ try {
   check('a memory-hungry page does not get past the 1 GiB cap: the run does not pass', hog.status !== 200 || hog.body?.status !== 'passed', `${hog.status} ${hog.body?.status ?? hog.body?.error ?? ''}; OOMKilled=${st.OOMKilled}, restarts=${JSON.parse(dk('inspect', 'aw-mem'))[0].RestartCount}`);
   check('the worker is still serving afterwards (restarted if it was killed)', await up(18083, 45000), `${Math.round((Date.now() - t1) / 1000)}s`);
   const memNow = dk('stats', '--no-stream', '--format', '{{.MemUsage}}', 'aw-mem'); info(`memory after the test: ${memNow}`);
+  // ---- the worker's own logs and answers carry no secrets (synthetic canaries in the job id and address) ----
+  { const C = makeCanaries(); start('aw-logs', 18084, {}); await up(18084);
+    const a = await post(18084, flow(C.stripe, [{ id: 'r', action: 'reload' }], `http://127.0.0.1:9/p/${C.github}?api_key=${C.aws}`));
+    await sleep(500); const lg = spawnSync('docker', ['logs', 'aw-logs'], { encoding: 'utf8' }); const text = (lg.stdout ?? '') + (lg.stderr ?? '');   // the refusal goes to stderr
+    const leaked = (t) => RAW(C).filter((v) => t.includes(v));
+    check('the refused job was logged by the container, and answered with an error', /refused or failed/.test(text) && a.status === 422, `${a.status}`);
+    check('no raw canary in the container logs or in the answer', leaked(text).length === 0 && leaked(JSON.stringify(a.body ?? '')).length === 0, leaked(text).length ? `${leaked(text).length} leaked` : '');
+    check('…the log still says which job was refused (masked, not deleted)', /job .{0,12}••••/.test(text)); }
 } finally { bad.close(); for (const n of names) dkTry('rm', '-f', n); }
 const failed = results.filter((x) => !x).length; console.log(failed ? `\n${failed} FAILED` : '\nAll passed'); process.exit(failed ? 1 : 0);

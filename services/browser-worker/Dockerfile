@@ -8,6 +8,7 @@ RUN npm ci --omit=dev
 # Only what the worker imports: the flow packages, the URL guard, the egress proxy and the server.
 COPY packages ./packages
 COPY lib/net ./lib/net
+COPY lib/security/redact.ts ./lib/security/redact.ts
 COPY scanner/egress-proxy.ts ./scanner/egress-proxy.ts
 COPY services/browser-worker/server.ts ./services/browser-worker/server.ts
 USER pwuser

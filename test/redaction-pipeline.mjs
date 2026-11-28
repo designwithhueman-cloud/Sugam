@@ -35,6 +35,7 @@ const routes = (u) => {
   if (u === '/shot-a') return shotPage(C.stripe); if (u === '/shot-b') return shotPage(MASKED);
   if (u === '/pseudo-a') return pseudoPage(C.anthropic); if (u === '/pseudo-b') return pseudoPage('••••');
   if (u === '/sab-1') return sabPage(SAB[0]); if (u === '/sab-2') return sabPage(SAB[1]);
+  if (u === '/blocker-sab') return blockerPage(SAB[0]).replace('</head>', `${sabotage}</head>`);
   if (u === '/blocker-a') return blockerPage(C.stripe); if (u === '/blocker-b') return blockerPage(MASKED);
   return null;
 };
@@ -97,6 +98,19 @@ check('the expected accessibility findings are present (image without text alter
   check('(setup) the raw legacy row really holds the canary', raw.includes(L.stripe) && raw.includes(L.github));
   const shown = JSON.stringify(await loadReport(leak.id)); check('the report built from legacy rows shows them masked, with their location', !shown.includes(L.stripe) && !shown.includes(L.github) && shown.includes('#legacy')); }
 
+// ---- legacy scan addresses stored raw are masked on every dashboard list ----
+{ const L = makeCanaries(); const rawUrl = `${BASE}/legacy/${L.github}?q=${L.stripe}`;
+  const [ls] = await db.insert(schema.scans).values({ url: rawUrl, finalUrl: rawUrl, pageTitle: `Legacy ${L.openai}`, projectId: project.id, createdBy: user.id, standard: 'wcag22aa', status: 'completed', completedAt: new Date() }).returning();
+  const [qs] = await db.insert(schema.scans).values({ url: rawUrl, finalUrl: rawUrl, pageTitle: `Legacy ${L.openai}`, createdBy: user.id, standard: 'wcag22aa', status: 'completed', completedAt: new Date() }).returning();
+  const stored = JSON.stringify(await db.select({ u: schema.scans.url, t: schema.scans.pageTitle }).from(schema.scans).where(eq(schema.scans.id, ls.id)));
+  check('(setup) the legacy scan rows really hold the raw address and title', stored.includes(L.github) && stored.includes(L.stripe) && stored.includes(L.openai));
+  const { siteStats } = await import('../lib/dashboard.ts'); const { quickScans, workspaceOverview } = await import('../lib/overview.ts'); const { compareScans } = await import('../lib/compare.ts');
+  const noL = (v) => { const t = JSON.stringify(v); return ![L.github, L.stripe, L.openai].some((x) => t.includes(x)); };
+  const st = await siteStats(project.id); check('the site dashboard list masks the legacy address and title (and still lists the scan)', noL(st.scans) && st.scans.some((x) => x.id === ls.id));
+  const q = await quickScans(user.id); check('the quick-scans list masks them (and still lists the scan)', noL(q.scans) && q.scans.some((x) => x.id === qs.id));
+  const cmp = await compareScans(ls.id, qs.id); check('the compare view masks them', noL(cmp));
+  const ov = typeof workspaceOverview === 'function' ? await workspaceOverview(org.id, 'agency') : null; if (ov) check('the workspace overview masks them', noL(ov)); }
+
 // ---- saved flows ----
 { const flow = (steps, startUrl = `${BASE}/clean`) => ({ name: 'Canary flow', startUrl, steps });
   const secret = await createFlow(project.id, user.id, flow([{ id: 'f1', action: 'fill', selector: '#in1', value: C.stripe }])); check('a flow with a key typed into a field is refused before it is saved', !secret.ok && secret.error === 'sensitive_value' && secret.status === 400 && /Step “f1”/.test(secret.message), secret.message);
@@ -126,6 +140,10 @@ const rawShot = async (p, w, h, quality = 70) => { const b = await chromium.laun
   check('the early phone screenshot (taken while the scan runs) is masked and carries no raw canary in its record', blockers.length >= 1 && noRaw(blockers) && blockers[0].shot.length > 1000);
   if (blockers[0]) { const raw = await rawShot('/blocker-a', blockers[0].width, blockers[0].height, 75); check('…and it differs from an unmasked screenshot of the page', Buffer.compare(raw, blockers[0].shot) !== 0); }
   const sabBlockers = []; await scan('/blocker-a', { onBlocker: (x) => sabBlockers.push(x) }); check('(repeat) the early screenshot is still masked on a second run', sabBlockers.length >= 1 && noRaw(sabBlockers)); void out; }
+
+{ const sb = []; const out = await scan('/blocker-sab', { onBlocker: (x) => sb.push(x) });
+  check('when the page blocks masking, the early phone screenshot is not recorded at all (no raw image is ever handed out)', sb.length === 0 && noRaw(sb));
+  check('…the scan still finishes, every final screenshot is the notice, and nothing holds the raw canary', out.viewports.length >= 2 && out.viewports.every((v) => v.screenshotOmitted === true) && noRaw(out)); }
 
 server.close();
 const failed = results.filter((x) => !x).length; console.log(`\n${results.length - failed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);

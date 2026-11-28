@@ -16,7 +16,7 @@ Logs are in `.data/test-run/logs/`, a summary in `.data/test-run/results.json`.
 
 | Group | What it needs | How it runs |
 |---|---|---|
-| **in-process** (40) | A browser. The runner starts the fixture site (`fixture/server.mjs`, port 4200) itself. | One test at a time, no app server. |
+| **in-process** (41) | A browser. The runner starts the fixture site (`fixture/server.mjs`, port 4200) itself. | One test at a time, no app server. |
 | **server** (25 runs) | A browser, a built app (`npm run build`), and the seeded database (built on first use). | Every test gets its **own** app server (port 3390) on a **fresh copy** of the seeded database, so scan rate limits and leftover data from one test cannot fail the next. Includes the AI tests against the simulated model (`test/support/gemini-stub.mjs`) and the Launch check test. |
 | **docker** (2) | Docker running and the `avara-browser-worker` image. | `browser-worker-container` needs only Docker; `flows-api` also gets its own app server. If Docker or the image is missing, these are printed as `SKIP` with the reason. They are never dropped silently. |
 

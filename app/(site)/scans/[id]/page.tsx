@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { asc, eq } from 'drizzle-orm';
 import { getDb, schema } from '@/lib/db/index.ts';
+import { redactDeep } from '@/lib/security/redact.ts';
 import { loadReport } from '@/lib/report.ts';
 import { ReviewPage } from '@/components/report/ReviewPage.tsx';
 import { ReportView } from '@/components/report/ReportView.tsx';
@@ -28,7 +29,7 @@ export default async function ScanPage({ params, searchParams }: { params: Promi
   const { id } = await params; const { issue } = await searchParams;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const db = await getDb();
-  const [scan] = await db.select().from(schema.scans).where(eq(schema.scans.id, id));
+  const scan = redactDeep((await db.select().from(schema.scans).where(eq(schema.scans.id, id)))[0]);
   if (!scan) notFound();
   const user = await currentUser();
   const claimed = await isClaimed(id);

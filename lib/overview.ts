@@ -3,6 +3,7 @@
 import { and, count, desc, eq, inArray, isNull } from 'drizzle-orm';
 import { scanSummaryView } from './scan-summary.ts';
 import { getDb, schema } from './db/index.ts';
+import { redactDeep } from './security/redact.ts';
 import { hasFeature, type PlanId } from './plans.ts';
 import type { Shot } from './review-view.ts';
 
@@ -31,7 +32,7 @@ export async function workspaceOverview(orgId: string, plan: PlanId) {
     .from(schema.projects).innerJoin(schema.clients, eq(schema.clients.id, schema.projects.clientId)).where(eq(schema.projects.organizationId, orgId));
   const rows: ProjectRow[] = []; const candidates: { row: ProjectRow; scan: typeof schema.scans.$inferSelect; lead: import('./review-view.ts').Item; label: string; recommended: number }[] = [];
   for (const p of projects) {
-    const recent = await db.select().from(schema.scans).where(eq(schema.scans.projectId, p.id)).orderBy(desc(schema.scans.createdAt)).limit(20);
+    const recent = redactDeep(await db.select().from(schema.scans).where(eq(schema.scans.projectId, p.id)).orderBy(desc(schema.scans.createdAt)).limit(20));
     const done = recent.filter((s) => s.status === 'completed').sort((a, b) => +(b.completedAt ?? b.createdAt) - +(a.completedAt ?? a.createdAt));
     // Same choice as the site dashboard: the latest live scan when there is one, else the latest of any environment.
     const latest = done.find((s) => s.environment === 'live') ?? done[0] ?? null;
@@ -91,7 +92,7 @@ export async function quickScans(userId: string, limit?: number) {
   const where = and(eq(schema.scans.createdBy, userId), isNull(schema.scans.projectId));
   const q = db.select().from(schema.scans).where(where).orderBy(desc(schema.scans.createdAt));
   const [scans, [{ n }]] = await Promise.all([limit ? q.limit(limit) : q, db.select({ n: count() }).from(schema.scans).where(where)]);
-  return { scans, total: Number(n) };
+  return { scans: redactDeep(scans), total: Number(n) };
 }
 
 export async function sharedReports(orgId: string) {

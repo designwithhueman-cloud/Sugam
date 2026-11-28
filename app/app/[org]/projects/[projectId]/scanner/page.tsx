@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { desc, eq } from 'drizzle-orm';
 import { getDb, schema } from '@/lib/db/index.ts';
+import { redactDeep } from '@/lib/security/redact.ts';
 import { requireUser } from '@/lib/auth.ts';
 import { projectAccess } from '@/lib/access.ts';
 import { startProjectScanAction } from '@/app/actions.ts';
@@ -20,7 +21,7 @@ export default async function Scanner({ params, searchParams }: { params: Promis
   const user = await requireUser(`/app/${org}/projects/${projectId}/scanner`);
   const pa = await projectAccess(user, projectId); if (!pa) notFound();
   const p = pa.project; const db = await getDb();
-  const scans = await db.select().from(schema.scans).where(eq(schema.scans.projectId, p.id)).orderBy(desc(schema.scans.createdAt)).limit(50);
+  const scans = redactDeep(await db.select().from(schema.scans).where(eq(schema.scans.projectId, p.id)).orderBy(desc(schema.scans.createdAt)).limit(50));
   const base = `/app/${org}/projects/${projectId}/scanner`; const L = listPage(scans, (x) => [x.pageTitle, x.url, x.environment, x.status], await searchParams); const scores = await strictScores(L.rows);
   return (
     <main id="main" className={projectMain}>

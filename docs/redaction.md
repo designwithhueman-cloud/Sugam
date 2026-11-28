@@ -50,8 +50,7 @@ measurements and findings still use the real page. **If a secret was detected an
 - **A page that fights back.** A page that rewrites the browser's own string functions before the check can make the in-page check lie. (A page that only blocks text changes is caught: the image is omitted.)
 - **Formats we do not know.** Detection is by pattern. A secret in a format not in the table is not recognised.
 - **Screenshots and rows stored before this change.** Old text rows are masked on read but stay raw in the database until they are scrubbed (no scrub script exists). Old screenshots are not changed.
-- **Some read paths.** Dashboard lists that read a scan's stored address straight from the database do not mask legacy rows.
-- **The browser worker's own console.** The Docker worker logs a short refusal message (for example a blocked element's label) without masking; its results are masked when the app stores them. Fixing the worker log needs an image rebuild.
+- **The browser worker's own console.** The worker's logs and answers are masked in source (`services/browser-worker/server.ts`). Verified in the rebuilt Docker image with synthetic canaries (`test/browser-worker-container.mjs`) and as a plain process (`test/worker-logs.mjs`). Containers started from an older image still log unmasked.
 - **Error monitoring.** None is installed. `test/redaction.mjs` fails if an error-monitoring package appears, so it is wired through `redactDeep` first.
 - **A user's own flow values.** A saved flow's `fill` text is the user's own input; secrets in it are refused, other text is stored as typed.
 
@@ -59,3 +58,4 @@ measurements and findings still use the real page. **If a secret was detected an
 
 `test/redaction.mjs` (unit, every kind, idempotence, untouched values, flows), `test/redaction-pipeline.mjs` (real scanner, job, database, simulated model, screenshots) and
 `test/redaction-server.mjs` (report page, APIs, exports, share link). They use synthetic canary secrets assembled at run time (`test/support/canaries.mjs`), so no key-shaped text is in the repository.
+- Dashboard lists (site dashboard, quick scans, workspace overview, scanner list, compare, scan page) mask legacy scan addresses and titles on read; the stored rows stay raw.
