@@ -12,7 +12,7 @@ const POINTS = [
 ] as const;
 
 function Chip({ label, tone }: { label: string; tone: string }) {
-  return <span className={`rounded-full px-3 py-1 text-sm font-semibold text-ink ${tone}`}>{label}</span>;
+  return <span className={`rounded-lg px-3 py-1 text-sm font-semibold text-ink ${tone}`}>{label}</span>;
 }
 
 export function Agencies() {
@@ -31,7 +31,7 @@ export function Agencies() {
           ))}
         </ul>
         <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
-          <Link href="/upgrade?plan=agency" className="inline-flex min-h-14 items-center gap-2 rounded-full bg-ink px-7 text-lg font-semibold text-white hover:bg-neutral-800">Join the Agency waiting list<ArrowRight aria-hidden className="size-5" /></Link>
+          <Link href="/upgrade?plan=agency" className="inline-flex min-h-14 items-center gap-2 rounded-xl bg-ink px-7 text-lg font-semibold text-white hover:bg-neutral-800">Join the Agency waiting list<ArrowRight aria-hidden className="size-5" /></Link>
           <Link href="/#pricing" className="inline-flex min-h-11 items-center text-lg font-semibold text-ink underline underline-offset-4">See Agency pricing</Link>
         </div>
       </div>
@@ -47,8 +47,8 @@ export function Agencies() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2"><Chip label="Critical" tone="bg-[#ffd9d4]" /><Chip label="Serious" tone="bg-[#ffe9b8]" /><Chip label="To check" tone="bg-[#e6dcff]" /></div>
             <ul className="mt-4 space-y-2.5 text-base text-ink">
-              <li className="flex items-center gap-2.5"><CheckCircle2 className="size-5 text-[#2d6a00]" />Buttons with no name <span className="ml-auto rounded-full bg-[#d9f56e] px-2.5 py-0.5 text-sm font-semibold">Fixed</span></li>
-              <li className="flex items-center gap-2.5"><span className="grid size-5 place-items-center"><span className="size-3.5 rounded-full border-2 border-dashed border-neutral-500" /></span>Low-contrast text <span className="ml-auto rounded-full bg-[#eceae4] px-2.5 py-0.5 text-sm font-semibold">Open</span></li>
+              <li className="flex items-center gap-2.5"><CheckCircle2 className="size-5 text-[#2d6a00]" />Buttons with no name <span className="ml-auto rounded-lg bg-[#d9f56e] px-2.5 py-0.5 text-sm font-semibold">Fixed</span></li>
+              <li className="flex items-center gap-2.5"><span className="grid size-5 place-items-center"><span className="size-3.5 rounded-full border-2 border-dashed border-neutral-500" /></span>Low-contrast text <span className="ml-auto rounded-lg bg-[#eceae4] px-2.5 py-0.5 text-sm font-semibold">Open</span></li>
             </ul>
             <p className="mt-4 flex items-center gap-2 border-t border-black/10 pt-3 text-sm text-neutral-700"><Link2 className="size-4" />Read-only link · opens without an account</p>
           </div>

@@ -3,14 +3,18 @@
 // nothing here decides what to fix first (that is analysis/avara/).
 import type { Page } from 'playwright';
 import { FIND_ACTIONS, MEASURE_ACTION, FIELDS_SNAPSHOT, REACH_FIELD } from './avara-inpage.ts';
+import { collapsedContainer, collapsedNote } from '../lib/avara/evidence-check.ts';
+import { CODE_EVIDENCE } from './code-evidence.ts';
 
 export type Measurement = {
   found: boolean; selector: string; text: string; html: string; tag: string; rendered: boolean; pointerEventsNone: boolean; disabled: boolean;
   box: { x: number; y: number; width: number; height: number }; width: number; height: number; belowFirstScreen: boolean; outsideX: boolean;
   sidewaysScrollPossible: boolean; xOverflowHidden: boolean; pageWidth: number; viewportWidth: number; visibleRatio: number; clippedBy: string | null;
-  covered: boolean; cover: { selector: string; position: string; text: string; box?: { x: number; y: number; width: number; height: number } } | null; centerPoint: { x: number; y: number };
+  covered: boolean; cover: { selector: string; position: string; text: string; dismissible?: boolean; box?: { x: number; y: number; width: number; height: number } } | null; centerPoint: { x: number; y: number };
+  /** Code evidence for the fix, read in the same state (scanner/code-evidence.ts): keys action, cover, clippedBy. */
+  code?: Record<string, import('./code-evidence.ts').CodeEvidence> | null;
 };
-export type Classification = { level: 'ok' | 'inconvenient' | 'unusable'; reasons: string[]; causes: { kind: 'hidden' | 'clipped' | 'covered' | 'offscreen' | 'small' | 'sideways' | 'ignored'; detail: string }[] };
+export type Classification = { level: 'ok' | 'inconvenient' | 'unusable'; unproven?: string; reasons: string[]; causes: { kind: 'hidden' | 'clipped' | 'covered' | 'offscreen' | 'small' | 'sideways' | 'ignored'; detail: string }[] };
 export type Candidate = { selector: string; text: string; how: 'goal' | 'inferred'; score: number; tag: string; html: string; submits: boolean; formSelector: string | null; href: string; external: boolean; mail: boolean };
 export type WorkflowOutcome = 'form_reached' | 'form_not_reached' | 'no_visible_change' | 'navigated_no_form' | 'not_activated' | 'could_not_activate';
 export type Workflow = { outcome: WorkflowOutcome; reason: string; steps: string[]; coverage: string; firstField?: { selector: string; name: string }; reach?: Record<string, unknown> };
@@ -24,14 +28,16 @@ export function classify(m: Measurement): Classification {
   if (!m.rendered) add(cannot, 'hidden', 'It is not shown at this width.');
   if (m.pointerEventsNone) add(cannot, 'ignored', 'It ignores taps (pointer-events: none).');
   if (m.rendered && m.visibleRatio < 0.2) add(cannot, m.clippedBy ? 'clipped' : 'offscreen', m.clippedBy ? `Most of it is cut off by ${m.clippedBy}.` : `Most of it is outside the ${m.viewportWidth}px screen.`);
-  if (m.rendered && m.covered && m.cover) add(cannot, 'covered', `${m.cover.selector} (${m.cover.position}) covers the middle of it, so a tap lands there instead.`);
+  // A cookie/consent banner the visitor can dismiss is not a defect of this element: the banner is reported on its own, and blaming the link would be a false alarm.
+  if (m.rendered && m.covered && m.cover && !m.cover.dismissible) add(cannot, 'covered', `${m.cover.selector} (${m.cover.position}) covers the middle of it, so a tap lands there instead.`);
   if (m.rendered && m.outsideX && !m.sidewaysScrollPossible && m.visibleRatio < 0.5) add(cannot, 'offscreen', 'It runs past the screen edge and the page cannot scroll sideways to reach it.');
   if (!cannot.length) {
     if (m.visibleRatio >= 0.2 && m.visibleRatio < 0.9) add(hard, 'clipped', `Part of it is cut off (${Math.round(m.visibleRatio * 100)}% visible).`);
     if (m.outsideX && m.sidewaysScrollPossible) add(hard, 'sideways', 'Reaching it needs sideways scrolling.');
     if (m.rendered && (m.width < 24 || m.height < 24)) add(hard, 'small', `It is only ${m.width} by ${m.height} px; the minimum target is 24 by 24 px.`);
   }
-  return { level: cannot.length ? 'unusable' : hard.length ? 'inconvenient' : 'ok', reasons: [...cannot, ...hard], causes };
+  const box = collapsedContainer(m);
+  return { level: cannot.length ? 'unusable' : hard.length ? 'inconvenient' : 'ok', ...(box && cannot.length ? { unproven: collapsedNote(box) } : {}), reasons: [...cannot, ...hard], causes };
 }
 
 const REACH_LIMIT = 'Stopped before submission. Not covered: field validation, the confirmation step, and whether the sign-up is received.';
@@ -41,13 +47,16 @@ const reachFailure = (r: Awaited<ReturnType<typeof reach>>) => (!r.found ? 'The 
 
 // Activate the action and watch what a visitor would see. Never submits a form: a submit button is not clicked, the form's first field is checked instead.
 export async function runWorkflow(page: Page, cand: Candidate, cls: Classification | null): Promise<Workflow> {
-  const steps: string[] = [`Found the main action: “${cand.text}” (${cand.how === 'goal' ? 'matches the goal you confirmed' : 'chosen by Sugam from the page'}).`];
+  const steps: string[] = [`Found the main action: “${cand.text}” (${cand.how === 'goal' ? 'matches the goal you confirmed' : 'chosen by Avara from the page'}).`];
+  if (cls?.unproven) return { outcome: 'not_activated', reason: cls.unproven, steps: [...steps, `Not activated: ${cls.unproven}`], coverage: 'Ends before activation: the action was inside a collapsed container that Avara did not open.' };
   if (cls?.level === 'unusable') return { outcome: 'could_not_activate', reason: cls.reasons[0], steps: [...steps, `A visitor could not activate it: ${cls.reasons[0]}`], coverage: 'Ends before activation: the action cannot be used at this width.' };
-  if (cand.mail) return { outcome: 'not_activated', reason: 'The action opens an email or phone app.', steps: [...steps, 'It is a mailto or tel link, so Sugam did not activate it.'], coverage: 'Ends at the link: Sugam does not open email or phone apps.' };
-  if (cand.external) return { outcome: 'not_activated', reason: 'The action goes to another website.', steps: [...steps, `It links to another site (${new URL(cand.href).host}), so Sugam did not follow it.`], coverage: 'Ends at the link: Sugam reviews one site at a time.' };
+  if (cand.mail) return { outcome: 'not_activated', reason: 'The action opens an email or phone app.', steps: [...steps, 'It is a mailto or tel link, so Avara did not activate it.'], coverage: 'Ends at the link: Sugam does not open email or phone apps.' };
+  // A download link does what a visitor expects when it downloads: there is no form or dialog to reach, so it is never judged as broken.
+  if (/\sdownload(?=[\s=>])/i.test(cand.html ?? '') || /\.(pdf|zip|docx?|pptx?|xlsx?|csv|dmg|exe|pkg|epub)(?:[?#]|$)/i.test(cand.href ?? '')) return { outcome: 'not_activated', reason: 'The action downloads a file.', steps: [...steps, 'It downloads a file, so Avara did not look for a form after it.'], coverage: 'Ends at the download: a download has no form to reach.' };
+  if (cand.external) return { outcome: 'not_activated', reason: 'The action goes to another website.', steps: [...steps, `It links to another site (${new URL(cand.href).host}), so Avara did not follow it.`], coverage: 'Ends at the link: Sugam reviews one site at a time.' };
   const before = (await page.evaluate(`(${FIELDS_SNAPSHOT})(${JSON.stringify(cand.submits ? cand.formSelector : null)})`)) as { url: string; fields: { selector: string; name: string }[]; dialogs: { label: string }[] };
   if (cand.submits) {
-    steps.push('The action submits a form on the page, so Sugam did not click it.');
+    steps.push('The action submits a form on the page, so Avara did not click it.');
     const first = before.fields[0];
     if (!first) return { outcome: 'no_visible_change', reason: 'The form has no visible field.', steps: [...steps, 'The form has no visible field to fill in.'], coverage: REACH_LIMIT };
     const r = await reach(page, first.selector); const why = reachFailure(r);
@@ -88,6 +97,7 @@ export async function probeActions(page: Page, vp: 'desktop' | 'mobile', width: 
   // The action the builder named comes first, however prominent other buttons are; the rest keep their order.
   const ordered = [...found.candidates.filter((c) => c.how === 'goal'), ...found.candidates.filter((c) => c.how !== 'goal')];
   for (const c of ordered) {
+    await page.evaluate(`window.__avaraCodeEvidence = ${CODE_EVIDENCE}`).catch(() => {});   // read by MEASURE_ACTION on the elements it measures
     const m = (await page.evaluate(`(${MEASURE_ACTION})(${JSON.stringify(c.selector)}, ${JSON.stringify(c.text)})`).catch(() => null)) as Measurement | { found: false } | null;
     const measurement = m && m.found ? (m as Measurement) : null;
     candidates.push({ candidate: c, measurement, classification: measurement ? classify(measurement) : null });

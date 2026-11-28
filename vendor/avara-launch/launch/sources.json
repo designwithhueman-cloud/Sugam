@@ -1,0 +1,114 @@
+[
+  {
+    "id": "vercel",
+    "title": "Vercel Web Design Guidelines",
+    "type": "skill",
+    "url": "https://github.com/vercel-labs/agent-skills/blob/main/skills/web-design-guidelines/SKILL.md",
+    "use": "Interface review and fix wording; reuse axe findings for accessible names."
+  },
+  {
+    "id": "anthropic",
+    "title": "Anthropic Webapp Testing",
+    "type": "skill",
+    "url": "https://github.com/anthropics/skills/blob/main/skills/webapp-testing/SKILL.md",
+    "use": "Exercise actual browser states and check the same element after repair."
+  },
+  {
+    "id": "impeccable",
+    "title": "Impeccable",
+    "type": "skill",
+    "url": "https://github.com/pbakaus/impeccable",
+    "use": "Review a specific affected section and look for intentional repetition before proposing a repair."
+  },
+  {
+    "id": "marketing",
+    "title": "Marketing Skills copywriting",
+    "type": "skill",
+    "url": "https://github.com/coreyhaines31/marketingskills/blob/main/skills/copywriting/SKILL.md",
+    "use": "Compare a quoted promise and action with the stated offer."
+  },
+  {
+    "id": "uiux",
+    "title": "UI UX Pro Max design",
+    "type": "skill",
+    "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill/blob/main/cli/assets/skills/design/SKILL.md",
+    "use": "Use the owner’s approved brand roles during a design review."
+  },
+  {
+    "id": "taste",
+    "title": "Taste Skill",
+    "type": "skill",
+    "url": "https://github.com/Leonxlnx/taste-skill",
+    "use": "Use a named visual reference as a brief and check the rendered result."
+  },
+  {
+    "id": "directory",
+    "title": "Awesome Design Tools",
+    "type": "directory",
+    "url": "https://github.com/goabstract/Awesome-Design-Tools",
+    "use": "Discovery index for reviewers; no executable check."
+  },
+  {
+    "id": "daisy",
+    "title": "daisyUI Card",
+    "type": "component",
+    "url": "https://daisyui.com/components/card/",
+    "use": "Card class as a structural hint; conventional card layout is a control case."
+  },
+  {
+    "id": "shadcn",
+    "title": "shadcn/ui Card",
+    "type": "component",
+    "url": "https://ui.shadcn.com/docs/components/card",
+    "use": "Card component semantics and look-alike controls; data-slot is an optional markup hint."
+  },
+  {
+    "id": "nng",
+    "title": "NN/g visual design",
+    "type": "research",
+    "url": "https://www.nngroup.com/articles/principles-visual-design/",
+    "use": "Compare relative scale and grouping."
+  },
+  {
+    "id": "voice",
+    "title": "NN/g tone of voice",
+    "type": "research",
+    "url": "https://www.nngroup.com/articles/tone-of-voice-dimensions/",
+    "use": "Human review of tone in context; the owner supplies actual phrase preferences."
+  },
+  {
+    "id": "trust",
+    "title": "Stanford credibility guidelines",
+    "type": "research",
+    "url": "https://credibility.stanford.edu/guidelines/",
+    "use": "Inspect support for a specific claim."
+  },
+  {
+    "id": "google",
+    "title": "Google LCP optimization",
+    "type": "guidance",
+    "url": "https://web.dev/articles/optimize-lcp",
+    "use": "Check the loading attribute of a measured LCP candidate."
+  },
+  {
+    "id": "tokens",
+    "title": "Material Design tokens",
+    "type": "design reference",
+    "url": "https://github.com/material-foundation/material-tokens",
+    "use": "Role-specific token comparison. Owner values remain authoritative."
+  },
+  {
+    "id": "wai",
+    "title": "W3C WAI form notifications",
+    "type": "guidance",
+    "url": "https://www.w3.org/WAI/tutorials/forms/notifications/",
+    "use": "Review visible recovery copy in context."
+  },
+  {
+    "id": "axe",
+    "title": "Deque button-name",
+    "type": "analyzer",
+    "url": "https://dequeuniversity.com/rules/axe/4.10/button-name",
+    "use": "Consume the actual axe outcome and target, including incomplete and inapplicable."
+  }
+]

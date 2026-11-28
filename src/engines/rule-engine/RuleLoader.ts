@@ -48,6 +48,18 @@ export class RuleLoader {
         byId.set(rule.ruleId, rule); rules.push(rule);
       });
     }
+    // Score admission (src/rules/_admissions.json): a rule moves a score only with a recorded admission for its exact id and version, naming
+    // the verified source passage and a failing and a clean fixture. Without one, scoreEligible in the rule file is ignored and reported.
+    let admitted = new Map<string, { version: string; passages: unknown[]; guidance?: { condition?: { pass?: string; fail?: string } }; tests?: { fail?: string; clean?: string } }>();
+    if (files.includes('_admissions.json')) {
+      try { admitted = new Map((JSON.parse(fs.readFileSync(path.join(this.dir, '_admissions.json'), 'utf8')).rules ?? []).map((a: { ruleId: string }) => [a.ruleId, a])); }
+      catch (err) { issues.push(`_admissions.json: not valid JSON (${(err as Error).message.slice(0, 80)})`); }
+    }
+    for (const r of rules) {
+      if (!r.scoreEligible) continue;
+      const a = admitted.get(r.ruleId);
+      if (!a || a.version !== (r.version ?? '1') || (!a.passages?.length && !(a.guidance?.condition?.pass && a.guidance?.condition?.fail)) || !a.tests?.fail || !a.tests?.clean) { r.scoreEligible = false; issues.push(`${r.ruleId}: scoreEligible without a recorded admission (a verified passage or a documented pass/fail condition, plus failing and clean fixtures), so it is not scored`); }
+    }
     this.cache = { stamp, rules, manifest, issues, byId };
     return this.cache;
   }

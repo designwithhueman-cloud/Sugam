@@ -2,6 +2,7 @@
 // request the headless browser makes (see scanner/scanner.ts).
 import dns from 'node:dns/promises';
 import net from 'node:net';
+import { stripSecrets } from './url-privacy.ts';
 
 const v4 = new net.BlockList();
 for (const [a, p] of [['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.0.2.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['198.51.100.0', 24], ['203.0.113.0', 24], ['224.0.0.0', 4], ['240.0.0.0', 4]] as const) v4.addSubnet(a, p, 'ipv4');
@@ -36,7 +37,9 @@ export class BlockedUrlError extends Error {
 const allowList = () => (process.env.ALLOW_PRIVATE_HOSTS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
 const cache = new Map<string, { ok: boolean; at: number }>();
 
-export async function checkUrl(input: string): Promise<URL> {
+/** Validates an address for scanning and returns it with secret parameters removed (see url-privacy.ts). */
+export async function checkUrl(input: string): Promise<URL> { return stripSecrets(await checkUrlRaw(input)); }
+async function checkUrlRaw(input: string): Promise<URL> {
   let u: URL;
   try { u = new URL(input); } catch { throw new BlockedUrlError('That does not look like a valid web address.', 'invalid_url'); }
   if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new BlockedUrlError('Only http and https addresses can be scanned.', 'invalid_url');

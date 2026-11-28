@@ -8,3 +8,9 @@ next-env.d.ts
 audit-output/
 test-account.txt
 --help/
+deploy/production.env
+
+# local-only files
+.DS_Store
+.claude/
+_d2.mjs

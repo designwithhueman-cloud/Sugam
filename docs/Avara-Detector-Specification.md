@@ -81,6 +81,8 @@ Every finding stores: ruleId, ruleVersion, url, viewport, inputMode, pageState, 
 | **PC-013** Message Consistency | Yes | DOM | numeric claims in the page text by noun | both statements with their numbers | Claims of the same kind agree within 10%. | Two values for the same kind of claim differ by more than 10%. | No numeric claims: not applicable. | Partly: `pc/claim-consistency` |
 | **PC-014** Feature Prioritization | Advisory (AI + person) | AI Judgement | feature order<br>owner-confirmed primary job | order of features beside the confirmed job | Feature order follows the confirmed job. | A concrete conflict: a minor feature precedes the core job. | Owner job not confirmed: could not verify. | Not built |
 | **PC-015** First 5-Second Comprehension | No | None (human session) | target users<br>timed exposure<br>unaided recall responses | recorded responses | Participants can recall the offer and audience after a timed exposure. | Participants cannot recall them. | Always "needs a person" until a session is run. A model cannot stand in. | Not built |
+| **PC-016** Offer Identifiable From The Hero | Advisory (AI, paid review) | AI Judgement | Every page with a hero (first screen). Page type decides what counts as the offer. | exact quote | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
+| **PC-017** Plain, Specific Language | Advisory (AI, paid review) | AI Judgement | Headline and first paragraph. | exact quote | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
 
 ## UX & Workflow Quality
 
@@ -106,6 +108,7 @@ Every finding stores: ruleId, ruleVersion, url, viewport, inputMode, pageState, 
 | **UX-018** Feature Discoverability | Advisory (AI + person) | Hybrid (Playwright + AI Judgement) | a named secondary feature<br>its expected context | search path for the feature | The feature is found from its expected context. | The feature cannot be found from there. | Feature not named: could not verify. | Not built |
 | **UX-019** Task Completion Confidence | No | None (human session) | participants<br>task<br>completion feedback | recorded interpretation | Participants correctly interpret completion feedback. | Participants misread the outcome. | Needs a person. | Not built |
 | **UX-020** Time To First Value | No | None (human session) | owner-defined first-value event<br>timed sessions | time to the first-value event per session | Time to first value is within the owner's target. | It exceeds the target. | Needs the owner to define first value and a session to time. | Not built |
+| **UX-021** Interaction Feedback Makes Sense | Advisory (AI, paid review) | AI Judgement | Pages where Avara exercised an interaction (phone menu, main action, dialog). | browser measurement | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
 
 ## Mobile Responsiveness
 
@@ -126,6 +129,7 @@ Every finding stores: ruleId, ruleVersion, url, viewport, inputMode, pageState, 
 | **MOB-013** Sticky UI Interference | Yes | Playwright (DOM) | main action rectangle<br>element at its centre point<br>position of the covering element | covering selector and its position (fixed or sticky)<br>overlap area | Nothing fixed or sticky covers the action. | A fixed or sticky element covers the action at 320px. | Action not found: could not verify. | Partly: `mobile/sticky-ui-interference` |
 | **MOB-014** Mobile Task Completion | No | None (rollup) | mobile replay of the task | failed step with its specific cause | Task replays. | A step fails (the specific rule owns the deduction). | Task not defined. | Not built |
 | **MOB-015** Mobile Performance Usability | No | None (rollup) | PERF-001 to PERF-009 results | mobile measurements with their test conditions | Summary only. | Summary only. | No measurements. | Not built |
+| **MOB-016** Phone First Screen Keeps Message And Action | Advisory (AI, paid review) | AI Judgement | Every page; phone first screen at 390px. | screenshot region or browser measurement | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
 
 ## Accessibility
 
@@ -151,6 +155,8 @@ Every finding stores: ruleId, ruleVersion, url, viewport, inputMode, pageState, 
 | **A11Y-018** Screen Reader Compatibility | No | None (human session) | assistive technology and browser pair<br>task script | recorded session notes | Task completes with the named screen reader. | Task fails with it. | Automated tree inspection gives partial evidence only. | Not built |
 | **A11Y-019** Accessible Navigation | Partly | Axe (Playwright) | axe bypass<br>focus order<br>navigation consistency | bypass mechanism, order | Bypass, order and consistent navigation hold. | No bypass, or focus order breaks meaning. | Single-page site: some criteria not applicable. | Partly: `bypass`, `sugam/focus-context-change`, `sugam/autofocus` ... |
 | **A11Y-020** Color Independence | Partly | Hybrid (DOM + Screenshot Analysis) | links in text blocks<br>grayscale render comparison | elements whose only cue is colour | Meaning conveyed by colour has another cue. | Colour is the only cue. | Charts and images need a person. | Partly: `link-in-text-block` |
+| **A11Y-021** Text Alternatives Serve The Same Purpose | Advisory (AI, paid review) | AI Judgement | Images with non-empty alt text. | exact quote or screenshot region | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
+| **A11Y-022** Headings And Labels Describe Their Purpose | Advisory (AI, paid review) | AI Judgement | Pages with headings or labelled fields. | exact quote | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
 
 ## Trust & Credibility
 
@@ -211,6 +217,7 @@ Every finding stores: ruleId, ruleVersion, url, viewport, inputMode, pageState, 
 | **CONV-013** User Motivation Alignment | No | None (human session) | target visitors' reported expectations | responses | Expectations match the offer. | They do not. | Needs a person. | Not built |
 | **CONV-014** Trial Visibility | Partly | Hybrid (DOM + Playwright) | trial entry point<br>conditions | link and conditions found | Trial entry and conditions are discoverable. | A trial is offered but cannot be found. | No trial offered: not applicable. | Partly: `conv/trial-visibility` |
 | **CONV-015** Conversion Confidence | No | None (human session) | participant understanding of commitment | recorded responses | Participants understand commitment and outcome. | They do not. | Lift needs outcome data. | Not built |
+| **CONV-016** Primary Action Clear, Labelled And Honest | Advisory (AI, paid review) | AI Judgement | Pages with a main action. | exact quote or browser measurement | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
 
 ## Performance
 
@@ -226,6 +233,7 @@ Every finding stores: ruleId, ruleVersion, url, viewport, inputMode, pageState, 
 | **PERF-008** Render Blocking Assets | Yes | Lighthouse | render-blocking resources<br>critical path | resource, wasted ms | No render-blocking resource of note. | A resource blocks first paint. | Lighthouse failed. | Partly: `perf/render-blocking` |
 | **PERF-009** Third-Party Script Impact | Yes | Lighthouse | third-party summary<br>network | origin, main-thread and transfer cost | Third parties cost little. | An origin has measured cost. | Improvement claims need equivalent runs. | Partly: `perf/third-party` |
 | **PERF-010** Mobile Performance | No | None (rollup) | PERF-001 to 009 results | child results | Summary only. | Summary only. | Preserves the field/lab boundary. | Not built |
+| **PERF-011** The First Thing Visitors Wait For Is Main Content | Advisory (AI, paid review) | AI Judgement | Scans where Lighthouse ran. | browser measurement | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
 
 ## Differentiation & Design Maturity
 
@@ -241,6 +249,8 @@ Every finding stores: ruleId, ruleVersion, url, viewport, inputMode, pageState, 
 | **DIFF-008** Trust Through Design | Partly | DOM | logo bands and whether logos link<br>testimonial blocks and whether they link | logo count and how many link<br>testimonial cards and how many link<br>stars or avatars present | No unlinked logo band together with unlinked testimonials. | (never a failure) | Both present and unverifiable: needs a person. Neither section present: not applicable. | Partly: `diff/trust-pattern` |
 | **DIFF-009** Feature Grid Saturation | Yes | DOM | repeated card groups per section | each grid: selector, card count, card titles | Fewer than 2 grids of repeated cards. | 3 or more grids of repeated cards. | 2 grids: needs a person. | Partly: `diff/feature-grid-saturation` |
 | **DIFF-010** Visual Commodity Risk | No | None (rollup) | results of DIFF-001 to DIFF-009 | child results | Summary only. | Summary only. | Fewer than the required number of children flagged. | Not built |
+| **DIFF-011** Owner-Specified Brand Cues Present | Advisory (AI, paid review) | AI Judgement | Scans where the owner supplied brand cues. | screenshot region or exact quote | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
+| **DIFF-012** A Specific Differentiator Is Stated | Advisory (AI, paid review) | AI Judgement | Every page with marketing copy. | exact quote | Met, grounded in the page. | Unmet or partly met (needs a person). | Insufficient evidence. | Paid AI review |
 
 ## Adding or changing a detector
 

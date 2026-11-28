@@ -7,6 +7,7 @@ import { currentUser } from '@/lib/auth.ts';
 import { sameOrigin } from '@/lib/access.ts';
 import { addClaim } from '@/lib/claims.ts';
 import { clientIp } from '@/lib/ip.ts';
+import { redactText } from '@/lib/security/redact.ts';
 
 export const dynamic = 'force-dynamic';
 const hits = new Map<string, number[]>();
@@ -19,7 +20,9 @@ export async function POST(req: Request) {
   if (!sameOrigin(req)) return NextResponse.json({ error: 'bad_origin', message: 'Request refused.' }, { status: 403 });
   const user = await currentUser();
   const ip = user ? user.id : 'anon:' + clientIp(req.headers);
-  if (limited(ip, user ? 20 : 5)) return NextResponse.json({ error: 'rate_limited', message: 'Too many scans from your network. Please wait a few minutes.' }, { status: 429 });
+  // Per-caller limit, then one ceiling for all anonymous scans in this process: the caller's address comes from a header that can be
+  // spoofed when no trusted proxy sets it (see lib/ip.ts), so the ceiling bounds the load whatever the header says.
+  if (limited(ip, user ? 20 : 5) || (!user && limited('anon:*', Number(process.env.ANON_SCAN_CEILING || 60)))) return NextResponse.json({ error: 'rate_limited', message: 'Too many scans from your network. Please wait a few minutes.' }, { status: 429 });
   let body: { url?: unknown; standard?: unknown; goal?: unknown };
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'bad_json', message: 'Invalid request.' }, { status: 400 }); }
   let url = String(body.url || '').trim();
@@ -31,7 +34,8 @@ export async function POST(req: Request) {
   const db = await getDb();
   // The main goal is optional and builder-confirmed: plain text, trimmed and capped.
   const goal = typeof body.goal === 'string' ? body.goal.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || null : null;
-  const [scan] = await db.insert(schema.scans).values({ url, standard, goal, createdBy: user?.id ?? null }).returning({ id: schema.scans.id });
+  const goalSafe = goal ? redactText(goal) : goal;   // a pasted key does not become part of the stored goal
+  const [scan] = await db.insert(schema.scans).values({ url, standard, goal: goalSafe, createdBy: user?.id ?? null }).returning({ id: schema.scans.id });
   await enqueueScan(scan.id);
   if (!user) await addClaim(scan.id);
   return NextResponse.json({ id: scan.id }, { status: 202 });

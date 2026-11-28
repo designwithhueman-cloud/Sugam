@@ -63,7 +63,7 @@ export function AuthForm({ mode, next, providers = [], error }: { mode: 'login' 
         <button type="submit" disabled={pending} className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-ink text-lg font-semibold text-white hover:bg-neutral-800 disabled:opacity-60">{pending ? 'One moment…' : signup ? 'Create account' : 'Sign in'}{!pending && <ArrowRight aria-hidden className="size-5" />}</button>
       </form>
 
-      <p className="mt-6 text-lg text-neutral-800">{signup ? 'Already have an account? ' : 'New to Sugam? '}<Link className="font-semibold text-ink underline underline-offset-4" href={`/${signup ? 'login' : 'signup'}${q}`}>{signup ? 'Sign in' : 'Create a free account'}</Link></p>
+      <p className="mt-6 text-lg text-neutral-800">{signup ? 'Already have an account? ' : 'New to Avara? '}<Link className="font-semibold text-ink underline underline-offset-4" href={`/${signup ? 'login' : 'signup'}${q}`}>{signup ? 'Sign in' : 'Create a free account'}</Link></p>
       {signup && <p className="mt-3 text-sm leading-snug text-neutral-700">By creating an account you agree to the <Link href="/terms" className="underline underline-offset-2">Terms</Link> and the <Link href="/privacy" className="underline underline-offset-2">Privacy page</Link>.</p>}
     </div>
   );

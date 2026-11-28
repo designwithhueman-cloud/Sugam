@@ -70,7 +70,10 @@ export type RuleResult = 'observed_pass' | 'observed_failure' | 'needs_human_rev
 export type Method = 'measured' | 'ai_assisted' | 'human' | 'rollup' | 'none';
 export type Coverage = { rules: number; decided: number; weightDecided: number; weightTotal: number; pct: number };
 
-export interface RuleOutcome { ruleId: string; result: RuleResult; method: Method; observation: string; evidence: string[]; confidence: number; reason?: string; userImpact?: string; businessImpact?: string }
+/** Why a rule produced no decision. Each is a different situation and they are never merged: a missing detector is unbuilt work, missing AI is configuration,
+ *  missing input means the scan did not capture what the detector reads, an analyzer error is a failure, and unknown_historical is an old scan that never saved it. */
+export type SkipReason = 'missing_detector' | 'ai_unavailable' | 'ai_no_answer' | 'ai_pending' | 'missing_input' | 'not_applicable' | 'analyzer_error' | 'needs_person' | 'rollup_no_inputs' | 'unknown_historical';
+export interface RuleOutcome { ruleId: string; result: RuleResult; method: Method; observation: string; evidence: string[]; confidence: number; reason?: string; skip?: SkipReason; detectorsRan?: string[]; /** the graded AI review of this criterion (paid plans), after grounding was checked in code */ ai?: { grade: AiGrade; observation: string; grounding: AiGrounding | null; recommendation: string; grounded: boolean }; /** a hybrid rule decided by AI: what its detectors measured before the model was asked */ measuredResult?: RuleResult; userImpact?: string; businessImpact?: string }
 
 /** What the evaluators are given. All of it comes from the scan; none of it is rules. */
 export interface WebsiteContext {
@@ -82,9 +85,13 @@ export interface WebsiteContext {
   axeResults: Record<string, unknown> | null;
   /** Detector outputs by detector id. `ran` says the detector executed; `hits` are its failures or review items. */
   detectors: Record<string, DetectorReport>;
+  /** The report is saved before the AI review: judgement rules are recorded as pending, and the review is replaced when the AI part finishes. */
+  aiPending?: boolean;
+  /** The scan's plan has no AI-assisted checks (Free): judgement rules say so instead of "no model configured". */
+  aiExcluded?: boolean;
 }
 export interface DetectorHit { bucket: 'confirmed_failure' | 'needs_review'; title: string; summary: string; evidence: string[]; severity?: string }
-export interface DetectorReport { ran: boolean; hits: DetectorHit[]; note?: string; notApplicable?: string }   // notApplicable: the detector ran and the rule does not apply to this page
+export interface DetectorReport { ran: boolean; hits: DetectorHit[]; note?: string; notApplicable?: string; analyzerError?: boolean; passNote?: string }   // passNote: what a clean run actually checked, shown instead of the generic pass sentence   // analyzerError: it did not run because its analyzer failed (not because input was missing)   // notApplicable: the detector ran and the rule does not apply to this page
 
 /** A language model, as the engine sees it. The engine never imports a vendor SDK. */
 export interface LlmClient {
@@ -92,7 +99,9 @@ export interface LlmClient {
   evaluate(input: { system: string; rules: { ruleId: string; title: string; evaluationPrompt: string }[]; context: unknown; images?: WebsiteContext['screenshots'] }): Promise<LlmVerdict[]>;
   interpret?(input: { system: string; failures: { ruleId: string; title: string; observation: string; evidence: string[] }[]; context: unknown }): Promise<{ ruleId: string; userImpact: string; businessImpact: string }[]>;
 }
-export interface LlmVerdict { ruleId: string; result: 'pass' | 'fail' | 'inconclusive' | 'not_applicable'; observation: string; evidence: string[]; confidence: number }
+export type AiGrade = 'met' | 'partly_met' | 'unmet' | 'insufficient_evidence';
+export type AiGrounding = { kind: 'quote' | 'region' | 'measurement'; quote?: string; measurement?: string; region?: { viewport: string; x: number; y: number; width: number; height: number } };
+export interface LlmVerdict { grade?: AiGrade; grounding?: AiGrounding; recommendation?: string; ruleId: string; result: 'pass' | 'fail' | 'inconclusive' | 'not_applicable'; observation: string; evidence: string[]; confidence: number; /** set by a client when the provider gave no answer (rate limit, server error, refusal): not a judgement */ undecided?: boolean }
 
 export interface Manifest {
   schemaVersion: number; library: string; libraryVersion: string;
@@ -104,6 +113,10 @@ export interface ReviewResult {
   overall: { score: number | null; status: 'provisional' | 'final'; assessedCategories: number; totalCategories: number; weightAssessed: number; coveragePct: number; note: string };
   ai: { used: boolean; model?: string; reason?: string; rulesJudged: number };
   loaderIssues: string[];
+  /** One record per loaded rule (the scan's rule snapshot), from RuleCoverage. Every coverage view is built from these. */
+  executions?: import('./RuleCoverage.ts').RuleRecord[];
+  /** The graded AI review per category (paid plans): ratings calculated in code from met/partly/unmet; insufficient evidence excluded. */
+  aiReview?: import('../../../lib/avara/ai-review.ts').AiReview;
   /** AEO and passive-security results. Reported beside the scores, never inside them. */
   tracks?: { aeo: { id: string; title: string; status: 'pass' | 'flag' | 'unverified'; evidence: string; recommendation: string; source: string; advisory: boolean }[]; security: { id: string; title: string; status: 'pass' | 'flag' | 'unverified'; evidence: string; recommendation: string; source: string; advisory: boolean }[] };
 }

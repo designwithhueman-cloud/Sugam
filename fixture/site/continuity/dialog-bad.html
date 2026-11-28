@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Ledgerly waitlist</title>
+<style>body{font:16px/1.5 system-ui;margin:0}header{padding:12px 16px}header a{margin-right:12px}main{padding:16px}button.cta{background:#1d4ed8;color:#fff;padding:12px 20px;border:0;border-radius:8px;font-size:16px}
+.modal{position:fixed;inset:20% 8px auto 8px;background:#fff;border:1px solid #444;padding:16px;display:none}.modal.on{display:block}input{font-size:16px;padding:8px;width:100%;box-sizing:border-box}</style></head>
+<body><header><nav aria-label="Main"><a href="features.html">Features</a><a href="pricing.html">Pricing</a></nav></header>
+<main><h1>Join the Ledgerly waitlist</h1><p>Be first to get automatic invoice reminders.</p><button class="cta" id="join">Join the waitlist</button></main>
+<div class="modal" id="m" role="dialog" aria-modal="true" aria-label="Join the waitlist"><form><label>Work email <input type="email" name="email" required></label><button type="submit">Join</button></form></div>
+<script>document.getElementById('join').addEventListener('click', () => { document.getElementById('m').classList.add('on'); document.querySelector('#m input').focus(); });</script></body></html>

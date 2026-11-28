@@ -1,0 +1,113 @@
+[
+  {
+    "detectorId": "launch/button-name",
+    "ruleId": "A11Y-003",
+    "title": "Button accessible name",
+    "version": "1",
+    "sources": [
+      "axe",
+      "vercel"
+    ],
+    "parameters": {},
+    "recommendationTemplate": "Give this button a name describing its action, then rerun the same axe check.",
+    "weight": 0,
+    "scoreEligible": false
+  },
+  {
+    "detectorId": "launch/lcp-image",
+    "ruleId": "PERF-004",
+    "title": "Loading of the measured LCP candidate",
+    "version": "1",
+    "sources": [
+      "google"
+    ],
+    "parameters": {},
+    "recommendationTemplate": "Inspect eager loading for this specific image and compare repeated lab runs.",
+    "weight": 0,
+    "scoreEligible": false
+  },
+  {
+    "detectorId": "launch/font-role",
+    "ruleId": "DESIGN-012",
+    "title": "Heading font against the brand brief",
+    "version": "1",
+    "sources": [
+      "uiux",
+      "tokens"
+    ],
+    "parameters": {},
+    "recommendationTemplate": "Check whether this heading should use an approved font for its role.",
+    "weight": 0,
+    "scoreEligible": false
+  },
+  {
+    "detectorId": "launch/voice",
+    "ruleId": "PC-009",
+    "title": "Owner-specified vocabulary",
+    "version": "1",
+    "sources": [
+      "voice",
+      "marketing"
+    ],
+    "parameters": {},
+    "recommendationTemplate": "Replace the marked phrase with an owner-approved expression that preserves the meaning.",
+    "weight": 0,
+    "scoreEligible": false
+  },
+  {
+    "detectorId": "launch/recovery",
+    "ruleId": "UX-017",
+    "title": "Recovery message wording",
+    "version": "1",
+    "sources": [
+      "wai",
+      "voice"
+    ],
+    "parameters": {
+      "phrases": [
+        "your fault",
+        "you failed to",
+        "obviously you"
+      ]
+    },
+    "recommendationTemplate": "Describe the problem and one recovery step the visitor can take.",
+    "weight": 0,
+    "scoreEligible": false
+  },
+  {
+    "detectorId": "launch/cta",
+    "ruleId": "CONV-001",
+    "title": "Goal action wording",
+    "version": "1",
+    "sources": [
+      "marketing",
+      "vercel"
+    ],
+    "parameters": {
+      "labels": [
+        "click here",
+        "go here",
+        "learn more"
+      ]
+    },
+    "recommendationTemplate": "Name the next action or destination if the surrounding context leaves it unclear.",
+    "weight": 0,
+    "scoreEligible": false
+  },
+  {
+    "detectorId": "launch/action-hit",
+    "ruleId": "MOB-013",
+    "title": "Visible mobile action hit sample",
+    "version": "1",
+    "sources": [
+      "anthropic",
+      "vercel"
+    ],
+    "parameters": {
+      "maxWidth": 480
+    },
+    "recommendationTemplate": "Inspect the element covering the action, then repeat the hit check in the same state.",
+    "weight": 0,
+    "scoreEligible": false
+  }
+]

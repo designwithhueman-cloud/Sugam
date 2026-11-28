@@ -26,7 +26,9 @@ export const FIND_ACTIONS = `function (goal) {
   ${CSS_PATH}
   const norm = (s) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\\s+/g, ' ').trim();
   const CTA = /(sign ?up|join|get started|get access|start|try|book|buy|subscribe|waitlist|wait list|demo|contact|download|register|request|claim|free|create account|schedule)/i;
-  const cands = [...document.querySelectorAll('a[href],button,[role=button],input[type=submit],input[type=button],summary')].filter((e) => !e.closest('[aria-hidden=true]') && label(e) && !e.disabled);
+  // Skip links ("Skip to content", pointing at an anchor on the same page) are hidden off-screen until focused by design: never the main action.
+  const skipLink = (e) => e.localName === 'a' && /^#./.test(e.getAttribute('href') || '') && /^skip\\b/i.test(label(e));
+  const cands = [...document.querySelectorAll('a[href],button,[role=button],input[type=submit],input[type=button],summary')].filter((e) => !e.closest('[aria-hidden=true]') && label(e) && !e.disabled && !skipLink(e));
   const g = goal ? norm(goal) : '';
   const out = [];
   for (const e of cands) {
@@ -66,17 +68,18 @@ export const MEASURE_ACTION = `function (sel, text) {
   const docW = document.documentElement.scrollWidth;
   const xHidden = ['hidden', 'clip'].includes(getComputedStyle(document.documentElement).overflowX) || ['hidden', 'clip'].includes(getComputedStyle(document.body).overflowX);
   // Scroll the PAGE only. scrollIntoView would also scroll overflow:hidden containers, which a visitor cannot do, and would hide the very problem.
-  scrollTo(window.scrollX, Math.max(0, r0.top + scrollY - innerHeight / 2 + r0.height / 2));
+  // behavior 'instant': a page with scroll-behavior:smooth would otherwise still be mid-scroll when we measure, and the check would test the wrong part of the page.
+  scrollTo({ left: window.scrollX, top: Math.max(0, r0.top + scrollY - innerHeight / 2 + r0.height / 2), behavior: 'instant' });
   const r = el.getBoundingClientRect();
   // the part of the box a visitor can see: cut it down by every ancestor that clips its overflow, and by the screen itself
   let vis = { l: r.left, t: r.top, r: r.right, b: r.bottom };
-  let clippedBy = null;
+  let clippedBy = null, clipEl = null;
   for (let n = el.parentElement; n && n !== document.documentElement; n = n.parentElement) {
     const c = getComputedStyle(n);
     if (['hidden', 'clip', 'scroll', 'auto'].includes(c.overflowX) || ['hidden', 'clip', 'scroll', 'auto'].includes(c.overflowY)) {
       const q = n.getBoundingClientRect(); const nv = { l: Math.max(vis.l, q.left), t: Math.max(vis.t, q.top), r: Math.min(vis.r, q.right), b: Math.min(vis.b, q.bottom) };
       const before = Math.max(0, (vis.r - vis.l)) * Math.max(0, (vis.b - vis.t)); const after = Math.max(0, (nv.r - nv.l)) * Math.max(0, (nv.b - nv.t));
-      if (after < before - 1 && !clippedBy) clippedBy = cssPath(n);
+      if (after < before - 1 && !clippedBy) { clippedBy = cssPath(n); clipEl = n; }
       vis = nv;
     }
   }
@@ -87,8 +90,8 @@ export const MEASURE_ACTION = `function (sel, text) {
   const cx = Math.min(Math.max(r.left + r.width / 2, 0), innerWidth - 1), cy = Math.min(Math.max(r.top + r.height / 2, 0), innerHeight - 1);
   const top = document.elementFromPoint(cx, cy);
   const covered = !!top && top !== el && !el.contains(top) && !top.contains(el);
-  let cover = null;
-  if (covered) { let holder = top; let pos = getComputedStyle(top).position; for (let n = top.parentElement; n && pos === 'static'; n = n.parentElement) { pos = getComputedStyle(n).position; holder = n; } cover = { selector: cssPath(holder), position: pos, text: label(top).slice(0, 40), box: (() => { const q = holder.getBoundingClientRect(); return { x: Math.round(q.left), y: Math.round(q.top), width: Math.round(q.width), height: Math.round(q.height) }; })() }; }
+  let cover = null, coverEl = null;
+  if (covered) { let holder = top; let pos = getComputedStyle(top).position; for (let n = top.parentElement; n && pos === 'static'; n = n.parentElement) { pos = getComputedStyle(n).position; holder = n; } coverEl = holder; cover = { selector: cssPath(holder), position: pos, text: label(top).slice(0, 40), dismissible: (() => { const hay = ((holder.id || '') + ' ' + (holder.className || '') + ' ' + (holder.innerText || '').slice(0, 400)).toLowerCase(); return /cookie|consent|gdpr|privacy (choices|preferences)/.test(hay) && [...holder.querySelectorAll('button, a, [role=button], input[type=button], input[type=submit]')].some((c) => /accept|agree|allow|reject|decline|deny|got it|dismiss|close|manage|preferences|save/i.test(label(c))); })(), box: (() => { const q = holder.getBoundingClientRect(); return { x: Math.round(q.left), y: Math.round(q.top), width: Math.round(q.width), height: Math.round(q.height) }; })() }; }
   return {
     found: true, selector: cssPath(el), text: label(el).slice(0, 80), html: el.outerHTML.replace(/\\s+/g, ' ').slice(0, 260), tag: el.localName,
     rendered, pointerEventsNone: pe, disabled: !!el.disabled || el.getAttribute('aria-disabled') === 'true',
@@ -96,6 +99,8 @@ export const MEASURE_ACTION = `function (sel, text) {
     width: Math.round(r.width), height: Math.round(r.height), belowFirstScreen: topBefore > innerHeight,
     outsideX: r.left < -1 || r.right > innerWidth + 1, sidewaysScrollPossible: docW > innerWidth + 1 && !xHidden, xOverflowHidden: xHidden,
     pageWidth: docW, viewportWidth: innerWidth, visibleRatio, clippedBy, covered, cover,
+    // Code evidence on the very elements measured (scanner/code-evidence.ts): a path selector can match more than one of them.
+    code: typeof window.__avaraCodeEvidence === 'function' ? window.__avaraCodeEvidence({ targets: [{ key: 'action', node: el, props: ['display', 'min-width', 'min-height'] }, ...(coverEl ? [{ key: 'cover', node: coverEl, props: ['position', 'display'] }] : []), ...(clipEl ? [{ key: 'clippedBy', node: clipEl, props: ['flex-wrap', 'overflow', 'overflow-x'] }] : [])] }) : null,
     centerPoint: { x: Math.round(cx), y: Math.round(cy) },
   };
 }`;
@@ -143,8 +148,10 @@ export const PAGE_CONTEXT = `function () {
   for (let n = w.nextNode(); n && first.length < 1500; n = w.nextNode()) { const p = n.parentElement; if (!p || !t(n.nodeValue) || /^(SCRIPT|STYLE|NOSCRIPT)$/.test(p.tagName)) continue; const r = p.getBoundingClientRect(); if (vis(p) && r.top >= 0 && r.top < innerHeight) first += t(n.nodeValue) + ' '; }
   const ctas = [...document.querySelectorAll('button, a[role=button], input[type=submit], a.btn, a[class*=button], a[class*=cta], [class*=cta]')].filter(vis).slice(0, 20).map((e) => ({ text: label(e).slice(0, 80), tag: e.tagName.toLowerCase(), href: e.getAttribute('href') ? abs(e.getAttribute('href')) : null, inViewport: e.getBoundingClientRect().top < innerHeight, style: style(e) }));
   const forms = [...document.querySelectorAll('form')].slice(0, 6).map((f) => ({
-    fields: [...f.querySelectorAll('input, select, textarea')].filter((i) => i.type !== 'hidden').slice(0, 25).map((i) => ({ type: i.type || i.localName, label: t((i.labels && i.labels[0] && i.labels[0].innerText) || i.getAttribute('aria-label') || i.placeholder || '').slice(0, 60), required: i.required, name: i.name || null })),
+    fields: [...f.querySelectorAll('input, select, textarea')].filter((i) => i.type !== 'hidden').slice(0, 25).map((i) => ({ type: i.type || i.localName, label: t((i.labels && i.labels[0] && i.labels[0].innerText) || i.getAttribute('aria-label') || i.placeholder || '').slice(0, 60), required: i.required, name: i.name || null, autocomplete: (i.getAttribute('autocomplete') || '').slice(0, 40) || null, checked: i.type === 'checkbox' ? !!i.checked : undefined })),
     submit: label(f.querySelector('button[type=submit], input[type=submit], button') || document.body).slice(0, 60),
+    action: (f.getAttribute('action') || '').slice(0, 160) || null,
+    text: t(f.innerText).slice(0, 400),
   }));
   const all = [...document.querySelectorAll('a[href]')].filter(vis);
   const find = (re) => all.filter((a) => re.test(label(a) + ' ' + (a.getAttribute('href') || ''))).slice(0, 4).map((a) => ({ text: label(a).slice(0, 60), href: abs(a.getAttribute('href')) }));
@@ -329,7 +336,9 @@ export const VALIDATION_PROBE = `function () {
   const label = (e) => (e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.classList.length ? '.' + [...e.classList].slice(0, 2).join('.') : '')).slice(0, 80);
   const out = [];
   for (const f of [...document.forms].slice(0, 4)) {
-    const fields = [...f.querySelectorAll('input,select,textarea')].filter((i) => !/^(hidden|submit|button|image|reset)$/.test(i.type) && !i.disabled);
+    // Only fields a visitor can see: a form inside a closed dialog or a collapsed panel cannot take focus, which says nothing about its errors.
+    const seen = (i) => { const r = i.getBoundingClientRect(), c = getComputedStyle(i); return r.width > 0 && r.height > 0 && c.visibility !== 'hidden'; };
+    const fields = [...f.querySelectorAll('input,select,textarea')].filter((i) => !/^(hidden|submit|button|image|reset)$/.test(i.type) && !i.disabled && seen(i));
     if (!fields.length || (fields.length === 1 && fields[0].type === 'search')) continue;
     const constrained = fields.filter((i) => i.required || /^(email|url|tel|number)$/.test(i.type) || i.pattern || i.minLength > 0).length;
     const prefilled = fields.some((i) => i.value && i.type !== 'checkbox' && i.type !== 'radio');
@@ -382,4 +391,31 @@ export const SIGNALS_PROBE = `function () {
     fontFamilies: (() => { const m = {}; for (const e of document.querySelectorAll('h1,h2,h3,h4,p,li,a,button,label,span,td')) { if (!e.getClientRects().length) continue; const own = [...e.childNodes].filter((n) => n.nodeType === 3).map((n) => n.nodeValue.trim()).join(' '); if (own.length < 4) continue; const f = getComputedStyle(e).fontFamily.split(',')[0].replace(/["']/g, '').trim().toLowerCase(); m[f] = (m[f] || 0) + own.length; } return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 8); })(),
     textWords: (document.body.innerText || '').trim().split(/\\s+/).filter(Boolean).length,
   };
+}`;
+
+// DIFF-002 hero layout (Avara detector pack, prototype-1): where the heading, the main action and the lead visual sit inside the first-screen hero,
+// as fractions of the hero box. Geometry only. The main action comes from the scanner's own action probe (arg.action), and is left out when that
+// probe found it covered, hidden or cut off; every element must be visible in the first screen and on top at its centre. Reads only; never clicks.
+export const HERO_LAYOUT = `function (arg) {
+  const vw = innerWidth, vh = innerHeight;
+  const label = (e) => (e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.classList.length ? '.' + [...e.classList].slice(0, 2).join('.') : '')).slice(0, 80);
+  const visible = (el) => { if (!el || !el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.right > 0 && r.left < vw && r.bottom > 0 && r.top < vh; };
+  const onTop = (el) => { const r = el.getBoundingClientRect(); const x = Math.min(Math.max(r.left + r.width / 2, 1), vw - 1), y = Math.min(Math.max(r.top + r.height / 2, 1), vh - 1); const t = document.elementFromPoint(x, y); return !!t && (t === el || el.contains(t)); };
+  const h1 = [...document.querySelectorAll('h1')].find((e) => visible(e) && onTop(e));
+  if (!h1) return { skip: 'No visible main heading in the first screen, so no hero was identified.' };
+  let hero = null;
+  for (let p = h1.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) { const r = p.getBoundingClientRect(); if (r.height > vh * 1.2 || r.top > vh * 0.5) break; if (p.querySelectorAll('h1').length > 1) break; hero = p; }
+  if (!hero || !visible(hero)) return { skip: 'Hero outside first viewport or hidden' };
+  const bounds = hero.getBoundingClientRect(); const features = {}; const elements = { hero: label(hero), heading: label(h1) }; const notes = [];
+  const put = (name, el) => { const r = el.getBoundingClientRect(); features[name + 'X'] = (r.left + r.width / 2 - bounds.left) / bounds.width; features[name + 'Y'] = (r.top + r.height / 2 - bounds.top) / bounds.height; if (name === 'visual') { features.visualWidth = r.width / bounds.width; features.visualHeight = r.height / bounds.height; } elements[name] = label(el); };
+  put('heading', h1);
+  let action = null; let actionSource = null;
+  if (arg && arg.action && arg.usable === false) notes.push('The main action was found covered, hidden or cut off by the action probe, so its position is not measured.');
+  else if (arg && arg.action) { try { action = [...document.querySelectorAll(arg.action)].find((e) => hero.contains(e) && visible(e) && onTop(e)) || null; } catch { action = null; } if (action) actionSource = 'main action from the action probe'; else notes.push('The main action is not inside the hero.'); }
+  else notes.push('The action probe found no main action.');
+  if (action) put('action', action);
+  const media = [...hero.querySelectorAll('img, picture, video, canvas, svg, figure, [role=img]')].filter((e) => !e.contains(h1) && !(action && e.contains(action)) && visible(e) && onTop(e) && e.getBoundingClientRect().width >= 96 && e.getBoundingClientRect().height >= 96);
+  const visual = media.sort((a, b) => { const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); return rb.width * rb.height - ra.width * ra.height; })[0];
+  if (visual) put('visual', visual); else notes.push('No lead visual of at least 96 by 96 px is visible in the hero.');
+  return { viewport: [vw, vh], features, elements, actionSource, notes };
 }`;

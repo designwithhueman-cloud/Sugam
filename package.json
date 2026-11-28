@@ -8,7 +8,10 @@
     "build": "node node_modules/next/dist/bin/next build",
     "start": "node node_modules/next/dist/bin/next start -p 3100",
     "worker": "node --experimental-strip-types worker/run.ts",
-    "db:generate": "node node_modules/drizzle-kit/bin.cjs generate"
+    "db:generate": "node node_modules/drizzle-kit/bin.cjs generate",
+    "test:all": "node scripts/test-all.mjs",
+    "test:list": "node scripts/test-all.mjs --list",
+    "batch": "node --experimental-strip-types scripts/batch.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

@@ -16,16 +16,19 @@ const ownerOf = new Map(rules.flatMap((r) => (r.evaluator?.detectors ?? []).map(
 const state = (r) => !r ? 'missing' : !r.ran ? 'could_not_verify' : r.notApplicable ? 'n/a' : r.hits.some((h) => h.bucket === 'confirmed_failure') ? 'fail' : r.hits.length ? 'needs_person' : 'pass';
 
 // ---- 1. the rules are data, complete, and score nothing twice ----
-const diff = rules.filter((r) => r.ruleId.startsWith('DIFF-'));
+const diffAll = rules.filter((r) => r.ruleId.startsWith('DIFF-')); const diff = diffAll.filter((r) => Number(r.ruleId.slice(5)) <= 10);   // DIFF-011 and DIFF-012 are paid-review criteria (AI), checked below
 check('DIFF-001 to DIFF-010 exist in their own category, each with source, sourceUrl, severity, detector, recommendation, user impact and business impact', diff.length === 10 && diff.every((r) => r.category === 'Differentiation & Design Maturity' && r.source && /^https:\/\//.test(r.sourceUrl) && r.severity && (r.evaluator?.detectors?.length || r.evaluator?.rollsUp?.length) && r.recommendationTemplate && r.userImpact && r.businessImpact && r.requiredEvidence?.length));
-check('the Differentiation category and all ten DIFF rules carry zero weight, so nothing is scored twice, and category weights still total 100', diff.every((r) => r.weight === 0) && loader.manifest.categories.find((c) => c.id === 'differentiation').weight === 0 && loader.manifest.categories.reduce((n, c) => n + c.weight, 0) === 100);
-check('every rule has a value tier, and tier sets the weight (1:10, 2:6, 3:3, 4:1; rollups and DIFF 0)', rules.every((r) => [1, 2, 3, 4].includes(r.valueTier) && r.weight === (r.mode === 'R' || r.ruleId.startsWith('DIFF-') ? 0 : { 1: 10, 2: 6, 3: 3, 4: 1 }[r.valueTier])));
+// Policy avara-score-2.0 scores all nine categories as a simple average, so Differentiation is scored like the others: its rules carry tier
+// weights (its rollup stays 0). The manifest's category weights are kept for older views and still total 100.
+check('DIFF rules carry tier weights (rollup 0), and category weights still total 100', diff.filter((r) => r.mode !== 'R').every((r) => r.weight > 0) && diff.filter((r) => r.mode === 'R').every((r) => r.weight === 0) && loader.manifest.categories.reduce((n, c) => n + c.weight, 0) === 100);
+check('every rule has a value tier, and tier sets the weight (1:10, 2:6, 3:3, 4:1; rollups 0)', rules.every((r) => [1, 2, 3, 4].includes(r.valueTier) && r.weight === (r.mode === 'R' ? 0 : { 1: 10, 2: 6, 3: 3, 4: 1 }[r.valueTier])));
 const pcRules = rules.filter((r) => r.ruleId.startsWith('PC-'));
-check('every Product Clarity rule has objective criteria, required evidence, an authored recommendation and hypothesis-labelled impacts', pcRules.length === 15 && pcRules.every((r) => r.requiredEvidence?.length && r.recommendationTemplateStatus === 'authored' && /hypothesis/.test(r.userImpact + r.businessImpact)));
+check('the paid-review criteria DIFF-011 and DIFF-012 carry their registry record (source, section, applicability, evidence, exceptions, tests)', diffAll.filter((r) => Number(r.ruleId.slice(5)) > 10).every((r) => r.criterion?.sourceUrl && r.criterion.section && r.criterion.applicability && r.criterion.evidence?.length && r.criterion.exceptions?.length && r.criterion.tests?.length));
+check('every Product Clarity rule has objective criteria, required evidence, an authored recommendation and hypothesis-labelled impacts', pcRules.length === 17 && pcRules.every((r) => r.requiredEvidence?.length && r.recommendationTemplateStatus === 'authored' && /hypothesis/.test(r.userImpact + r.businessImpact)));
 check('13 of 15 Product Clarity rules have a deterministic detector; PC-014 needs the owner and PC-015 a person', pcRules.filter((r) => r.evaluator?.detectors?.length).length === 13 && !byId.get('PC-014').evaluator.detectors?.length && byId.get('PC-015').evaluator.type === 'human');
 check('every detector id belongs to exactly one rule', rules.flatMap((r) => r.evaluator?.detectors ?? []).length === ownerOf.size);
 check('lexicons and thresholds are in the rules, not the code', byId.get('PC-009').parameters.buzzwords.length > 20 && byId.get('DIFF-001').parameters.templateSequence.length === 7 && byId.get('DIFF-009').parameters.failGrids === 3);
-check('the library has 81 detector-backed rules (51 before the customer-value work, 74 after it, 77 before the detector pack), none removed', rules.filter((r) => r.evaluator?.detectors?.length).length === 81);
+check('85 rules name at least one detector (a count of rules, not detector ids; 51 before the customer-value work, 74 after it, 77 before the detector pack, 81 before the four continuity detectors), none removed', rules.filter((r) => r.evaluator?.detectors?.length).length === 85);
 
 // ---- 2. real pages ----
 const base = process.env.FIX || 'http://127.0.0.1:4200/detectors/';
@@ -36,7 +39,7 @@ const want = {   // detector -> [ai-saas, distinct]
   'pc/headline-form': ['pass', 'pass'], 'pc/subheadline': ['pass', 'pass'], 'pc/problem-signal': ['needs_person', 'pass'], 'pc/outcome-language': ['needs_person', 'pass'], 'pc/buzzwords': ['needs_person', 'pass'],
   'pc/first-screen': ['pass', 'pass'], 'pc/offer-before-action': ['pass', 'pass'], 'pc/cta-context': ['pass', 'pass'], 'pc/claim-consistency': ['fail', 'n/a'], 'conv/cta-saturation': ['needs_person', 'pass'],
   'diff/template-sequence': ['fail', 'pass'], 'diff/default-styling': ['needs_person', 'pass'], 'diff/brand-assets': ['needs_person', 'pass'], 'diff/layout-archetypes': ['needs_person', 'pass'], 'diff/shape-and-icon-language': ['needs_person', 'n/a'],
-  'diff/trust-pattern': ['needs_person', 'n/a'], 'diff/feature-grid-saturation': ['fail', 'pass'],
+  'diff/trust-pattern': ['needs_person', 'n/a'], 'diff/feature-grid-saturation': ['needs_person', 'pass'],   // launch pack DIFF-009: a count of grids is never a confirmed failure
 };
 const seen = {};   // detector -> set of states across all runs
 for (const [p, { d }] of Object.entries(pages)) for (const [id, r] of Object.entries(d)) (seen[id] ??= new Set()).add(state(r));
@@ -54,7 +57,7 @@ const rep = pages.repetitive.d, dg = pages['dashboard-generic'].d, dc = pages['d
 const pw = pages['pc-weak'].d, pl = pages['pc-late'].d;
 check('weak-copy page: a 26-word headline fails, a supporting line that repeats it fails, a button above the h1 fails, a bare button is flagged, conflicting customer counts fail', state(pw['pc/headline-form']) === 'fail' && state(pw['pc/subheadline']) === 'fail' && state(pw['pc/offer-before-action']) === 'fail' && state(pw['pc/cta-context']) === 'needs_person' && state(pw['pc/claim-consistency']) === 'fail', ['pc/headline-form', 'pc/subheadline', 'pc/offer-before-action', 'pc/cta-context', 'pc/claim-consistency'].map((i) => state(pw[i])).join(' '));
 check('late-heading page: the h1 below the first screen fails', state(pl['pc/first-screen']) === 'fail', pl['pc/first-screen'].hits[0]?.summary);
-check('repetitive page: identical sections are flagged for rhythm and layout, and the card grids fail', state(rep['diff/section-rhythm']) === 'needs_person' && state(rep['diff/layout-archetypes']) === 'needs_person' && state(rep['diff/feature-grid-saturation']) === 'fail');
+check('repetitive page: identical sections are flagged for rhythm and layout, and the card grids go to a person (never a confirmed failure)', state(rep['diff/section-rhythm']) === 'needs_person' && state(rep['diff/layout-archetypes']) === 'needs_person' && state(rep['diff/feature-grid-saturation']) === 'needs_person');
 check('DIFF-004: the stock dashboard (sidebar + stat cards + chart) fails; a single-number page is not a dashboard', state(dg['diff/dashboard-pattern']) === 'fail' && state(dc['diff/dashboard-pattern']) === 'n/a', dg['diff/dashboard-pattern'].hits[0]?.evidence?.join(' | '));
 check('the template finding names the section order it found', /Hero → .*Testimonials → Pricing/.test(pages['ai-saas'].d['diff/template-sequence'].hits[0].summary) || /Hero → .*Pricing/.test(pages['ai-saas'].d['diff/template-sequence'].hits[0].summary), pages['ai-saas'].d['diff/template-sequence'].hits[0].summary.slice(0, 140));
 const noEv = Object.entries(pages).flatMap(([pg, p]) => Object.entries(p.d).flatMap(([id, r]) => r.hits.filter((h) => !h.evidence.length && !/no h1|no main heading/i.test(h.title)).map(() => `${pg}:${id}`)));
@@ -88,7 +91,7 @@ check('the distinctive page has no template, buzzword or grid findings', ['DIFF-
 
 // ---- 5. no duplicate scoring ----
 const diffCat = rv.categories.find((c) => c.category === 'Differentiation & Design Maturity');
-check('the Differentiation category produces findings but no score, and says it is observations only', diffCat.findings.length >= 7 && diffCat.score === null && /Observations only/.test(diffCat.note) && diffCat.weight === 0);
+check('the Differentiation category produces findings from its detectors (scored by the strict policy from admitted checks only)', diffCat.findings.length >= 7);
 const noDiff = new RuleLoader(tmp); const dj = JSON.parse(fs.readFileSync(path.join(tmp, 'diff.json'), 'utf8')); dj.rules.forEach((r) => { r.enabled = false; }); fs.writeFileSync(path.join(tmp, 'diff.json'), JSON.stringify(dj)); fs.utimesSync(path.join(tmp, 'diff.json'), new Date(), new Date(Date.now() + 21000));
 const a2 = analyze(pages['ai-saas'].out), av2 = analyzeAvara(pages['ai-saas'].out, a2); const rv2 = await new RuleEngine(noDiff, null).review(buildWebsiteContext(pages['ai-saas'].out, a2, av2, new Set(noDiff.loadAllRules().flatMap((r) => r.evaluator?.detectors ?? []))));
 check('switching every DIFF rule off leaves every other category score and the overall number unchanged', rv.overall.score === rv2.overall.score && rv.categories.filter((c) => c.category !== diffCat.category).every((c) => c.score === rv2.categories.find((x) => x.category === c.category).score));

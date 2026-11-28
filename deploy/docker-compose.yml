@@ -1,0 +1,36 @@
+# One server: the app, Postgres and Caddy (HTTPS). Run from the repository root:
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/production.env up -d --build
+# Only Caddy is reachable from outside (ports 80 and 443). See docs/deploy.md.
+services:
+  app:
+    build: { context: .., dockerfile: deploy/Dockerfile }
+    env_file: production.env
+    environment:
+      DATABASE_URL: postgres://avara:${POSTGRES_PASSWORD}@db:5432/avara
+      STORAGE_DIR: /data/objects
+    volumes: [objects:/data]
+    depends_on: { db: { condition: service_healthy } }
+    restart: unless-stopped
+    init: true          # reaps the browser processes each scan starts
+    shm_size: 1gb       # Chrome needs more shared memory than Docker's 64 MB default
+    expose: ["3000"]
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: avara
+      POSTGRES_DB: avara
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: [pg:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U avara -d avara"], interval: 5s, timeout: 3s, retries: 20 }
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment: { AVARA_DOMAIN: "${AVARA_DOMAIN}" }
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "caddy_data:/data", "caddy_config:/config"]
+    depends_on: [app]
+    restart: unless-stopped
+
+volumes: { objects: {}, pg: {}, caddy_data: {}, caddy_config: {} }

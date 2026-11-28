@@ -5,7 +5,7 @@ import { pgTable, pgEnum, uuid, text, integer, real, boolean, jsonb, timestamp, 
 export const complianceStandard = pgEnum('compliance_standard', ['wcag22aa', 'ada_title_ii', 'en_301_549', 'aoda']);
 export const scanStatus = pgEnum('scan_status', ['queued', 'running', 'analyzing', 'completed', 'failed']);
 export const scanEnvironment = pgEnum('scan_environment', ['adhoc', 'staging', 'live']);
-export const viewportName = pgEnum('viewport_name', ['desktop', 'mobile']);
+export const viewportName = pgEnum('viewport_name', ['desktop', 'mobile', 'narrow']);   // narrow: the focused 320px pass (0009)
 export const severity = pgEnum('severity', ['critical', 'serious', 'moderate', 'minor']);
 export const findingBucket = pgEnum('finding_bucket', ['confirmed_failure', 'needs_review', 'verified_pass']);
 export const findingSource = pgEnum('finding_source', ['axe', 'heuristic', 'keyboard']);
@@ -76,6 +76,7 @@ export const projects = pgTable('projects', {
   name: text('name').notNull(),
   liveUrl: text('live_url'),
   stagingUrl: text('staging_url'),
+  deployTokenHash: text('deploy_token_hash'),   // sha256 of the bearer token for the preview-ready webhook; the token itself is shown once and never stored
   defaultStandard: complianceStandard('default_standard').notNull().default('wcag22aa'),
   createdAt: ts('created_at').notNull().defaultNow(),
 }, (t) => [index('projects_client_idx').on(t.clientId)]);
@@ -91,13 +92,13 @@ export const scans = pgTable('scans', {
   pageTitle: text('page_title'),
   standard: complianceStandard('standard').notNull().default('wcag22aa'),
   status: scanStatus('status').notNull().default('queued'),
-  progress: jsonb('progress').$type<{ step: string; percent: number }>(),
+  progress: jsonb('progress').$type<{ step: string; percent: number; stages?: import('../../scanner/scanner.ts').ScanStages }>(),
   error: jsonb('error').$type<{ code: string; message: string }>(),
   // Sugam score: severity-weighted, for comparing scans of the same site. Not a compliance grade.
   score: integer('score'),
   summary: jsonb('summary').$type<ScanSummary>(),
   engine: jsonb('engine').$type<{ axe: string; browser: string; viewports: string[] }>(),
-  ai: jsonb('ai').$type<{ used: boolean; model?: string; reason?: string }>(),
+  ai: jsonb('ai').$type<{ used: boolean; model?: string | null; reason?: string | null; pending?: boolean; fixes?: { state: 'pending' | 'done'; changed?: number; refused?: number; rubrics?: string[]; ms?: number | null } }>(),   // pending: the AI review runs after the report is shown
   // Avara: the product this scan belongs to, the goal the builder confirmed (optional), the scan this one re-checks, and how each analyzer fared.
   productId: uuid('product_id'),
   goal: text('goal'),
@@ -157,7 +158,9 @@ export const issues = pgTable('issues', {
 export type FixSet = {
   aiPrompt: Record<'lovable' | 'bolt' | 'v0' | 'cursor', string>;
   noCode: { framer: string[]; webflow: string[] };
-  code: { language: 'html' | 'jsx' | 'css'; before: string; after: string; note?: string };
+  /** after: an exact, evidence-backed edit (or empty). example: the same change with a placeholder selector or wording, when the scan could
+   *  not confirm a selector for this exact element (shown as "Copy example", never as a patch). */
+  code: { language: 'html' | 'jsx' | 'css'; before: string; after: string; note?: string; example?: string };
 };
 
 // Each affected element, with verbatim HTML as extracted from the page.
@@ -390,6 +393,32 @@ export const scanResults = pgTable('scan_results', {
   ranAt: ts('ran_at').notNull(),
 });
 
+// One record per rule per scan: the scan's rule snapshot and what happened to each rule. Every coverage count is built from these rows.
+// Scans saved before this table existed have none; their records are derived at read time from rule_findings and marked unknown where evidence is missing.
+export const ruleExecutions = pgTable('rule_executions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  scanId: uuid('scan_id').notNull().references(() => scans.id, { onDelete: 'cascade' }),
+  ruleId: text('rule_id').notNull(),
+  ruleVersion: text('rule_version').notNull(),
+  definitionHash: text('definition_hash'),
+  category: text('category').notNull(),
+  title: text('title').notNull(),
+  mode: text('mode').notNull(),
+  weight: integer('weight').notNull(),
+  session: text('session'),
+  implementation: text('implementation').notNull(),   // detector | detector_and_ai | ai_only | person_only | rollup | not_built
+  execution: text('execution').notNull(),             // ran | not_applicable | skipped | unknown
+  reason: text('reason'),                             // missing_detector | ai_unavailable | ai_no_answer | ai_pending | missing_input | not_applicable | analyzer_error | needs_person | rollup_no_inputs
+  evidence: jsonb('evidence').$type<string[]>().notNull(),
+  outcome: text('outcome').notNull(),
+  method: text('method').notNull(),
+  scope: text('scope').notNull(),                     // full | measurable_part | summary | none
+  measured: text('measured'),                         // the detectors' own result (observed_pass | observed_failure | …), independent of any AI; null when no detector decided
+  scoreEligible: boolean('score_eligible').notNull(),
+  observationOnly: boolean('observation_only').notNull(),
+  createdAt: ts('created_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('rule_executions_scan_rule_uq').on(t.scanId, t.ruleId)]);
+
 // What Avara has learned: facts worth keeping from each scan, and patterns computed across scans. Patterns only ever come from stored scans.
 export const knowledge = pgTable('knowledge', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -414,3 +443,155 @@ export const patterns = pgTable('patterns', {
   status: text('status').notNull(),              // emerging (too few scans) | established
   updatedAt: ts('updated_at').notNull().defaultNow(),
 });
+
+// ---------- Avara Launch Scanner (vendor/avara-launch, lib/launch) ----------
+// One row per pack entry per viewport: the pack rule and its version, the Avara rule that owns it, the viewport and page state it was read
+// in, the element it is about, what happened (outcome and reason) and the evidence. Zero weight: these rows never reach rule counts or scores.
+export const launchChecks = pgTable('launch_checks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  scanId: uuid('scan_id').notNull().references(() => scans.id, { onDelete: 'cascade' }),
+  entry: text('entry').notNull(),                  // the pack's id: DIFF-007, launch/cta, ...
+  packRuleId: text('pack_rule_id').notNull(),      // the id the pack used (A11Y-003 for button-name)
+  hostRuleId: text('host_rule_id').notNull(),      // the Avara rule that owns it (A11Y-015)
+  ruleVersion: text('rule_version').notNull(),     // pack rule version
+  packVersion: text('pack_version').notNull(),
+  decision: text('decision').notNull(),            // reused | improved | added | blocked
+  viewport: text('viewport').notNull(),            // desktop | mobile
+  viewportSize: jsonb('viewport_size').$type<[number, number] | null>(),
+  pageState: text('page_state').notNull(),         // initial: read before any keyboard input, resize or click
+  target: text('target'),                          // the element it is about, when there is one
+  outcome: text('outcome').notNull(),              // observed | needs-review | needs-person | not-applicable | not-run | analyzer-finding
+  reason: text('reason').notNull(),
+  needs: text('needs'),                            // owner input that would let it decide
+  evidence: jsonb('evidence').$type<unknown[]>().notNull(),
+  createdAt: ts('created_at').notNull().defaultNow(),
+}, (t) => [index('launch_checks_scan_idx').on(t.scanId)]);
+
+// ---------- saved flows (milestones 1-4: packages/contracts, packages/flow-engine, services/browser-worker) ----------
+// `definition` is a packages/contracts Flow whose id is this row's id. A run's `result` is a FlowRun produced by the browser worker.
+export const flows = pgTable('flows', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  definition: jsonb('definition').notNull().$type<Record<string, unknown>>(),   // the approved version: runs always use this
+  version: integer('version').notNull().default(1),
+  journeyKey: text('journey_key'),                  // set for flows saved from a discovered journey; rediscovery matches on it
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: ts('created_at').notNull().defaultNow(),
+  updatedAt: ts('updated_at').notNull().defaultNow(),
+}, (t) => [index('flows_project_idx').on(t.projectId)]);
+
+/** Every approved version of a flow, with who approved it. flows.definition is a copy of the newest. */
+export const flowVersions = pgTable('flow_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull(),
+  definition: jsonb('definition').notNull().$type<Record<string, unknown>>(),
+  note: text('note'),
+  approvedBy: uuid('approved_by').references(() => users.id, { onDelete: 'set null' }),
+  approvedAt: ts('approved_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('flow_versions_flow_version').on(t.flowId, t.version)]);
+
+/** One run of journey discovery from a project's address. `result` is a packages/contracts DiscoveryResult. */
+export const flowDiscoveries = pgTable('flow_discoveries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  startUrl: text('start_url').notNull(),
+  status: text('status').notNull().default('running'),   // running | done | error
+  result: jsonb('result').$type<Record<string, unknown>>(),
+  error: text('error'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: ts('created_at').notNull().defaultNow(),
+  finishedAt: ts('finished_at'),
+}, (t) => [index('flow_discoveries_project_idx').on(t.projectId, t.createdAt)]);
+
+/** A change rediscovery found for a saved flow. Never applied until the owner accepts it. */
+export const flowProposals = pgTable('flow_proposals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
+  discoveryId: uuid('discovery_id').references(() => flowDiscoveries.id, { onDelete: 'set null' }),
+  kind: text('kind').notNull(),                          // changed | missing
+  baseVersion: integer('base_version').notNull().default(1),   // the flow version this was proposed against; a proposal for an older version cannot be applied
+  proposed: jsonb('proposed').$type<Record<string, unknown>>(),   // the new definition, for `changed`
+  reason: text('reason').notNull(),
+  status: text('status').notNull().default('pending'),   // pending | accepted | dismissed
+  createdAt: ts('created_at').notNull().defaultNow(),
+  decidedBy: uuid('decided_by').references(() => users.id, { onDelete: 'set null' }),
+  decidedAt: ts('decided_at'),
+}, (t) => [index('flow_proposals_flow_idx').on(t.flowId, t.status)]);
+
+export const flowRuns = pgTable('flow_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
+  status: text('status').notNull().default('running'),   // running | passed | failed | blocked | error
+  environment: text('environment'),                 // null for an ordinary run; 'published' or 'preview' for one half of a comparison (kept out of run history)
+  version: integer('version').notNull().default(1),   // the approved flow version this run was started with; it never changes, even if a newer version is approved while the run is in flight
+  result: jsonb('result').$type<Record<string, unknown>>(),
+  error: text('error'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  startedAt: ts('started_at').notNull().defaultNow(),
+  finishedAt: ts('finished_at'),
+}, (t) => [index('flow_runs_flow_idx').on(t.flowId, t.startedAt)]);
+
+/** One manual comparison of a flow version on the project's published and preview addresses. The two runs are flow_runs rows with an environment. */
+export const flowComparisons = pgTable('flow_comparisons', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull(),
+  status: text('status').notNull().default('running'),   // running | done
+  publishedRunId: uuid('published_run_id').references(() => flowRuns.id, { onDelete: 'set null' }),
+  previewRunId: uuid('preview_run_id').references(() => flowRuns.id, { onDelete: 'set null' }),
+  publishedOrigin: text('published_origin').notNull(),
+  previewOrigin: text('preview_origin').notNull(),
+  verdict: text('verdict'),                         // see packages/flow-engine/environments.ts
+  detail: jsonb('detail').$type<Record<string, unknown>>(),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  deploymentEventId: uuid('deployment_event_id').references(() => deploymentEvents.id, { onDelete: 'cascade' }),   // set when a deployment event started it; status 'pending' = accepted, not yet dispatched
+  claimedBy: text('claimed_by'), claimedAt: ts('claimed_at'),   // which process is running it, and since when (a dead process's claim goes stale and the comparison is dispatched again)
+  createdAt: ts('created_at').notNull().defaultNow(),
+  finishedAt: ts('finished_at'),
+}, (t) => [index('flow_comparisons_flow_idx').on(t.flowId, t.createdAt), uniqueIndex('flow_comparisons_flow_deployment').on(t.flowId, t.deploymentEventId)]);
+
+/** A "preview is ready" notice for a project, accepted once per (project, deployment id). The flows it compares are pinned in flow_comparisons rows written in the same transaction. */
+export const deploymentEvents = pgTable('deployment_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  deploymentId: text('deployment_id').notNull(),
+  publishedOrigin: text('published_origin').notNull(), previewOrigin: text('preview_origin').notNull(),   // the addresses at the time it was received
+  skipped: jsonb('skipped').notNull().default([]).$type<{ flowId: string; name: string; reason: string; message: string }[]>(),
+  receivedAt: ts('received_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('deployment_events_project_deployment').on(t.projectId, t.deploymentId)]);
+
+// ---------- launch check (exposure checks and site ownership) ----------
+// A project's owner proves control of its live address once per origin. Only then do the extra read-only requests (files, source maps, tables) run.
+export const siteVerifications = pgTable('site_verifications', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  origin: text('origin').notNull(),
+  method: text('method').notNull(),                       // meta | file
+  verifiedBy: uuid('verified_by').references(() => users.id, { onDelete: 'set null' }),
+  verifiedAt: ts('verified_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('site_verifications_project_origin').on(t.projectId, t.origin)]);
+
+export const exposureRuns = pgTable('exposure_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  url: text('url').notNull(),
+  active: boolean('active').notNull().default(false),     // true when the owner was verified and the extra checks ran
+  results: jsonb('results').notNull().$type<Record<string, unknown>[]>(),   // check results only: never keys, file contents or row values
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: ts('created_at').notNull().defaultNow(),
+}, (t) => [index('exposure_runs_project_idx').on(t.projectId, t.createdAt)]);
+
+// ---------- product events (first-party, no cookies, no user id) ----------
+// One row says "a fix prompt was copied for this finding in this scan". Only ids: no address, no prompt text, no key, no user. The row belongs to the
+// scan: deleting the scan (or the account that owns it, or an anonymous scan after its retention period) deletes its events. Copying the same finding
+// again does not add a row. The rest of the funnel is not stored twice: scan_completed is scans.completed_at, rescan_started is a scan whose rescan_of is
+// the original, and finding_fixed is rescan_outcomes.outcome = 'fixed'.
+export const productEvents = pgTable('product_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  kind: text('kind').notNull(),                                                                       // prompt_copied
+  scanId: uuid('scan_id').notNull().references(() => scans.id, { onDelete: 'cascade' }),
+  findingRef: uuid('finding_ref').notNull(),                                                          // an issue, finding or recommendation id of that scan
+  createdAt: ts('created_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('product_events_once').on(t.scanId, t.kind, t.findingRef)]);

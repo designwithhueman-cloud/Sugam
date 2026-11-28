@@ -1,0 +1,6 @@
+{
+  "purpose": "Production reference set for DIFF-002 hero-layout comparison. Each record needs an id, origin, rights (permission to store and compare), viewport and features measured with scanner/avara-inpage.ts HERO_LAYOUT. Empty until a permissioned set is built and validated on held-out negatives; demo fixtures live in fixture/site/diff002/ and must never be copied here.",
+  "version": "0",
+  "validated": false,
+  "records": []
+}

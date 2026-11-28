@@ -1,0 +1,3268 @@
+{
+ "generated": "2026-11-22T21:16:50.168Z",
+ "url": "http://127.0.0.1:4200/detectors/good.html",
+ "input": {
+  "sha256_16": "b5965a25c17c7784",
+  "bytes": 76855,
+  "note": "scan output as JSON, screenshots dropped; both reviews read this same object"
+ },
+ "timings": {
+  "scanMs": 9438,
+  "scanLabel": "fixture page on localhost (not a live site)",
+  "reviewOffMs": 11,
+  "reviewStubMs": 6,
+  "stubLabel": "simulated AI: a local stub answered; no model call, no network latency"
+ },
+ "aiOff": {
+  "catalogTopics": 135,
+  "byImplementation": {
+   "ai_only": 35,
+   "detector": 75,
+   "detector_and_ai": 10,
+   "person_only": 7,
+   "rollup": 8
+  },
+  "executedChecks": 68,
+  "detectorRan": 68,
+  "decidedByMeasurement": 68,
+  "decidedByAi": 0,
+  "summaries": 8,
+  "notApplicable": 9,
+  "skipped": 50,
+  "skippedByReason": {
+   "ai_unavailable": 35,
+   "missing_input": 8,
+   "needs_person": 7
+  }
+ },
+ "aiStub": {
+  "catalogTopics": 135,
+  "byImplementation": {
+   "ai_only": 35,
+   "detector": 75,
+   "detector_and_ai": 10,
+   "person_only": 7,
+   "rollup": 8
+  },
+  "executedChecks": 103,
+  "detectorRan": 68,
+  "decidedByMeasurement": 58,
+  "decidedByAi": 45,
+  "summaries": 8,
+  "notApplicable": 9,
+  "skipped": 15,
+  "skippedByReason": {
+   "missing_input": 8,
+   "needs_person": 7
+  }
+ },
+ "trace": {
+  "measuredToAi": [
+   "CONV-006",
+   "CONV-014",
+   "DESIGN-001",
+   "DESIGN-002",
+   "MOB-005",
+   "TRUST-001",
+   "TRUST-002",
+   "TRUST-003",
+   "TRUST-012",
+   "UX-010"
+  ],
+  "measuredToAiCount": 10,
+  "detectorEvidenceLost": [],
+  "note": "Hybrid rules whose measurement passed are re-judged by the model when one is available, so the deciding method changes from measured to AI. Their detectors still ran and are kept as evidence."
+ },
+ "launchChecks": {
+  "distinctIds": 16,
+  "rows": 32,
+  "note": "Avara Launch Scanner checks: a separate pack, never counted as rules and never scored."
+ },
+ "skipped": {
+  "aiOff": [
+   {
+    "ruleId": "A11Y-018",
+    "category": "Accessibility",
+    "reason": "needs_person",
+    "why": "needs a person: assistive-technology session. Run task with named assistive technology/browser pair. Automated tree inspection supplies partial evidence only."
+   },
+   {
+    "ruleId": "CONV-005",
+    "category": "Conversion Readiness",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "CONV-007",
+    "category": "Conversion Readiness",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "CONV-008",
+    "category": "Conversion Readiness",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "CONV-009",
+    "category": "Conversion Readiness",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "CONV-010",
+    "category": "Conversion Readiness",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "CONV-013",
+    "category": "Conversion Readiness",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Compare expectations reported by target visitors with the actual offer."
+   },
+   {
+    "ruleId": "CONV-015",
+    "category": "Conversion Readiness",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Capture participant understanding of the commitment and outcome. Measured conversion lift requires outcome data."
+   },
+   {
+    "ruleId": "DESIGN-003",
+    "category": "Design & Brand Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "DESIGN-006",
+    "category": "Design & Brand Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "DESIGN-007",
+    "category": "Design & Brand Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "DESIGN-009",
+    "category": "Design & Brand Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "DESIGN-011",
+    "category": "Design & Brand Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "DESIGN-012",
+    "category": "Design & Brand Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "DESIGN-014",
+    "category": "Design & Brand Quality",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Review with brand owner and audience against a supplied brief. Avoid invented benchmarks."
+   },
+   {
+    "ruleId": "DESIGN-015",
+    "category": "Design & Brand Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "MOB-012",
+    "category": "Mobile Responsiveness",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "PERF-001",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Performance was not requested for this scan."
+   },
+   {
+    "ruleId": "PERF-002",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Performance was not requested for this scan."
+   },
+   {
+    "ruleId": "PERF-004",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-005",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-006",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-007",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-008",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-009",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PC-014",
+    "category": "Product Clarity",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "PC-015",
+    "category": "Product Clarity",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Five-second test: show target users the page for five seconds, then ask for unaided recall of the offer and audience. Ne"
+   },
+   {
+    "ruleId": "TRUST-006",
+    "category": "Trust & Credibility",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "TRUST-007",
+    "category": "Trust & Credibility",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "TRUST-008",
+    "category": "Trust & Credibility",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "TRUST-009",
+    "category": "Trust & Credibility",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "TRUST-010",
+    "category": "Trust & Credibility",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "TRUST-011",
+    "category": "Trust & Credibility",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "TRUST-013",
+    "category": "Trust & Credibility",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "TRUST-015",
+    "category": "Trust & Credibility",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-001",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-003",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-004",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-005",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-006",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-007",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-008",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-009",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-012",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-013",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-015",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-016",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-018",
+    "category": "UX & Workflow Quality",
+    "reason": "ai_unavailable",
+    "why": "AI review unavailable: No AI model is configured: AVARA_AI is not \"on\", so rules that need judgement did not run. (judgement only; no detector)"
+   },
+   {
+    "ruleId": "UX-019",
+    "category": "UX & Workflow Quality",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Compare completion feedback with actual outcome and participant interpretation."
+   },
+   {
+    "ruleId": "UX-020",
+    "category": "UX & Workflow Quality",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Define first value with the owner. Time representative sessions to that event."
+   }
+  ],
+  "aiStub": [
+   {
+    "ruleId": "A11Y-018",
+    "category": "Accessibility",
+    "reason": "needs_person",
+    "why": "needs a person: assistive-technology session. Run task with named assistive technology/browser pair. Automated tree inspection supplies partial evidence only."
+   },
+   {
+    "ruleId": "CONV-013",
+    "category": "Conversion Readiness",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Compare expectations reported by target visitors with the actual offer."
+   },
+   {
+    "ruleId": "CONV-015",
+    "category": "Conversion Readiness",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Capture participant understanding of the commitment and outcome. Measured conversion lift requires outcome data."
+   },
+   {
+    "ruleId": "DESIGN-014",
+    "category": "Design & Brand Quality",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Review with brand owner and audience against a supplied brief. Avoid invented benchmarks."
+   },
+   {
+    "ruleId": "PERF-001",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Performance was not requested for this scan."
+   },
+   {
+    "ruleId": "PERF-002",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Performance was not requested for this scan."
+   },
+   {
+    "ruleId": "PERF-004",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-005",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-006",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-007",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-008",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PERF-009",
+    "category": "Performance",
+    "reason": "missing_input",
+    "why": "needed input was missing: Lighthouse did not run."
+   },
+   {
+    "ruleId": "PC-015",
+    "category": "Product Clarity",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Five-second test: show target users the page for five seconds, then ask for unaided recall of the offer and audience. Ne"
+   },
+   {
+    "ruleId": "UX-019",
+    "category": "UX & Workflow Quality",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Compare completion feedback with actual outcome and participant interpretation."
+   },
+   {
+    "ruleId": "UX-020",
+    "category": "UX & Workflow Quality",
+    "reason": "needs_person",
+    "why": "needs a person: user-or-owner session. Define first value with the owner. Time representative sessions to that event."
+   }
+  ]
+ },
+ "rules": [
+  {
+   "ruleId": "A11Y-001",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "color-contrast",
+     "sugam/non-text-contrast"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "color-contrast",
+     "sugam/non-text-contrast"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-002",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "image-alt",
+     "input-image-alt",
+     "role-img-alt",
+     "sugam/image-of-text"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "image-alt",
+     "input-image-alt",
+     "role-img-alt",
+     "sugam/image-of-text"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-003",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "label",
+     "select-name",
+     "label-content-name",
+     "label-content-name-mismatch",
+     "sugam/placeholder-only-label",
+     "sugam/form-label-not-visible",
+     "sugam/voice-name-not-first",
+     "sugam/form-group-name",
+     "sugam/form-autocomplete-missing",
+     "sugam/form-input-type"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "label",
+     "select-name",
+     "label-content-name",
+     "label-content-name-mismatch",
+     "sugam/placeholder-only-label",
+     "sugam/form-label-not-visible",
+     "sugam/voice-name-not-first",
+     "sugam/form-group-name",
+     "sugam/form-autocomplete-missing",
+     "sugam/form-input-type"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-004",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/keyboard-trap",
+     "sugam/non-semantic-clickable",
+     "sugam/positive-tabindex",
+     "sugam/looks-clickable"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/keyboard-trap",
+     "sugam/non-semantic-clickable",
+     "sugam/positive-tabindex",
+     "sugam/looks-clickable"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-005",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/focus-not-visible",
+     "sugam/focus-obscured",
+     "sugam/focus-offscreen"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/focus-not-visible",
+     "sugam/focus-obscured",
+     "sugam/focus-offscreen"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-006",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "list",
+     "listitem",
+     "definition-list"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "list",
+     "listitem",
+     "definition-list"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-007",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "heading-order",
+     "empty-heading",
+     "sugam/heading-structure"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "heading-order",
+     "empty-heading",
+     "sugam/heading-structure"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-008",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "region",
+     "landmark-one-main",
+     "sugam/no-main-landmark"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "region",
+     "landmark-one-main",
+     "sugam/no-main-landmark"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-009",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "link-name",
+     "sugam/vague-link-text",
+     "sugam/new-tab-warning",
+     "sugam/duplicate-cta-label"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "link-name",
+     "sugam/vague-link-text",
+     "sugam/new-tab-warning",
+     "sugam/duplicate-cta-label"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-010",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/form-error-not-linked"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/form-error-not-linked"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-011",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/reflow-320",
+     "sugam/text-spacing",
+     "sugam/small-text",
+     "accessibility/reflow-function-loss"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/reflow-320",
+     "sugam/text-spacing",
+     "sugam/small-text",
+     "accessibility/reflow-function-loss"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-012",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "td-headers-attr",
+     "th-has-data-cells"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "td-headers-attr",
+     "th-has-data-cells"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-013",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "a11y/reading-order"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "a11y/reading-order"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-014",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/embedded-media",
+     "sugam/media-transcript",
+     "video-caption"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/embedded-media",
+     "sugam/media-transcript",
+     "video-caption"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-015",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "button-name",
+     "aria-allowed-attr",
+     "aria-required-attr",
+     "aria-valid-attr-value",
+     "sugam/aria-tablist"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "button-name",
+     "aria-allowed-attr",
+     "aria-required-attr",
+     "aria-valid-attr-value",
+     "sugam/aria-tablist"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-016",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/autoplay-no-pause",
+     "sugam/reduced-motion"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/autoplay-no-pause",
+     "sugam/reduced-motion"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-017",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "a11y/error-prevention"
+    ]
+   },
+   "stub": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "a11y/error-prevention"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-018",
+   "category": "Accessibility",
+   "implementation": "person_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "A11Y-019",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "bypass",
+     "sugam/focus-context-change",
+     "sugam/autofocus",
+     "sugam/dragging-alternative",
+     "sugam/auth-captcha",
+     "sugam/auth-paste-blocked",
+     "sugam/auth-autocomplete-off",
+     "sugam/forced-colors-optout",
+     "nav/fragment-target"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "bypass",
+     "sugam/focus-context-change",
+     "sugam/autofocus",
+     "sugam/dragging-alternative",
+     "sugam/auth-captcha",
+     "sugam/auth-paste-blocked",
+     "sugam/auth-autocomplete-off",
+     "sugam/forced-colors-optout",
+     "nav/fragment-target"
+    ]
+   }
+  },
+  {
+   "ruleId": "A11Y-020",
+   "category": "Accessibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "link-in-text-block"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "link-in-text-block"
+    ]
+   }
+  },
+  {
+   "ruleId": "CONV-001",
+   "category": "Conversion Readiness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "conv/generic-primary-action"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "conv/generic-primary-action"
+    ]
+   }
+  },
+  {
+   "ruleId": "CONV-002",
+   "category": "Conversion Readiness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "conv/cta-visible"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "conv/cta-visible"
+    ]
+   }
+  },
+  {
+   "ruleId": "CONV-003",
+   "category": "Conversion Readiness",
+   "implementation": "detector",
+   "off": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "conv/cta-consistency"
+    ]
+   },
+   "stub": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "conv/cta-consistency"
+    ]
+   }
+  },
+  {
+   "ruleId": "CONV-004",
+   "category": "Conversion Readiness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "conv/cta-saturation"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "conv/cta-saturation"
+    ]
+   }
+  },
+  {
+   "ruleId": "CONV-005",
+   "category": "Conversion Readiness",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "CONV-006",
+   "category": "Conversion Readiness",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/form-required-not-marked",
+     "conv/field-count"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "sugam/form-required-not-marked",
+     "conv/field-count"
+    ]
+   }
+  },
+  {
+   "ruleId": "CONV-007",
+   "category": "Conversion Readiness",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "CONV-008",
+   "category": "Conversion Readiness",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "CONV-009",
+   "category": "Conversion Readiness",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "CONV-010",
+   "category": "Conversion Readiness",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "CONV-011",
+   "category": "Conversion Readiness",
+   "implementation": "rollup",
+   "off": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "TRUST-009",
+     "TRUST-010"
+    ]
+   },
+   "stub": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "TRUST-009",
+     "TRUST-010"
+    ]
+   }
+  },
+  {
+   "ruleId": "CONV-012",
+   "category": "Conversion Readiness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "workflow/first-field-unreachable"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "workflow/first-field-unreachable"
+    ]
+   }
+  },
+  {
+   "ruleId": "CONV-013",
+   "category": "Conversion Readiness",
+   "implementation": "person_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "CONV-014",
+   "category": "Conversion Readiness",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "conv/trial-visibility"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "conv/trial-visibility"
+    ]
+   }
+  },
+  {
+   "ruleId": "CONV-015",
+   "category": "Conversion Readiness",
+   "implementation": "person_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "DESIGN-001",
+   "category": "Design & Brand Quality",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "design/typography-hierarchy"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "design/typography-hierarchy"
+    ]
+   }
+  },
+  {
+   "ruleId": "DESIGN-002",
+   "category": "Design & Brand Quality",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "design/font-families"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "design/font-families"
+    ]
+   }
+  },
+  {
+   "ruleId": "DESIGN-003",
+   "category": "Design & Brand Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "DESIGN-004",
+   "category": "Design & Brand Quality",
+   "implementation": "detector",
+   "off": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "design/visual-hierarchy"
+    ]
+   },
+   "stub": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "design/visual-hierarchy"
+    ]
+   }
+  },
+  {
+   "ruleId": "DESIGN-005",
+   "category": "Design & Brand Quality",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "design/cta-emphasis"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "design/cta-emphasis"
+    ]
+   }
+  },
+  {
+   "ruleId": "DESIGN-006",
+   "category": "Design & Brand Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "DESIGN-007",
+   "category": "Design & Brand Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "DESIGN-008",
+   "category": "Design & Brand Quality",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "design/component-consistency"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "design/component-consistency"
+    ]
+   }
+  },
+  {
+   "ruleId": "DESIGN-009",
+   "category": "Design & Brand Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "DESIGN-010",
+   "category": "Design & Brand Quality",
+   "implementation": "detector",
+   "off": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "design/spacing-rhythm"
+    ]
+   },
+   "stub": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "design/spacing-rhythm"
+    ]
+   }
+  },
+  {
+   "ruleId": "DESIGN-011",
+   "category": "Design & Brand Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "DESIGN-012",
+   "category": "Design & Brand Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "DESIGN-013",
+   "category": "Design & Brand Quality",
+   "implementation": "rollup",
+   "off": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "DESIGN-001",
+     "DESIGN-004",
+     "DESIGN-008"
+    ]
+   },
+   "stub": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "DESIGN-001",
+     "DESIGN-004",
+     "DESIGN-008"
+    ]
+   }
+  },
+  {
+   "ruleId": "DESIGN-014",
+   "category": "Design & Brand Quality",
+   "implementation": "person_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "DESIGN-015",
+   "category": "Design & Brand Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "DIFF-001",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/template-sequence"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/template-sequence"
+    ]
+   }
+  },
+  {
+   "ruleId": "DIFF-002",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/default-styling"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/default-styling"
+    ]
+   }
+  },
+  {
+   "ruleId": "DIFF-003",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/brand-assets"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/brand-assets"
+    ]
+   }
+  },
+  {
+   "ruleId": "DIFF-004",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "detector",
+   "off": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "diff/dashboard-pattern"
+    ]
+   },
+   "stub": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "diff/dashboard-pattern"
+    ]
+   }
+  },
+  {
+   "ruleId": "DIFF-005",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "needs_human_review",
+    "reason": null,
+    "detectors": [
+     "diff/layout-archetypes"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "needs_human_review",
+    "reason": null,
+    "detectors": [
+     "diff/layout-archetypes"
+    ]
+   }
+  },
+  {
+   "ruleId": "DIFF-006",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "detector",
+   "off": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "diff/shape-and-icon-language"
+    ]
+   },
+   "stub": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "diff/shape-and-icon-language"
+    ]
+   }
+  },
+  {
+   "ruleId": "DIFF-007",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/section-rhythm"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/section-rhythm"
+    ]
+   }
+  },
+  {
+   "ruleId": "DIFF-008",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/trust-pattern"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/trust-pattern"
+    ]
+   }
+  },
+  {
+   "ruleId": "DIFF-009",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/feature-grid-saturation"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "diff/feature-grid-saturation"
+    ]
+   }
+  },
+  {
+   "ruleId": "DIFF-010",
+   "category": "Differentiation & Design Maturity",
+   "implementation": "rollup",
+   "off": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "DIFF-001",
+     "DIFF-002",
+     "DIFF-003",
+     "DIFF-004",
+     "DIFF-005",
+     "DIFF-006",
+     "DIFF-007",
+     "DIFF-008",
+     "DIFF-009"
+    ]
+   },
+   "stub": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "DIFF-001",
+     "DIFF-002",
+     "DIFF-003",
+     "DIFF-004",
+     "DIFF-005",
+     "DIFF-006",
+     "DIFF-007",
+     "DIFF-008",
+     "DIFF-009"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-001",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/layout-integrity"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/layout-integrity"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-002",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/horizontal-scroll"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/horizontal-scroll"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-003",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "target-size"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "target-size"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-004",
+   "category": "Mobile Responsiveness",
+   "implementation": "rollup",
+   "off": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "MOB-003",
+     "A11Y-003",
+     "A11Y-004"
+    ]
+   },
+   "stub": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "MOB-003",
+     "A11Y-003",
+     "A11Y-004"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-005",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/typography"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/typography"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-006",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/content-scaling"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/content-scaling"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-007",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/image-responsiveness"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/image-responsiveness"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-008",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "mobile/navigation-accessibility"
+    ]
+   },
+   "stub": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "mobile/navigation-accessibility"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-009",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/form-usability"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/form-usability"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-010",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/primary-action-missing",
+     "mobile/primary-action-unusable",
+     "mobile/primary-action-inconvenient",
+     "workflow/action-cannot-be-activated"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/primary-action-missing",
+     "mobile/primary-action-unusable",
+     "mobile/primary-action-inconvenient",
+     "workflow/action-cannot-be-activated"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-011",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/orientation"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/orientation"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-012",
+   "category": "Mobile Responsiveness",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "MOB-013",
+   "category": "Mobile Responsiveness",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/sticky-ui-interference"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "mobile/sticky-ui-interference"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-014",
+   "category": "Mobile Responsiveness",
+   "implementation": "rollup",
+   "off": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "MOB-010",
+     "CONV-012"
+    ]
+   },
+   "stub": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "MOB-010",
+     "CONV-012"
+    ]
+   }
+  },
+  {
+   "ruleId": "MOB-015",
+   "category": "Mobile Responsiveness",
+   "implementation": "rollup",
+   "off": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "PERF-001",
+     "PERF-002",
+     "PERF-003"
+    ]
+   },
+   "stub": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "PERF-001",
+     "PERF-002",
+     "PERF-003"
+    ]
+   }
+  },
+  {
+   "ruleId": "PERF-001",
+   "category": "Performance",
+   "implementation": "detector",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "PERF-002",
+   "category": "Performance",
+   "implementation": "detector",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "PERF-003",
+   "category": "Performance",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "perf/interaction-latency"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "perf/interaction-latency"
+    ]
+   }
+  },
+  {
+   "ruleId": "PERF-004",
+   "category": "Performance",
+   "implementation": "detector",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "PERF-005",
+   "category": "Performance",
+   "implementation": "detector",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "PERF-006",
+   "category": "Performance",
+   "implementation": "detector",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "PERF-007",
+   "category": "Performance",
+   "implementation": "detector",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "PERF-008",
+   "category": "Performance",
+   "implementation": "detector",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "PERF-009",
+   "category": "Performance",
+   "implementation": "detector",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "missing_input",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "PERF-010",
+   "category": "Performance",
+   "implementation": "rollup",
+   "off": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "PERF-001",
+     "PERF-002",
+     "PERF-003",
+     "PERF-004",
+     "PERF-005",
+     "PERF-006",
+     "PERF-007",
+     "PERF-008",
+     "PERF-009"
+    ]
+   },
+   "stub": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "PERF-001",
+     "PERF-002",
+     "PERF-003",
+     "PERF-004",
+     "PERF-005",
+     "PERF-006",
+     "PERF-007",
+     "PERF-008",
+     "PERF-009"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-001",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/hero-statement"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/hero-statement"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-002",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/audience-cue"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/audience-cue"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-003",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/feature-first"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/feature-first"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-004",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/unsupported-superlatives"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/unsupported-superlatives"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-005",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/headline-form"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/headline-form"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-006",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/subheadline"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/subheadline"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-007",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "needs_human_review",
+    "reason": null,
+    "detectors": [
+     "pc/problem-signal"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "needs_human_review",
+    "reason": null,
+    "detectors": [
+     "pc/problem-signal"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-008",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/outcome-language"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/outcome-language"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-009",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/buzzwords"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/buzzwords"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-010",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/first-screen"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/first-screen"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-011",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/offer-before-action"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/offer-before-action"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-012",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/cta-context"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "pc/cta-context"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-013",
+   "category": "Product Clarity",
+   "implementation": "detector",
+   "off": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "pc/claim-consistency"
+    ]
+   },
+   "stub": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "pc/claim-consistency"
+    ]
+   }
+  },
+  {
+   "ruleId": "PC-014",
+   "category": "Product Clarity",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "PC-015",
+   "category": "Product Clarity",
+   "implementation": "person_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "TRUST-001",
+   "category": "Trust & Credibility",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/contact-route"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/contact-route"
+    ]
+   }
+  },
+  {
+   "ruleId": "TRUST-002",
+   "category": "Trust & Credibility",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/privacy-link"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/privacy-link"
+    ]
+   }
+  },
+  {
+   "ruleId": "TRUST-003",
+   "category": "Trust & Credibility",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/terms-link"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/terms-link"
+    ]
+   }
+  },
+  {
+   "ruleId": "TRUST-004",
+   "category": "Trust & Credibility",
+   "implementation": "rollup",
+   "off": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "TRUST-005",
+     "TRUST-006",
+     "TRUST-012"
+    ]
+   },
+   "stub": {
+    "kind": "summary",
+    "outcome": "inconclusive",
+    "reason": null,
+    "detectors": [
+     "TRUST-005",
+     "TRUST-006",
+     "TRUST-012"
+    ]
+   }
+  },
+  {
+   "ruleId": "TRUST-005",
+   "category": "Trust & Credibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/unfinished-proof"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/unfinished-proof"
+    ]
+   }
+  },
+  {
+   "ruleId": "TRUST-006",
+   "category": "Trust & Credibility",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "TRUST-007",
+   "category": "Trust & Credibility",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "TRUST-008",
+   "category": "Trust & Credibility",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "TRUST-009",
+   "category": "Trust & Credibility",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "TRUST-010",
+   "category": "Trust & Credibility",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "TRUST-011",
+   "category": "Trust & Credibility",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "TRUST-012",
+   "category": "Trust & Credibility",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/review-route"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/review-route"
+    ]
+   }
+  },
+  {
+   "ruleId": "TRUST-013",
+   "category": "Trust & Credibility",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "TRUST-014",
+   "category": "Trust & Credibility",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/support-route"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "trust/support-route"
+    ]
+   }
+  },
+  {
+   "ruleId": "TRUST-015",
+   "category": "Trust & Credibility",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-001",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-002",
+   "category": "UX & Workflow Quality",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "ux/primary-task-visible"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "ux/primary-task-visible"
+    ]
+   }
+  },
+  {
+   "ruleId": "UX-003",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-004",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-005",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-006",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-007",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-008",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-009",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-010",
+   "category": "UX & Workflow Quality",
+   "implementation": "detector_and_ai",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "ux/scannability"
+    ]
+   },
+   "stub": {
+    "kind": "detector+ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "ux/scannability"
+    ]
+   }
+  },
+  {
+   "ruleId": "UX-011",
+   "category": "UX & Workflow Quality",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "workflow/action-no-response"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "workflow/action-no-response"
+    ]
+   }
+  },
+  {
+   "ruleId": "UX-012",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-013",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-014",
+   "category": "UX & Workflow Quality",
+   "implementation": "detector",
+   "off": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "ux/journey-continuity"
+    ]
+   },
+   "stub": {
+    "kind": "not_applicable",
+    "outcome": "not_applicable",
+    "reason": "not_applicable",
+    "detectors": [
+     "ux/journey-continuity"
+    ]
+   }
+  },
+  {
+   "ruleId": "UX-015",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-016",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-017",
+   "category": "UX & Workflow Quality",
+   "implementation": "detector",
+   "off": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "ux/error-recovery",
+     "ux/generic-error-message"
+    ]
+   },
+   "stub": {
+    "kind": "detector",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": [
+     "ux/error-recovery",
+     "ux/generic-error-message"
+    ]
+   }
+  },
+  {
+   "ruleId": "UX-018",
+   "category": "UX & Workflow Quality",
+   "implementation": "ai_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "ai_unavailable",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "ai",
+    "outcome": "observed_pass",
+    "reason": null,
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-019",
+   "category": "UX & Workflow Quality",
+   "implementation": "person_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   }
+  },
+  {
+   "ruleId": "UX-020",
+   "category": "UX & Workflow Quality",
+   "implementation": "person_only",
+   "off": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   },
+   "stub": {
+    "kind": "skipped",
+    "outcome": "not_run",
+    "reason": "needs_person",
+    "detectors": []
+   }
+  }
+ ]
+}

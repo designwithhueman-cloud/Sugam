@@ -51,9 +51,9 @@
       "weight": 10,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -85,9 +85,9 @@
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -172,7 +172,25 @@
       "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html#reflowing-websites-and-web-applications",
+        "section": "Reflowing websites and web applications",
+        "sectionVerified": true,
+        "applicability": "Inspect reading conditions at the tested width.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "MOB-006",
@@ -189,9 +207,9 @@
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -223,9 +241,9 @@
       "weight": 6,
       "mode": "M",
       "advisory": true,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -257,18 +275,20 @@
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
-        "detectors": []
+        "detectors": [
+          "mobile/navigation-accessibility"
+        ]
       },
       "recommendationTemplate": "Fix \"Navigation Accessibility\": {{observation}} Make the smallest change to {{element}} that resolves it for {{audience}}, then rescan to confirm.",
       "recommendationTemplateStatus": "generic",
       "related": [],
       "lenses": [],
-      "status": "catalogued",
+      "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "Interpret the measured evidence for \"Navigation Accessibility\". Exercise the mobile menu, keyboard interaction, and return path. Apply pattern guidance to the actual widget. Do not guess beyond the measurements supplied.",
@@ -289,9 +309,9 @@
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -323,9 +343,9 @@
       "weight": 10,
       "mode": "M",
       "advisory": true,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -365,9 +385,9 @@
       "weight": 6,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -414,7 +434,25 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.w3.org/WAI/WCAG22/Understanding/reflow.html#reflowing-websites-and-web-applications",
+        "section": "Reflowing websites and web applications",
+        "sectionVerified": true,
+        "applicability": "Compare mobile spacing for equivalent controls; show the affected task.",
+        "evidence": [
+          "quote",
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "MOB-013",
@@ -431,9 +469,9 @@
       "weight": 10,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -527,6 +565,60 @@
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "\"Mobile Performance Usability\" is a summary of other rules (PERF-001, PERF-002, PERF-003) and adds no independent result.",
       "valueTier": 4
+    },
+    {
+      "ruleId": "MOB-016",
+      "version": "1.0.0-draft",
+      "category": "Mobile Responsiveness",
+      "title": "Phone First Screen Keeps Message And Action",
+      "description": "On the 390px phone screenshot, judge whether the first screen still shows what the page offers and its main action, or whether imagery, banners or spacing push them below.",
+      "source": "NN/g, Homepage Design: 5 Fundamental Principles",
+      "sourceType": "research",
+      "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-3-reveal-content-through-examples-3",
+      "sourceKey": "NNHOME",
+      "sourceSection": "Principle 3: Reveal Content Through Examples",
+      "severity": "medium",
+      "weight": 6,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "On the 390px phone screenshot, judge whether the first screen still shows what the page offers and its main action, or whether imagery, banners or spacing push them below. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Bring the offer and main action into the phone first screen: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-3-reveal-content-through-examples-3",
+        "section": "Principle 3: Reveal Content Through Examples",
+        "sectionVerified": true,
+        "applicability": "Every page; phone first screen at 390px.",
+        "evidence": [
+          "region",
+          "measurement"
+        ],
+        "exceptions": [
+          "Whether the main action is measurably below the first screen is a detector result (MOB-010); this judges the message and action together."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      },
+      "userImpact": "Phone visitors who see neither the offer nor the action in the first screen may not scroll.",
+      "businessImpact": "Phone visitors may leave earlier. This is a hypothesis; Avara did not measure visits.",
+      "requiredEvidence": [
+        "a screenshot region",
+        "a browser measurement"
+      ]
     }
   ]
 }

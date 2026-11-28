@@ -34,7 +34,23 @@
       "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 1
+      "valueTier": 1,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 5: Make it easy to contact you.",
+        "sectionVerified": true,
+        "applicability": "Find a relevant contact route before commitment.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-002",
@@ -51,9 +67,9 @@
       "weight": 10,
       "mode": "M",
       "advisory": false,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "llm",
         "detectors": [
@@ -68,7 +84,23 @@
       "enabled": true,
       "sourceStatus": "passage-unverified",
       "evaluationPrompt": "Interpret the measured evidence for \"Privacy Policy Presence\". Where personal information is requested, inspect the disclosure link and observed destination. Record availability only. Do not guess beyond the measurements supplied.",
-      "valueTier": 1
+      "valueTier": 1,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 1: Make it easy to verify the accuracy of the information on your site.",
+        "sectionVerified": true,
+        "applicability": "Where personal information is requested, inspect the disclosure link and observed destination.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-003",
@@ -85,9 +117,9 @@
       "weight": 6,
       "mode": "M",
       "advisory": true,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "llm",
         "detectors": [
@@ -102,7 +134,23 @@
       "enabled": true,
       "sourceStatus": "needs-owner-input",
       "evaluationPrompt": "Interpret the measured evidence for \"Terms of Service Presence\". When terms are referenced or owner-required, inspect access before commitment. Legal applicability requires separate review. Do not guess beyond the measurements supplied.",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 2: Show that there's a real organization behind your site.",
+        "sectionVerified": true,
+        "applicability": "When terms are referenced or owner-required, inspect access before commitment.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Legal applicability requires separate review."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-004",
@@ -213,7 +261,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "needs-owner-input",
-      "valueTier": 4
+      "valueTier": 4,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 1: Make it easy to verify the accuracy of the information on your site.",
+        "sectionVerified": true,
+        "applicability": "Inspect existing logo claims and evidence of relationship if supplied.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Absence is neutral."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-007",
@@ -245,7 +309,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 4: Show that honest and trustworthy people stand behind your site.",
+        "sectionVerified": true,
+        "applicability": "When founder identity underpins an offer, check whether the visitor can identify the person.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Optional."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-008",
@@ -277,7 +357,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 3: Highlight the expertise in your organization and in the content and services you provide.",
+        "sectionVerified": true,
+        "applicability": "When expertise is claimed, inspect relevant people, credentials or equivalent organizational evidence.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-009",
@@ -309,7 +405,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 1
+      "valueTier": 1,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 2: Show that there's a real organization behind your site.",
+        "sectionVerified": true,
+        "applicability": "Quote the assurance near a sensitive request.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Underlying security requires independent evidence."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-010",
@@ -341,7 +453,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 1: Make it easy to verify the accuracy of the information on your site.",
+        "sectionVerified": true,
+        "applicability": "Map relevant assurance to the point a visitor takes a risk.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-011",
@@ -373,7 +501,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 2: Show that there's a real organization behind your site.",
+        "sectionVerified": true,
+        "applicability": "Identify a concrete inconsistency in business identity or provenance.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-012",
@@ -407,7 +551,23 @@
       "status": "partial",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 3
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 1: Make it easy to verify the accuracy of the information on your site.",
+        "sectionVerified": true,
+        "applicability": "If independent reviews are claimed, inspect the route to them.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-013",
@@ -439,7 +599,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 1
+      "valueTier": 1,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 1: Make it easy to verify the accuracy of the information on your site.",
+        "sectionVerified": true,
+        "applicability": "Trace one material factual claim to evidence.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     },
     {
       "ruleId": "TRUST-014",
@@ -505,7 +681,23 @@
       "status": "catalogued",
       "enabled": true,
       "sourceStatus": "passage-unverified",
-      "valueTier": 2
+      "valueTier": 2,
+      "criterion": {
+        "sourceUrl": "https://credibility.stanford.edu/guidelines/index.html",
+        "section": "Guideline 9: Use restraint with any promotional content (e.g., ads, offers).",
+        "sectionVerified": true,
+        "applicability": "Compare the commitment requested with the available explanation of consequences or remedies.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "Insufficient evidence when the page does not show what the criterion needs; never guessed."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      }
     }
   ]
 }

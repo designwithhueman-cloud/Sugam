@@ -26,7 +26,7 @@ await p.goto(base + '/login'); await p.getByRole('link', { name: 'Continue with 
 check('Google sign-in lands in the dashboard, signed in, with a workspace', (await p.locator('body').innerText()).includes("Gia Google's workspace") || /workspace/i.test(await p.locator('body').innerText()));
 await ctx.close(); [ctx, p] = await fresh();
 await p.goto(base + '/login'); await p.getByRole('link', { name: 'Continue with Google' }).click(); await p.waitForURL('**/app**', { timeout: 15000 });
-check('signing in with Google again goes to the same account, with no second workspace', await p.evaluate(() => { const hs = [...new Set([...document.querySelectorAll('a[href^="/app/"]')].map((a) => a.getAttribute('href')).filter((h) => /^\/app\/gia-google/.test(h)))]; return hs.length === 1 && hs[0] === '/app/gia-google'; }));
+check('signing in with Google again goes to the same account, with no second workspace', await p.evaluate(() => { const hs = [...new Set([...document.querySelectorAll('a[href^="/app/"]')].map((a) => a.getAttribute('href').split(/[/?#]/).slice(0, 3).join('/')).filter((h) => /^\/app\/gia-google/.test(h)))]; return hs.length === 1 && hs[0] === '/app/gia-google'; }));
 await ctx.close(); [ctx, p] = await fresh();
 await p.goto(base + '/login'); await p.getByRole('link', { name: 'Continue with GitHub' }).click(); await p.waitForURL('**/app**', { timeout: 15000 }); check('GitHub sign-in works and makes a workspace from the GitHub name', await p.evaluate(() => [...document.querySelectorAll('a[href^="/app/"]')].some((a) => a.getAttribute('href') === '/app/octo-cat')));
 await ctx.close(); [ctx, p] = await fresh();

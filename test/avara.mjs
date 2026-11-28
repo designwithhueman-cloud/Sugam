@@ -34,24 +34,25 @@ try {
   if (mode === 'main') {
     const orig = await scan('Join the waitlist');
     const first = await p.getByTestId('sentence').innerText(); const head = await p.getByTestId('headline').innerText();
-    check('the first priority is one sentence tied to the visitor goal, and the headline names the control', /Join the waitlist/.test(first) && /320px/.test(first) && /join the waitlist/.test(first) && first.split(/\.\s/).length === 1 && /Join the waitlist/.test(head), `${head} | ${first}`);
+    check('the first priority is one sentence that names the control, says how much is visible at 320px and what the visitor cannot do; the headline names the control', /Join the waitlist/.test(first) && /320px/.test(first) && /cannot tap it/.test(first) && first.split(/\.\s/).length === 1 && /On phones, .Join the waitlist. is cut off\./.test(head), `${head} | ${first}`);
     check('the clipped signup button is ONE action across mobile, accessibility and UX, shown first and marked as blocking', (await p.getByTestId('blocker').count()) === 1 && /One change fixes this and 2 related findings/.test(await prim().innerText()));
     await openTech(); const tr = await prim().getByTestId('trace').innerText();
     check('its technical details name all three categories', ['Accessibility', 'Mobile', 'UX and workflow'].every((c) => tr.includes(c)), tr.slice(0, 200));
     const ft = await prim().getByTestId('finding').allInnerTexts();
     check('each finding names a versioned rule, its source section and link, who is affected, what they were trying to do and the consequence as a hypothesis', ft.length >= 3 && ft.every((t) => /v1\.0\.0/.test(t) && /Who is affected/.test(t) && /Trying to/.test(t) && /Likely consequence \(hypothesis\)|Consequence \(observed\)/.test(t)) && (await prim().getByTestId('finding').first().locator('a[href^="https://"]').count()) === 1);
     check('source type is shown separately from per-finding confidence', /Standard|Usability heuristic/.test(ft[0]) && /confidence/.test(ft[0]) && (await prim().getByTestId('source-type').count()) >= 3);
-    check('the workflow shows the observed steps, and "What was checked" says where coverage ends', /Steps Sugam took/.test(ft.join('\n')) && /Stopped before submission/.test(await checkedText()));
+    check('the workflow shows the observed steps, and "What was checked" says where coverage ends', /Steps Avara took/.test(ft.join('\n')) && /Stopped before submission/.test(await checkedText()));
     // The exact generated fix, opened on demand (free plan: the recommended first fix is the available fix)
     check('the fix is closed until asked for, then offered for AI builders, Framer, Webflow and code', (await prim().getByTestId('fix-primary').isHidden()) && (await (async () => { await p.getByTestId('see-fix').click(); return prim().getByTestId('fix-primary').isVisible(); })()));
     const fixBox = prim().getByTestId('fix-primary'); const tools = await fixBox.locator('option').allInnerTexts();
-    check('the builder picker lists every tool', ['Lovable', 'Bolt', 'v0', 'Cursor', 'Framer', 'Webflow', 'Plain code'].every((t) => tools.includes(t)), tools.join(','));
+    check('the tool picker lists the 16 tools from Fix it where you build', ['Lovable', 'Bolt.new', 'v0', 'Base44', 'Cursor', 'Claude', 'ChatGPT', 'Shopify', 'Webflow', 'Framer', 'Vercel', 'Next.js', 'React', 'Astro', 'Vue', 'Svelte'].every((t) => tools.includes(t)) && tools.length === 16, tools.join(','));
     await fixBox.locator('select').selectOption('lovable');
     const prompt = await fixBox.getByTestId('fix-text').innerText();
     await fixBox.getByRole('button', { name: /Copy prompt/ }).click(); await p.waitForTimeout(200);
     const clip = await p.evaluate(() => navigator.clipboard.readText());
-    check('Copy prompt copies the exact prompt, which is concise and names the element, the smallest change and how to verify', clip.trim() === prompt.trim() && prompt.length < 1200 && /Element:/.test(prompt) && /Change:/.test(prompt) && /Verify:/.test(prompt), `${prompt.length} chars`);
-    check('"How to check it" is shown beside the fix', /How to check it/.test(await fixBox.innerText()));
+    check('Copy prompt copies the exact prompt: the element and the smallest change, with no Verify line (that is for the person, shown beside it)', clip.trim() === prompt.trim() && prompt.length < 1200 && /Element:/.test(prompt) && /Change:/.test(prompt) && !/Verify:/.test(clip), `${prompt.length} chars`);
+    check('"How to check it" is shown beside the fix, with the rescan check that left the prompt', /How to check it[\s\S]*Rescan/.test(await fixBox.innerText()));
+    fs.mkdirSync(out, { recursive: true });
     fs.writeFileSync(out + 'avara-generated-fix.txt', prompt + '\n');
     check('the fix does not touch brand tokens or ask for a redesign', /keep|preserve|do not change|unchanged/i.test(prompt));
     check('the other fixes keep their builder panel back on the free plan', (await p.getByTestId('other-row').evaluateAll((rows) => rows.every((r) => !r.querySelector('select')))));

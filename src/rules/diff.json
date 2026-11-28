@@ -14,12 +14,12 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "M",
       "advisory": true,
-      "scoreEligible": false,
+      "scoreEligible": true,
       "confidence": null,
-      "confidenceBasis": null,
+      "confidenceBasis": "Admitted 2026-11-22 as documented Avara guidance: measurable pass/fail condition, failing and clean fixtures in test/score-admission.mjs (src/rules/_admissions.json). The cited source is a reference; its passage is not verified.",
       "evaluator": {
         "type": "detector",
         "detectors": [
@@ -76,7 +76,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -117,7 +117,33 @@
         "hueMin": 235,
         "hueMax": 290,
         "minSignals": 3,
-        "minRadius": 12
+        "minRadius": 12,
+        "heroLayout": {
+          "version": "prototype-1",
+          "status": "diagnostic",
+          "publish": false,
+          "weight": 0,
+          "note": "Avara DIFF-002 detector pack: geometric comparison of the first-screen hero (heading, main action, lead visual) with a versioned, permissioned reference set at the same viewport. Diagnostic only: stored per scan, never shown as an observation or scored until a person approves a release policy from held-out real-site validation. DIFF-001 owns section order.",
+          "positionTolerance": 0.08,
+          "positionToleranceStatus": "experimental coordinate tolerance",
+          "minimumGroups": 3,
+          "groups": {
+            "heading position": [
+              "headingX",
+              "headingY"
+            ],
+            "action position": [
+              "actionX",
+              "actionY"
+            ],
+            "visual composition": [
+              "visualX",
+              "visualY",
+              "visualWidth",
+              "visualHeight"
+            ]
+          }
+        }
       },
       "sourceStatus": "passage-unverified",
       "related": [],
@@ -138,7 +164,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "low",
-      "weight": 0,
+      "weight": 3,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -191,7 +217,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "M",
       "advisory": true,
       "scoreEligible": false,
@@ -237,7 +263,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "low",
-      "weight": 0,
+      "weight": 3,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -281,7 +307,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "low",
-      "weight": 0,
+      "weight": 3,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -329,7 +355,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -373,7 +399,7 @@
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "H",
       "advisory": true,
       "scoreEligible": false,
@@ -408,17 +434,17 @@
     },
     {
       "ruleId": "DIFF-009",
-      "version": "1.0.0-draft",
+      "version": "1.1.0-draft",
       "category": "Differentiation & Design Maturity",
       "title": "Feature Grid Saturation",
-      "description": "The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 3 or more such grids fails; 2 needs a person; one passes.",
+      "description": "The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 2 or more such grids need a person (a count of grids is a pattern, never a confirmed failure); one passes.",
       "source": "NN/g Ten Usability Heuristics (aesthetic and minimalist design)",
       "sourceType": "avara",
       "sourceUrl": "https://www.nngroup.com/articles/ten-usability-heuristics/",
       "sourceKey": "DIFF",
       "sourceSection": null,
       "severity": "medium",
-      "weight": 0,
+      "weight": 6,
       "mode": "M",
       "advisory": true,
       "scoreEligible": false,
@@ -430,7 +456,7 @@
           "diff/feature-grid-saturation"
         ]
       },
-      "evaluationPrompt": "Feature Grid Saturation: The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 3 or more such grids fails; 2 needs a person; one passes. Deterministic evidence first; a person confirms. A model does not decide this rule.",
+      "evaluationPrompt": "Feature Grid Saturation: The page is not mostly grids of same-looking icon cards. Objective check: count grids of 3 or more cards, each with an icon, heading and short text. 2 or more such grids need a person (a count of grids is a pattern, never a confirmed failure); one passes. Deterministic evidence first; a person confirms. A model does not decide this rule.",
       "recommendationTemplate": "The page has {{observation}}. Keep the grid for the features that matter most and show the rest differently: one annotated screenshot, a short list, or a worked example. Evidence: {{evidence}}",
       "recommendationTemplateStatus": "authored",
       "userImpact": "Repeated icon cards are scanned, not read, and make features blur into one another. This is a hypothesis from reading the page, not measured behaviour.",
@@ -561,6 +587,120 @@
       "enabled": true,
       "status": "catalogued",
       "valueTier": 3
+    },
+    {
+      "ruleId": "DIFF-011",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "Owner-Specified Brand Cues Present",
+      "description": "Check whether the brand cues the owner named (logo, colour, character, phrase) appear in the first screen. Without owner-supplied cues the result is insufficient evidence. Memorability needs audience research; a screenshot cannot establish it.",
+      "source": "Ipsos, Getting Brand Assets Right (2018)",
+      "sourceType": "research",
+      "sourceUrl": "https://www.ipsos.com/en/getting-brand-assets-right",
+      "sourceKey": "IPSOS",
+      "sourceSection": "Getting Brand Assets Right (no sub-sections)",
+      "severity": "low",
+      "weight": 3,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Check whether the brand cues the owner named (logo, colour, character, phrase) appear in the first screen. Without owner-supplied cues the result is insufficient evidence. Memorability needs audience research; a screenshot cannot establish it. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "Show the brand cue you named in the first screen: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.ipsos.com/en/getting-brand-assets-right",
+        "section": "Getting Brand Assets Right (no sub-sections)",
+        "sectionVerified": true,
+        "applicability": "Scans where the owner supplied brand cues.",
+        "evidence": [
+          "region",
+          "quote"
+        ],
+        "exceptions": [
+          "No owner cues: insufficient evidence, never unmet.",
+          "Recognition and memorability require audience evidence."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ],
+        "supplementary": [
+          {
+            "name": "Ehrenberg-Bass, Building Distinctive Brand Assets (book listing)",
+            "url": "https://marketingscience.info/learn-with-us/books",
+            "sectionVerified": false
+          }
+        ]
+      },
+      "userImpact": "Visitors may not connect the page with the brand they know.",
+      "businessImpact": "Brand cues may be missed. This is a hypothesis; recognition needs audience research.",
+      "requiredEvidence": [
+        "a screenshot region",
+        "an exact quote from the page"
+      ]
+    },
+    {
+      "ruleId": "DIFF-012",
+      "version": "1.0.0-draft",
+      "category": "Differentiation & Design Maturity",
+      "title": "A Specific Differentiator Is Stated",
+      "description": "Check whether the page states at least one concrete, checkable way it differs (a number, a named method, a named audience) rather than generic claims. Quote it, or quote the generic claim.",
+      "source": "NN/g, Homepage Design: 5 Fundamental Principles",
+      "sourceType": "research",
+      "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-2-communicate-who-you-are-and-what-you-do-2",
+      "sourceKey": "NNHOME",
+      "sourceSection": "Principle 2: Communicate Who You Are and What You Do",
+      "severity": "low",
+      "weight": 3,
+      "mode": "H",
+      "advisory": true,
+      "scoreEligible": false,
+      "confidence": null,
+      "confidenceBasis": null,
+      "evaluator": {
+        "type": "llm"
+      },
+      "evaluationPrompt": "Check whether the page states at least one concrete, checkable way it differs (a number, a named method, a named audience) rather than generic claims. Quote it, or quote the generic claim. Ground every point in an exact quote, a screenshot region or a browser measurement from the context. If the context does not show it, answer insufficient evidence.",
+      "recommendationTemplate": "State one concrete, checkable way you differ: {{observation}}",
+      "recommendationTemplateStatus": "authored",
+      "related": [],
+      "lenses": [],
+      "status": "partial",
+      "enabled": true,
+      "sourceStatus": "section-verified",
+      "valueTier": 3,
+      "criterion": {
+        "sourceUrl": "https://www.nngroup.com/articles/homepage-design-principles/#toc-principle-2-communicate-who-you-are-and-what-you-do-2",
+        "section": "Principle 2: Communicate Who You Are and What You Do",
+        "sectionVerified": true,
+        "applicability": "Every page with marketing copy.",
+        "evidence": [
+          "quote"
+        ],
+        "exceptions": [
+          "A portfolio differentiates through its work samples; quoting a project counts."
+        ],
+        "tests": [
+          "test/ai-review.mjs",
+          "test/ai-review-server.mjs"
+        ]
+      },
+      "userImpact": "Visitors comparing options cannot see why to choose you.",
+      "businessImpact": "The page may read like its competitors. This is a hypothesis; Avara did not measure choice.",
+      "requiredEvidence": [
+        "an exact quote from the page"
+      ]
     }
   ]
 }

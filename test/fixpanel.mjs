@@ -12,11 +12,11 @@ const info = async () => panel.evaluate((s) => { const r = s.getBoundingClientRe
 let i = await info();
 check('desktop: nothing runs past the panel and the page does not scroll sideways', i.outside === 0 && i.docW <= i.vw, JSON.stringify({ outside: i.outside, docW: i.docW, vw: i.vw }));
 check('the headline is plain language and one sentence says who may be affected', /Images without a text description/.test(i.text) && /may be unable to/.test(i.text));
-check('the prompt is short (under 900 characters) and holds the element, the change and how to verify', i.preChars < 900 && /Element:/.test(i.text) && /Change:/.test(i.text) && /Verify:/.test(i.text), `${i.preChars} characters`);
-check('the prompt does not carry scan evidence or repeated context', !/What Sugam measured|Fix any of the following|Ask me if you are unsure|Prefer native HTML/.test(await panel.getByTestId('fix-text').innerText()));
+check('the prompt is short (under 900 characters) and holds the element and the change; how to verify sits beside it, not in the prompt', i.preChars < 900 && /Element:/.test(i.text) && /Change:/.test(i.text) && /How to check it/.test(i.text), `${i.preChars} characters`);
+check('the prompt does not carry scan evidence or repeated context', !/What (Sugam|Avara) measured|Fix any of the following|Ask me if you are unsure|Prefer native HTML/.test(await panel.getByTestId('fix-text').innerText()));
 check('Copy prompt is one clear action next to the prompt heading', (await panel.getByRole('button', { name: /Copy prompt/ }).count()) === 1);
 await panel.getByRole('button', { name: /Copy prompt/ }).click(); await p.waitForTimeout(200);
-const clip = await p.evaluate(() => navigator.clipboard.readText()); check('Copy prompt copies the whole prompt', clip.startsWith('Fix:') && clip.includes('Verify:') && clip.length < 900);
+const clip = await p.evaluate(() => navigator.clipboard.readText()); check('Copy prompt copies the instruction only (Element and Change), with no Verify line', clip.startsWith('Element:') && clip.includes('Change:') && !clip.includes('Verify:') && clip.length < 900);
 const det = panel.getByTestId('technical'); check('Technical details is closed by default and holds the rule, the source and the elements', (await det.getAttribute('open')) === null && (await det.evaluate((e) => e.textContent.includes('Rule') && e.textContent.includes('Who is affected') && e.textContent.includes('Source passage'))));
 await det.locator('summary').click(); await p.waitForTimeout(200); i = await info(); check('desktop: opening Technical details still keeps everything inside the panel', i.outside === 0 && i.docW <= i.vw, JSON.stringify({ outside: i.outside, docW: i.docW }));
 await p.setViewportSize({ width: 320, height: 640 }); await p.waitForTimeout(300); i = await info();

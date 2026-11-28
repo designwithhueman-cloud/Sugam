@@ -43,25 +43,30 @@ function primaryTaskVisible(out: ScanOutput): DetectorReport {
   if (!vs.length) return off('The main-action check did not run.');
   const hits: DetectorHit[] = []; let seen = 0;
   for (const [n, v] of vs) { const a = mainAction(v); if (!a?.m) continue; seen++; if (a.m.belowFirstScreen) hits.push(fail(`“${a.text}” is below the first screen on ${n}`, `On ${n}, the main action “${a.text}” starts ${Math.round(a.m.box.y)}px down, below the first screen.`, [`${a.selector}  top ${Math.round(a.m.box.y)}px, screen ${n === 'mobile' ? 640 : 800}px tall`])); }
-  return seen ? ran(hits) : ran([review('No main action found', 'Sugam could not identify a main action to check. Confirm the goal when you scan.', ['looked for buttons and links that look like the main action; none scored high enough'])]);
+  return seen ? ran(hits) : ran([review('No main action found', 'Avara could not identify a main action to check. Confirm the goal when you scan.', ['looked for buttons and links that look like the main action; none scored high enough'])]);
 }
 function ctaVisible(out: ScanOutput): DetectorReport {
   const v = vp(out, 'desktop'); if (!v?.avara) return off('The main-action check did not run.');
-  const a = mainAction(v); if (!a?.m || !a.cls) return ran([review('No main action found', 'Sugam could not identify the conversion entry point on desktop.', ['looked for buttons and links that look like the main action; none scored high enough'])]);
+  const a = mainAction(v); if (!a?.m || !a.cls) return ran([review('No main action found', 'Avara could not identify the conversion entry point on desktop.', ['looked for buttons and links that look like the main action; none scored high enough'])]);
   return ran(a.cls.level === 'ok' ? [] : [fail(`“${a.text}” is not available on desktop`, `On desktop, “${a.text}” ${a.cls.reasons[0] ?? 'cannot be used'}`.trim(), [`${a.selector}  visible ${Math.round(a.m.visibleRatio * 100)}%, ${a.m.width} by ${a.m.height} px`])]);
 }
 
-// ---- 320px page observations ----
+// ---- phone page observations (the 390px phone pass) ----
 type MP = { images: { selector: string; nw: number; nh: number; rw: number; rh: number; fit: string; right: number; svg: boolean; loaded: boolean }[]; viewportMeta: string | null; innerWidth: number; textCount: number; smallCount: number; smallSamples: { selector: string; px: number; text: string }[]; inputs: { selector: string; px: number; right: number }[] };
 type TR = { baselineClipped: { selector: string; kind: string; by: number; text: string }[]; newlyClipped: { selector: string; kind: string; by: number; text: string }[]; scaled: number };
 function contentScaling(out: ScanOutput): DetectorReport {
   const tr = vp(out, 'mobile')?.textResize as TR | null | undefined; if (!tr) return off('The text-size check did not run.');
-  return ran(tr.newlyClipped.length ? [fail('Text clips when it is made 200% larger', `${tr.newlyClipped.length} element${tr.newlyClipped.length === 1 ? '' : 's'} lose text or controls when text is doubled at 320px wide.`, tr.newlyClipped.map((x) => `${x.selector}  clipped by ${x.by}px (${x.kind})  "${x.text}"`))] : []);
+  return ran(tr.newlyClipped.length ? [fail('Text clips when it is made 200% larger', `${tr.newlyClipped.length} element${tr.newlyClipped.length === 1 ? '' : 's'} lose text or controls when text is doubled on the phone (${vp(out, 'mobile')?.width ?? 390}px wide).`, tr.newlyClipped.map((x) => `${x.selector}  clipped by ${x.by}px (${x.kind})  "${x.text}"`))] : []);
 }
 function layoutIntegrity(out: ScanOutput): DetectorReport {
-  const tr = vp(out, 'mobile')?.textResize as TR | null | undefined; if (!tr) return off('The 320px layout check did not run.');
-  return ran(tr.baselineClipped.length ? [review('Content is clipped at 320px wide', `${tr.baselineClipped.length} element${tr.baselineClipped.length === 1 ? ' is' : 's are'} clipped by their container at 320px. It may be intended (a carousel); a person should confirm.`, tr.baselineClipped.map((x) => `${x.selector}  clipped by ${x.by}px (${x.kind})  "${x.text}"`))] : []);
+  const tr = vp(out, 'mobile')?.textResize as TR | null | undefined; if (!tr) return off('The phone layout check did not run.');
+  return ran(tr.baselineClipped.length ? [review('Content is clipped on a phone', `${tr.baselineClipped.length} element${tr.baselineClipped.length === 1 ? ' is' : 's are'} clipped by their container on the phone (${vp(out, 'mobile')?.width ?? 390}px wide). It may be intended (a carousel); a person should confirm.`, tr.baselineClipped.map((x) => `${x.selector}  clipped by ${x.by}px (${x.kind})  "${x.text}"`))] : []);
 }
+// A measurement reason in plain words: a covering element's CSS path becomes "a fixed element" (the path stays in the evidence line).
+const plainReason = (r: string) => {
+  const m = r.match(/^\S.*?\((fixed|sticky|absolute)\) covers the middle of it(.*)$/);
+  return m ? `is covered by a ${m[1]} element${m[2].replace(/^, so a tap lands there instead\./, ', so a tap lands on that instead.')}` : r.charAt(0).toLowerCase() + r.slice(1);
+};
 function orientation(out: ScanOutput): DetectorReport {
   const m = vp(out, 'mobile'); const o = m?.orientation; const mp = m?.mobileProbe as MP | null | undefined;
   if (!m || (o === undefined && !mp)) return off('The phone-width pass did not run.');
@@ -69,16 +74,16 @@ function orientation(out: ScanOutput): DetectorReport {
   if (mp && mp.viewportMeta == null) hits.push(fail('The page has no viewport tag', 'Without <meta name="viewport"> phones show the page at desktop width and shrink it.', ['<head> has no meta name="viewport"']));
   if (o) {
     if (o.docW > o.vw + 1) hits.push(fail('The page scrolls sideways when the phone is turned', `In landscape (640px wide) the page is ${o.docW}px wide.`, [`document width ${o.docW}px, screen ${o.vw}px`]));
-    if (o.action && o.action.level !== 'ok') hits.push(fail(`“${o.action.text}” stops working in landscape`, `In landscape “${o.action.text}” ${o.action.reasons[0] ?? 'is not usable'}`, [`level ${o.action.level}`]));
+    if (o.action && o.action.level !== 'ok') hits.push(fail(`“${o.action.text}” stops working in landscape`, `In landscape (640px wide) “${o.action.text}” ${plainReason(o.action.reasons[0] ?? 'is not usable')}`, [`level ${o.action.level}`, ...(o.action.reasons[0] ? [o.action.reasons[0]] : [])]));
   } else if (!mp) return off('The landscape check did not run.');
   return ran(hits);
 }
 function mobileTypography(out: ScanOutput): DetectorReport {
-  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The 320px text check did not run.');
+  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The phone text check did not run.');
   return ran(mp.smallCount ? [review('Some text is smaller than 12px on a phone', `${mp.smallCount} of ${mp.textCount} text elements are under 12px at 320px. Whether that hurts reading is a judgement.`, mp.smallSamples.map((s) => `${s.selector}  ${s.px}px  "${s.text}"`))] : []);
 }
 function mobileForm(out: ScanOutput): DetectorReport {
-  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The 320px form check did not run.');
+  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The phone form check did not run.');
   if (!mp.inputs.length) return na('No form fields on this page.');
   const hits: DetectorHit[] = []; const out_ = mp.inputs.filter((i) => i.right > mp.innerWidth + 1); const small = mp.inputs.filter((i) => i.px < 16);
   if (out_.length) hits.push(fail('A form field runs past the edge of the phone screen', `${out_.length} field${out_.length === 1 ? '' : 's'} extend beyond 320px.`, out_.map((i) => `${i.selector}  right edge ${i.right}px`)));
@@ -86,7 +91,7 @@ function mobileForm(out: ScanOutput): DetectorReport {
   return ran(hits);
 }
 function imageResponsiveness(out: ScanOutput): DetectorReport {
-  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The 320px image check did not run.');
+  const mp = vp(out, 'mobile')?.mobileProbe as MP | null | undefined; if (!mp) return off('The phone image check did not run.');
   const imgs = mp.images.filter((i) => i.loaded); if (!imgs.length) return na('No loaded images on this page.');
   const hits: DetectorHit[] = []; const over = imgs.filter((i) => i.rw > mp.innerWidth + 1 || i.right > mp.innerWidth + 1);
   const bent = imgs.filter((i) => !i.svg && (i.fit === 'fill' || i.fit === '') && i.nw > 0 && i.nh > 0 && i.rw > 40 && i.rh > 40 && Math.abs((i.rw / i.rh) / (i.nw / i.nh) - 1) > 0.08);
@@ -100,7 +105,7 @@ function statusHit(pc: PageCtx, what: string, l: Link | undefined, mustHave: boo
   const st = linkState(pc, l);
   if (st === 'missing') return mustHave ? fail(`${what} link is missing`, `${what} is needed here and no link to it was found on the page.`, [`looked for a link whose text or address mentions ${what.toLowerCase().split(' ')[0]}; none found`]) : null;
   if (st === 'broken') return fail(`${what} link does not open`, `The ${what.toLowerCase()} link “${l!.text}” did not open (${pc.linkChecks?.[l!.href ?? '']}).`, [linkEvidence(pc, l!)]);
-  if (st === 'unchecked') return review(`${what} link not checked`, `A ${what.toLowerCase()} link exists but Sugam could not confirm it opens.`, [linkEvidence(pc, l!)]);
+  if (st === 'unchecked') return review(`${what} link not checked`, `A ${what.toLowerCase()} link exists but Avara could not confirm it opens.`, [linkEvidence(pc, l!)]);
   return null;
 }
 function privacy(pc: PageCtx | undefined): DetectorReport {
@@ -225,6 +230,93 @@ function perfThirdParty(out: ScanOutput): DetectorReport {
 }
 
 /** Every derived detector id. The ids are written into src/rules/*.json under the one rule that owns each. */
+// =====================================================================================================================================
+// The four rules that had no detector. Each says exactly what it exercised; anything it could not exercise is "needs a person", never a pass.
+// =====================================================================================================================================
+const pass = (note: string): DetectorReport => ({ ran: true, hits: [], passNote: note });
+
+// ---- A11Y-017 Error Prevention (WCAG 2.2 SC 3.3.4, AA): a form whose submission is a legal commitment, a financial transaction, changes or deletes
+// the visitor's stored data, or submits test answers must be reversible, checked for input errors with a chance to correct, or confirmed.
+// Avara never submits, so it can only see the form itself: a confirm/review step it can read passes; none is "needs a person", never a failure.
+type FormCtx = { fields: { type: string; label: string; required: boolean; name: string | null; autocomplete?: string | null; checked?: boolean }[]; submit: string; action?: string | null; text?: string };
+const COVERED: { kind: string; test: (f: FormCtx) => string | null }[] = [
+  { kind: 'a financial transaction', test: (f) => { const x = f.fields.find((i) => /^cc-/.test(i.autocomplete ?? '') || /card ?number|cvc|cvv|security code|expiry|expiration|iban|routing|account number|sort code/i.test(`${i.label} ${i.name ?? ''}`)); return x ? `field “${x.label || x.name}”${x.autocomplete ? ` (autocomplete ${x.autocomplete})` : ''}` : /^(pay|pay now|purchase|place (my )?order|buy( now)?|complete (purchase|order|payment)|donate|send money|transfer)\b/i.test(f.submit.trim()) ? `submit button “${f.submit}”` : null; } },
+  { kind: 'a change to or deletion of stored data', test: (f) => /\b(delete|remove|erase|close|deactivate|cancel)\b.*\b(account|data|profile|subscription|workspace|project)\b/i.test(f.submit) ? `submit button “${f.submit}”` : null },
+  { kind: 'a legal commitment', test: (f) => /\b(sign|e-?sign|accept)\b.*\b(contract|agreement|lease|offer)\b/i.test(f.submit) ? `submit button “${f.submit}”` : f.fields.find((i) => /signature/i.test(`${i.label} ${i.name ?? ''}`)) ? 'a signature field' : null },
+  { kind: 'test answers', test: (f) => /\bsubmit (my |your )?(answers|test|exam|quiz|assessment)\b/i.test(f.submit) ? `submit button “${f.submit}”` : null },
+];
+const SAFEGUARD = /review (your |the )?(order|details|answers|information)|step \d+ of \d+|you('ll| will) (be able to )?(review|confirm)|confirm on the next|before (you|we) (charge|submit)|undo|cancel (any ?time|within)|full refund|you can (change|edit|cancel)/i;
+function errorPrevention(out: ScanOutput): DetectorReport {
+  const pc = vp(out, 'desktop')?.pageContext as PageCtx | undefined; if (!pc) return off('The page-content capture did not run.');
+  const forms = (pc.forms ?? []) as FormCtx[];
+  const covered = forms.map((f) => { for (const c of COVERED) { const why = c.test(f); if (why) return { f, kind: c.kind, why }; } return null; }).filter((x): x is NonNullable<typeof x> => !!x);
+  if (!covered.length) return na(forms.length ? `None of the ${forms.length} form${forms.length === 1 ? '' : 's'} on this page is a legal, financial, data-deleting or test submission, so SC 3.3.4 does not apply.` : 'No form on this page, so SC 3.3.4 does not apply.');
+  const hits: DetectorHit[] = []; const ok: string[] = [];
+  for (const { f, kind, why } of covered) {
+    const box = f.fields.find((i) => i.type === 'checkbox' && /confirm|i (have )?(read|reviewed|checked)|i understand|is correct/i.test(i.label));
+    const nextStep = /^(continue|next|review)\b/i.test(f.submit.trim());
+    const text = (f.text ?? '').match(SAFEGUARD)?.[0];
+    if (box || nextStep || text) { ok.push(`“${f.submit}” (${kind}): ${box ? `confirm checkbox “${box.label}”` : nextStep ? 'the button goes to another step first' : `the form says “${text}”`}`); continue; }
+    hits.push(review(`“${f.submit}” commits ${kind} without a visible check or confirm step`, `This form looks like ${kind} (${why}). Avara never submits a form, so it cannot see whether a confirmation, review step or undo follows. Submit it once with test data and confirm one of those exists.`, [`form submit “${f.submit}”${f.action ? `, action ${f.action}` : ''}`, `covered because of the ${why}`, 'no confirm checkbox, review step or reversal wording found in the form']));
+  }
+  return hits.length ? ran(hits) : pass(`Each covered form shows a safeguard before it commits: ${ok.join('; ')}.`);
+}
+
+// ---- MOB-008 Navigation Accessibility (WAI-ARIA APG: disclosure navigation and modal dialog): the collapsed phone menu has a name, says whether it
+// is open (aria-expanded), opens with Enter, lets Tab reach its links, and closes with Escape with focus back on the button.
+function navigationAccessibility(out: ScanOutput): DetectorReport {
+  const v = vp(out, 'mobile'); if (!v || v.navMenu === undefined) return off('The phone menu check did not run on this scan (it was added after the scan was made).');
+  const m = v.navMenu; if (!m) return off('The phone menu check started but did not complete.');
+  if (!m.found) return na(m.why);
+  const at = `${m.selector} at ${v.width}px`; const who = m.name ? `“${m.name}” menu button` : 'The menu button';
+  const ev = [`${at}: aria-expanded ${m.expandedAttr ?? 'absent'}, ${m.target.w}×${m.target.h}px`, `Enter: ${m.focusable === false ? 'not pressed (the button cannot take focus)' : m.openedByKeyboard ? `opened (${m.linksBefore} → ${m.linksAfter} visible links)` : 'nothing opened'}${m.openedByClick !== null ? `; tap: ${m.openedByClick ? 'opened' : 'nothing opened'}` : ''}`];
+  const hits: DetectorHit[] = [];
+  if (!m.name) hits.push(fail('The phone menu button has no name', `${who} has no text or aria-label, so a screen reader announces only “button”.`, ev));
+  if (!m.openedByKeyboard && m.openedByClick) hits.push(fail('The phone menu opens with a tap but not with the keyboard', m.focusable === false ? `${who} opens when tapped, but it cannot take keyboard focus (it is not a button), so keyboard and switch users cannot reach the navigation.` : `${who} opened when tapped but not when focused and Enter was pressed, so keyboard and switch users cannot reach the navigation.`, ev));
+  if (!m.openedByKeyboard && m.openedByClick === false) hits.push(review('Avara could not open the phone menu', `${who} did not open with Enter or a tap. Open it by hand and confirm it works with the keyboard.`, ev));
+  const open = m.openedByKeyboard || !!m.openedByClick;
+  if (open && m.expandedAttr === null) hits.push(review('The phone menu button does not say whether the menu is open', `${who} has no aria-expanded, so a screen reader user is not told the menu opened. The APG disclosure pattern sets aria-expanded on the button.`, ev));
+  if (open && m.tabIntoMenu === false) hits.push(review('Tab does not reach the menu links after it opens', `After ${who} opened, four presses of Tab did not land on a link in the menu. The links may come late in the focus order.`, [...ev, 'Tab ×4 from the button: no menu link focused']));
+  if (open && m.escapeCloses === false) hits.push(review('Escape does not close the phone menu', `With the menu open, Escape left it open. Visitors using a keyboard expect Escape to close it.`, [...ev, 'Escape: still open']));
+  if (open && m.escapeCloses && m.focusReturned === false) hits.push(review('Focus is lost when the phone menu closes', `Escape closed the menu but focus did not return to ${who}.`, [...ev, 'Escape: closed, focus not on the button']));
+  return hits.length ? ran(hits) : pass(`${who} at ${v.width}px: named, aria-expanded ${m.expandedAttr}, opened with Enter, Tab reached a menu link, Escape closed it and returned focus.`);
+}
+
+// ---- PERF-003 Interaction to Next Paint (web.dev): good at 200 ms or less. Measured here with Event Timing on the real key presses and taps the
+// phone pass makes, on one unthrottled load. That is lab interaction latency, labelled as such; field INP (p75 of real visits) is not available,
+// and Total Blocking Time is never used in its place.
+function interactionLatency(out: ScanOutput): DetectorReport {
+  const v = vp(out, 'mobile'); if (!v || v.interaction === undefined) return off('Interaction timing was not recorded on this scan (it was added after the scan was made).');
+  const t = v.interaction; if (!t) return off('Interaction timing started but did not complete.');
+  if (!t.supported) return off('The browser did not report Event Timing, so no interaction latency was measured.');
+  if (!t.interactions) return off('No key press or tap was made on the phone pass, so there was nothing to time.');
+  const good = param('PERF-003', 'goodMs', 200);
+  const worst = t.worst ?? 0; const scope = `Lab, one load at ${v.width}px, unthrottled CPU, ${t.interactions} key presses and taps; not field INP (p75 of real visits).`;
+  const top = t.measured.slice(0, 3).map((x) => `${x.name} on ${x.target || 'the page'}: ${x.duration} ms`);
+  // One slow reading can be machine load during the scan. Confirmed: two or more interactions over the limit, or one over 500 ms ("poor").
+  const over = t.measured.filter((x) => x.duration > good).length; const poor = param('PERF-003', 'poorMs', 500);
+  if (worst > good && (over >= 2 || worst > poor)) return ran([fail(`An interaction took ${worst} ms to show a response`, `${over} of ${t.interactions} interactions took longer than the ${good} ms “good” limit for Interaction to Next Paint; the slowest took ${worst} ms from input to the next frame.`, [...top, scope])]);
+  if (worst > good) return ran([review(`One interaction took ${worst} ms to show a response`, `One of ${t.interactions} interactions took ${worst} ms, over the ${good} ms limit; the others were faster. A single slow reading can come from load during the scan, so check it on a real phone.`, [...top, scope])]);
+  return pass(`The slowest of ${t.interactions} interactions took ${worst >= 16 ? `${worst} ms` : 'under 16 ms'} (limit ${good} ms). ${scope}`);
+}
+
+// ---- UX-014 User Journey Continuity (Nielsen heuristic 3, user control and freedom: a clearly marked way out). After the main action is
+// activated at 390px: if it opened a page, browser Back must return to the start with the action there again; if it opened a dialog, Escape or a
+// visible close control must dismiss it. Revising entered data needs typing and submitting, which Avara does not do.
+function journeyContinuity(out: ScanOutput): DetectorReport {
+  const v = vp(out, 'mobile'); if (!v || v.journey === undefined) return off('The way-back check did not run on this scan (it was added after the scan was made).');
+  const j = v.journey; if (!j) return off(v.avara?.candidates.length ? 'The way-back check started but did not complete.' : 'No main action was found on the phone, so there was no journey to follow.');
+  if (!j.tested) return /changed nothing/.test(j.why ?? '') ? na(j.why!) : off(j.why ?? 'The main action was not followed.');
+  if (j.kind === 'page') {
+    if (!j.backReturns) return ran([fail('Back does not return to the page the visitor came from', `After the main action opened a new page, browser Back went to ${j.backUrl || 'a blank page'} instead of the starting page.`, j.steps)]);
+    if (j.actionAgain === false) return ran([review('After Back, the main action is not where it was', 'Back returned to the starting page, but the main action could not be found again. Check that the page restores its state.', j.steps)]);
+    return pass(j.steps.join(' '));
+  }
+  if (!j.escapeCloses && !j.closeControl) return ran([fail(j.backdropCloses ? 'The dialog closes only by tapping outside it' : 'The dialog that opens has no way out', j.backdropCloses ? 'The main action opens a dialog with no close or cancel control that Escape does not close; only tapping outside it works, so a keyboard user who opened it is stuck.' : 'The main action opens a dialog that Escape does not close and that has no visible close or cancel control, so a visitor who opened it by mistake is stuck.', j.steps)]);
+  if (!j.escapeCloses) return ran([review('Escape does not close the dialog', `The dialog has a “${j.closeControl}” control, but Escape leaves it open.`, j.steps)]);
+  return pass(j.steps.join(' '));
+}
+
 export function derivedReports(out: ScanOutput): Record<string, DetectorReport> {
   const pc = vp(out, 'desktop')?.pageContext as PageCtx | undefined; const vc = pc as VPC | undefined;
   return {
@@ -237,8 +329,9 @@ export function derivedReports(out: ScanOutput): Record<string, DetectorReport> 
     'mobile/typography': mobileTypography(out), 'mobile/form-usability': mobileForm(out), 'mobile/image-responsiveness': imageResponsiveness(out),
     'trust/privacy-link': privacy(pc), 'trust/terms-link': terms(pc), 'trust/contact-route': contact(pc), 'trust/review-route': reviewRoute(pc), 'trust/support-route': supportRoute(pc),
     'conv/trial-visibility': trial(pc), 'conv/cta-consistency': ctaConsistency(pc), 'conv/field-count': fieldCount(pc),
-    'ux/scannability': scannability(pc), 'design/visual-hierarchy': visualHierarchy(out, vc), 'design/spacing-rhythm': spacingRhythm(vc), 'ux/error-recovery': errorRecovery(out), 'nav/fragment-target': fragmentTarget(out), 'a11y/reading-order': readingOrder(out), 'design/font-families': fontFamilies(out), 'conv/generic-primary-action': genericPrimaryAction(out), 'trust/unfinished-proof': unfinishedProof(vc), 'design/typography-hierarchy': typographyHierarchy(pc), 'design/cta-emphasis': ctaEmphasis(out, pc), 'design/component-consistency': componentConsistency(pc),
+    'ux/scannability': scannability(pc), 'design/visual-hierarchy': visualHierarchy(out, vc), 'design/spacing-rhythm': spacingRhythm(vc), 'ux/error-recovery': errorRecovery(out), 'ux/generic-error-message': genericErrorMessage(out), 'nav/fragment-target': fragmentTarget(out), 'a11y/reading-order': readingOrder(out), 'design/font-families': fontFamilies(out), 'conv/generic-primary-action': genericPrimaryAction(out), 'trust/unfinished-proof': unfinishedProof(vc), 'design/typography-hierarchy': typographyHierarchy(pc), 'design/cta-emphasis': ctaEmphasis(out, pc), 'design/component-consistency': componentConsistency(pc),
     'perf/image-optimization': perfImages(out), 'perf/font-optimization': perfFonts(out), 'perf/javascript-efficiency': perfJs(out), 'perf/css-efficiency': perfCss(out), 'perf/render-blocking': perfBlocking(out), 'perf/third-party': perfThirdParty(out),
+    'a11y/error-prevention': errorPrevention(out), 'mobile/navigation-accessibility': navigationAccessibility(out), 'perf/interaction-latency': interactionLatency(out), 'ux/journey-continuity': journeyContinuity(out),
   };
 }
 
@@ -458,7 +551,8 @@ function featureGridSaturation(pc: VPC | undefined): DetectorReport {
   const icon = grids.filter((g) => (g.sec.group?.icons ?? 0) >= Math.ceil((g.sec.group?.count ?? 0) / 2)).length; const cards = grids.reduce((n, g) => n + (g.sec.group?.count ?? 0), 0);
   const ev = grids.map((g) => `${g.sec.group!.selector}: ${g.sec.group!.count} cards${g.sec.group!.icons ? ` (${g.sec.group!.icons} with icons)` : ''}: ${g.sec.group!.titles.map((t) => quote(t, 28)).join(', ')}`);
   const summary = `${grids.length} grids of repeated cards (${cards} cards, ${icon} grids with icons)`;
-  if (grids.length >= param('DIFF-009', 'failGrids', 3)) return ran([fail('The page is made of repeated card grids', summary + ' make up the page.', ev)]);
+  // A count of grids is a pattern, not a defect: even many grids are a question for a person, never a confirmed failure (launch pack DIFF-009).
+  if (grids.length >= param('DIFF-009', 'failGrids', 3)) return ran([review('The page is made of repeated card grids', summary + ' make up the page. Check whether each group helps visitors make a different decision.', ev)]);
   if (grids.length >= param('DIFF-009', 'reviewGrids', 2)) return ran([review('The page leans on repeated card grids', summary + '.', ev)]);
   return ran([]);
 }
@@ -499,6 +593,23 @@ function errorRecovery(out: ScanOutput): DetectorReport {
   return ran(hits);
 }
 
+
+// ---- Detector pack v3 (H9 lens): a field shown as invalid whose linked error only says "invalid". Advisory: help may sit elsewhere on the page.
+// Reads only the error text already on the page in the captured state (aria-invalid + aria-errormessage). Never types, submits or stores a value.
+function genericErrorMessage(out: ScanOutput): DetectorReport {
+  const x = vp(out, 'desktop')?.heuristics?.extra; if (!x || !x.invalidMessages) return off('The form field check did not run.');
+  if (!x.invalidMessages.length) return na('No visible error to inspect: no field was shown as invalid with a linked error message when the page was captured. Avara never submits a form to produce one.');
+  const terms = param<string[]>('UX-017', 'genericErrorPhrases', []);
+  const generic = x.invalidMessages.filter((m) => terms.includes(m.message.toLowerCase().trim().replace(/[.!]+$/, '')));
+  // Blaming wording (launch pack UX-017), matched as whole words so "you failed to" never matches inside other words.
+  const words = (t: string) => ' ' + (t.normalize('NFKC').toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? []).join(' ') + ' ';
+  const blame = param<string[]>('UX-017', 'blamePhrases', []).map((p) => words(p)).filter((p) => p.trim());
+  const blaming = x.invalidMessages.filter((m) => blame.some((p) => words(m.message).includes(p)));
+  const blameHit = blaming.length ? [review('An error message blames the visitor', `${blaming.length} visible error message${blaming.length === 1 ? '' : 's'} put the fault on the visitor. Describe the problem and one step that fixes it, without blame.`, blaming.map((m) => `${m.selector}  “${m.message.slice(0, 120)}”`))] : [];
+  if (!generic.length && blameHit.length) return ran(blameHit);
+  if (!generic.length) { const n = x.invalidMessages.length; return { ...ran([]), passNote: `${n} visible linked error message${n === 1 ? ' was' : 's were'} inspected and ${n === 1 ? 'is' : 'are'} more than a generic “invalid” or “error”.` }; }
+  return ran([...blameHit, ...(generic.length ? [review('An error message does not say how to fix the field', `${generic.length} field${generic.length === 1 ? ' is' : 's are'} marked invalid with a message that only says it is wrong. Explain how to correct the value, using the format or limit for that field.`, generic.map((m) => `${m.selector}  error “${m.message}”`))] : [])]);
+}
 
 // ---- Detector pack: three advisory reads. Each says what was observed and asks a person; none can fail a page. ----
 // A same-page link whose target is missing from the DOM captured after load. Script routing or a deferred panel can mount it later.

@@ -14,3 +14,8 @@ export async function putObject(key: string, body: Buffer | string): Promise<str
 export async function getObject(key: string): Promise<Buffer | null> {
   try { return await fs.readFile(safe(key)); } catch { return null; }
 }
+/** Removes every object under a prefix such as `scans/{id}` (screenshots, raw results, diagnostics, the early blocker). Missing is fine. */
+export async function deletePrefix(prefix: string): Promise<void> {
+  if (!/^scans\/[0-9a-f-]{36}$/i.test(prefix)) throw new Error('invalid storage prefix');
+  await fs.rm(safe(prefix), { recursive: true, force: true });
+}

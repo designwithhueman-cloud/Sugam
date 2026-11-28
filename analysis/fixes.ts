@@ -2,11 +2,18 @@
 // (Framer, Webflow) and a native-HTML-first code patch. "Before" is always the verbatim HTML
 // extracted from the page; "after" changes only what the fix needs. Placeholders in [brackets]
 // mark wording only the site owner can supply; Sugam never invents content.
+import { formatFix, safeCode, describeElement, shortSelector, viewportAt, defaultLabel, roleWord, type FixParts } from './fix-format.ts';
 import type { FixSet } from '../lib/db/schema.ts';
 
 export type FixInput = {
   ruleId: string; title: string; whatToChange: string; wcagText: string; pageUrl: string;
   selector: string; html: string; instanceCount: number; detail?: string; data?: Record<string, unknown>;
+  /** Where it was seen (desktop, mobile) and which check found it (axe, keyboard, heuristic): the Element and Verify parts use both. */
+  viewports?: string[]; source?: string;
+  /** A short selector confirmed to match only this element in every captured viewport where it was seen (scanner/code-evidence.ts); null when none. */
+  stable?: string | null;
+  /** aria-label removal tested on a temporary copy (scanner/name-check.ts): safe only when the name still contains the visible label. */
+  nameCheck?: { safe: boolean; name: string; reason: string } | null;
 };
 
 // ---------- small HTML helpers (operate on the first start tag only) ----------
@@ -72,6 +79,10 @@ const RECIPES: Record<string, Recipe> = {
     change: 'Fix the ARIA attribute value so it is valid. For aria-controls / aria-labelledby, point it at an id that exists on the page.',
     framer: ['ARIA attributes are usually set in code components or embeds. Open the component and correct the attribute value.'],
     webflow: ['Select the element.', 'Settings panel (D) → Custom attributes.', 'Correct the attribute value, or point it at the id of an element that exists on the page.'],
+    // Point the reference at an id that exists, and give the target that id. [Brackets] are names only the owner knows, so this is an example.
+    after: (h) => /\saria-(controls|labelledby|describedby|owns|activedescendant)="/.test(h)
+      ? `${h.replace(/(\saria-(?:controls|labelledby|describedby|owns|activedescendant)=")[^"]*"/, '$1[id-of-the-target]"')}\n<!-- and on the element it points to: -->\n<div id="[id-of-the-target]">…</div>`
+      : h.replace(/(\saria-[a-z]+=")[^"]*"/, '$1[a valid value, e.g. true or false]"'),
   },
   'color-contrast': {
     change: 'Increase the contrast between the text and its background to at least 4.5:1 (3:1 for large text).',
@@ -85,7 +96,7 @@ const RECIPES: Record<string, Recipe> = {
         after: s ? `${i.selector} {\n  color: ${s.color}; /* ${s.ratio}:1 on ${bg}, meets ${need}:1 */\n}` : `${i.selector} {\n  color: [a colour with at least ${need || 4.5}:1 contrast on the background];\n}`,
       };
     },
-    framer: ['Select the text layer.', 'In the Text section change the colour to one with at least 4.5:1 contrast against its background (the code tab shows a suggested value when Sugam could measure both colours).', 'If the text sits on an image or gradient, add a solid or semi-opaque backdrop behind the text.'],
+    framer: ['Select the text layer.', 'In the Text section change the colour to one with at least 4.5:1 contrast against its background (the code tab shows a suggested value when Avara could measure both colours).', 'If the text sits on an image or gradient, add a solid or semi-opaque backdrop behind the text.'],
     webflow: ['Select the text element (or its class).', 'Style panel → Typography → Color: choose a colour with at least 4.5:1 contrast against its background.', 'Update the class or colour variable so every instance changes.'],
   },
   'target-size': {
@@ -216,6 +227,8 @@ const RECIPES: Record<string, Recipe> = {
     change: 'Use one h1 for the page title, then h2 for sections and h3 inside them, going down one level at a time. Pick the tag by structure, then style it to the size you want with CSS.',
     framer: ['Select the text layer and set its tag (H1 to H6) in the properties panel. One H1 per page; do not skip levels.'],
     webflow: ['Select the heading → Settings (D) → Tag: choose the level that matches the page outline. Keep the look with the Style panel.'],
+    // The next level down from the section heading above it (h2 under the page's h1 is the common case).
+    after: (h) => h.replace(/^<\s*h[1-6]\b/i, '<h2').replace(/<\/\s*h[1-6]\s*>\s*$/i, '</h2>') + '\n<!-- Use the level one below the heading above it: h2 under h1, h3 under h2. -->',
   },
   'sugam/no-main-landmark': {
     change: 'Wrap the page content, everything except the header and footer, in a single <main> element.',
@@ -261,9 +274,11 @@ const RECIPES: Record<string, Recipe> = {
     webflow: ['Replace the Div Block that has a click interaction with a Link Block (set the URL) or a Button element.', 'Move the classes and children into the new element so the design is unchanged.'],
   },
   'sugam/looks-clickable': {
-    change: 'This element shows a pointer cursor. If it does something when clicked, make it a <button> or <a href>. If it does nothing, remove cursor: pointer so it does not suggest an action.',
+    change: 'If it does something when clicked, make it a <button> or <a href>. If it does nothing, remove cursor: pointer so it does not suggest an action.',
     framer: ['Check whether the frame has a click interaction. If yes, turn it into a Link or button component; if not, remove the pointer cursor.'],
     webflow: ['Check the element for interactions. If it is clickable, replace it with a Link Block; if not, remove cursor: pointer from its class.'],
+    // A real button (or a link when it goes somewhere): keyboard and screen-reader support come with the element.
+    after: (h) => { const inner = h.replace(/^<[^>]+>/, '').replace(/<\/[a-z0-9-]+>\s*$/i, ''); const cls = /\sclass="([^"]*)"/.exec(h)?.[1]; return `<button type="button"${cls ? ` class="${cls}"` : ''}>${inner}</button>\n<!-- If it goes to another page, use <a href="[where it goes]"> instead. -->`; },
   },
   'sugam/aria-tablist': {
     change: 'Follow the WAI-ARIA tabs pattern: one tab has aria-selected="true" and tabindex="0", the others tabindex="-1"; every tab has aria-controls pointing to an existing role="tabpanel"; Left/Right arrow keys move between tabs. If the "tabs" load separate pages, use links in a <nav> instead.',
@@ -316,12 +331,14 @@ const RECIPES: Record<string, Recipe> = {
     webflow: ['Project settings → Custom code → Head: add the CSS from the code tab.', 'Make the cookie banner\'s Accept button the first thing reached by Tab, so it can be dismissed.'],
   },
   'sugam/focus-offscreen': {
-    change: 'This element receives keyboard focus but is off-screen. Hide it from the Tab order when it is not shown, or make it visible when focused (like a skip link).',
+    change: 'Hide it from the Tab order when it is not shown, or make it visible when focused (like a skip link).',
     framer: ['Check hidden menus or drawers: when closed, they should be removed from the page or set to display: none.'],
     webflow: ['For closed menus and drawers, set Display: None on the closed state so their links are not in the Tab order.'],
+    language: 'css',
+    css: (i) => ({ before: `${i.selector} { /* off screen when focused */ }`, after: `${i.selector}:focus-visible {\n  position: static;\n  left: auto;\n  transform: none;\n}` }),
   },
   'sugam/keyboard-trap': {
-    change: 'Pressing Tab does not move focus away from this element. Make sure Tab and Shift+Tab always move on (modal dialogs must close with Escape).',
+    change: 'Make sure Tab and Shift+Tab always move on (modal dialogs must close with Escape).',
     framer: ['Check embedded widgets and code components on this element for keydown handlers that cancel Tab.'],
     webflow: ['Check embeds and third-party widgets on this element; remove or replace the one that traps Tab.'],
   },
@@ -349,57 +366,128 @@ const TOOLS: Record<'lovable' | 'bolt' | 'v0' | 'cursor', string> = {
 };
 
 
-// Contrast fixes get their own, shorter prompt: the existing palette first, a stated target, a verified hex only as a
-// fallback, and a scoped, verified change. Nothing here is invented: the colours and ratio are axe's measurements.
-function contrastBody(i: FixInput): string {
-  const d = i.data || {};
-  const fg = String(d.fgColor || ''), bg = String(d.bgColor || '');
-  const need = Number(String(d.expectedContrastRatio || '4.5').replace(':1', '')) || 4.5;
-  const large = need <= 3;
-  const text = textOf(i.html).slice(0, 60);
-  const measured = fg && bg && d.contrastRatio ? `${fg} on ${bg} is ${d.contrastRatio}:1` : 'the contrast is below the minimum';
-  const size = d.fontSize ? ` (${String(d.fontSize).replace(/\s+/g, ' ')}${d.fontWeight ? `, weight ${d.fontWeight}` : ''})` : '';
-  const sug = fg && bg ? suggestForeground(fg, bg, need) : null;
-  const bgRgb = hexToRgb(bg); const dir = bgRgb && lum(bgRgb) > 0.5 ? 'darker' : 'lighter';
-  const snippet = i.html.length > 240 ? i.html.slice(0, 240) + '…' : i.html;
-  return [
-    `Fix low text contrast (${i.wcagText}) on ${i.pageUrl}. Change only this element: ${i.selector}${text ? `, the text "${text}"` : ''}.`,
-    '```html', snippet, '```',
-    `Measured: ${measured}${size}. Target: ${need}:1 (${large ? 'large text' : 'normal text'}).`,
-    'Goal: pass contrast without changing the design system or the look of the site. Do not touch the background, font size or weight, and do not add colours that are not already in the palette unless step 3 forces it.',
-    '1. Use the existing palette first. Pick the design system\'s text colour token for this context. If several tokens pass, take the closest shade in the same colour family, so the change is as small as possible.',
-    '2. If the text gets smaller at a supported breakpoint, pick a token that passes at both sizes.',
-    sug ? `3. Only if no token passes, use ${sug.color} (${sug.ratio}:1 on ${bg}). It is the current colour made ${dir} by the least amount that passes. Look in the project\'s palette for a match first, and if you must add it, add it as a named token rather than an inline value.` : `3. If no token passes, choose the closest shade of the current colour that reaches ${need}:1 against the real background${bg ? ` (${bg})` : ' (the background could not be measured, so check it in the browser)'}, and add it as a named token rather than an inline value.`,
-    '4. Change only this element and keep its other styles. Leave shared colour utilities and tokens unchanged. Check the rendered contrast at desktop and mobile widths.',
-    '5. Tell me which token or value you used, so the design owner can review it.',
-    i.instanceCount > 1 ? `This appears ${i.instanceCount} times: fix the shared component or class, not just one copy.` : '',
-  ].filter(Boolean).join('\n');
+// For rules where the builder inspects first, the edit itself, said once (the recipe's longer text repeats the inspect step).
+const EDIT: Record<string, string> = {
+  'image-alt': 'Then set the image’s alt attribute (the alt text field in Framer or Webflow) to that.',
+  'button-name': 'Then add that as visible text, or as an aria-label on the button if it stays icon-only.',
+  'input-button-name': 'Then set the button’s value, or its aria-label, to that action.',
+  'link-name': 'Then add that as visible link text, or as an aria-label (or the image’s alt) if the link stays icon-only.',
+  label: 'Add a visible <label> with those words and tie it to the field with for and id.',
+  'sugam/duplicate-cta-label': 'Then give each copy an aria-label that starts with its visible text and adds that context, for example “Get started with Pro”.',
+  'sugam/vague-link-text': 'Then rewrite the link text to name that destination.',
+};
+
+// What the scan measured or found missing, said once, in the Element part. Rules not listed use the first line of the check's own detail.
+const AXE_PREFIX = /^(fix (any|all) of the following:|element|the element)\s*/i;
+const OBSERVED: Record<string, (i: FixInput) => string | null> = {
+  'image-alt': () => 'It has no alt attribute, so screen readers get no description.',
+  'button-name': () => 'It has no accessible name: no text, aria-label or title.',
+  'input-button-name': () => 'It has no accessible name: no value, aria-label or title.',
+  'link-name': () => 'It has no accessible name: no text, aria-label or image alt.',
+  label: () => 'It has no label tied to it.',
+  'label-content-name-mismatch': (i) => { const al = attrOf(i.html, 'aria-label'); const t = textOf(i.html); return al && t ? `Its accessible name “${al.slice(0, 60)}” does not start with its visible text “${t.slice(0, 40)}”.` : null; },
+  'color-contrast': (i) => { const d = i.data || {}; const need = String(d.expectedContrastRatio || '4.5').replace(':1', ''); const size = d.fontSize ? ` at ${String(d.fontSize).replace(/\s+/g, ' ')}${d.fontWeight ? `, weight ${d.fontWeight}` : ''}` : '';
+    return d.fgColor && d.bgColor && d.contrastRatio ? `Its text colour ${d.fgColor} on ${d.bgColor} measures ${d.contrastRatio}:1${size}; it needs ${need}:1.` : `Its text contrast is below ${need}:1.`; },
+  'sugam/looks-clickable': () => 'It shows a pointer cursor but is not a button or link.',
+  'sugam/focus-offscreen': () => 'It receives keyboard focus while it is off-screen.',
+  'sugam/keyboard-trap': () => 'Pressing Tab does not move focus away from it.',
+};
+function observed(i: FixInput): string {
+  const o = OBSERVED[i.ruleId]?.(i); if (o) return o;
+  const line = (i.detail || '').split('\n').map((l) => l.trim()).filter((l) => l && !/^fix (any|all) of the following:?$/i.test(l))[0];
+  if (line) { const t = line.replace(AXE_PREFIX, ''); const c = t.charAt(0).toUpperCase() + t.slice(1); return (c.length > 170 ? c.slice(0, 169) + '…' : c).replace(/([^.!?…])$/, '$1.'); }
+  return `${plainTitle(i.ruleId, i.title)}.`;
 }
 
-// Shorter prompts cost the builder fewer tokens and are easier to follow: the markup is collapsed (inline SVG paths and long
-// runs of whitespace add nothing), very long selectors keep only their last segments, and some rules lead with what actually
-// matters (for covered focus, the fixed element that covers it, not the focused button).
-function compactHtml(html: string, max = 320): string {
-  const h = html.replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, '<svg>…</svg>').replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim();
-  return h.length > max ? h.slice(0, max) + '…' : h;
-}
-function shortSelector(sel: string): string {
-  const parts = sel.split(/\s>\s/);
-  return parts.length > 4 ? '… > ' + parts.slice(-3).join(' > ') : sel;
-}
+// When the right fix depends on what the element means, the builder is told what to look at before choosing.
+const INSPECT: Record<string, string> = {
+  'image-alt': 'First decide what the image does here: if it only decorates, use alt=""; if it carries information, describe that information.',
+  'button-name': 'First check what the button does when used, then name that action.',
+  'input-button-name': 'First check what the button does when used, then name that action.',
+  'link-name': 'First open the link to see where it goes, then name the destination.',
+  label: 'Use the words the field asks for, as shown next to it.',
+  'aria-valid-attr-value': 'First find the element this attribute should point to.',
+  'sugam/duplicate-cta-label': 'First check what each copy leads to (a plan or a product), then add that context.',
+  'sugam/vague-link-text': 'First check where each link goes.',
+  'sugam/heading-structure': 'First decide which text is a real section heading.',
+  'sugam/looks-clickable': 'First check whether it should do anything when clicked.',
+  'sugam/focus-offscreen': 'First check whether it should be reachable while hidden.',
+  'sugam/image-of-text': 'First check whether the words in the picture matter to the page.',
+};
 
 // How a person confirms the fix worked, by rule. Anything not listed falls back to a rescan.
 const VERIFY: Record<string, string> = {
-  'image-alt': 'every image has alt text that says what it shows, or alt="" if it is only decoration.',
-  'button-name': 'a screen reader announces a clear name for the button.',
-  'link-name': 'a screen reader announces where the link goes.',
-  'input-button-name': 'a screen reader announces a clear name for the button.',
-  label: 'the field has a visible label, and clicking the label focuses the field.',
-  'aria-valid-attr-value': 'the attribute points to an element that exists on the page.',
-  'sugam/focus-obscured': 'press Tab to reach it; the focused item is fully visible and not covered by the bar.',
-  'sugam/non-semantic-clickable': 'press Tab to reach it, then Enter or Space; it works like a real button.',
-  'sugam/duplicate-cta-label': 'each link or button has a name that says where it goes.',
+  'image-alt': 'with a screen reader, move to the image: it describes what the image shows, or skips it if it only decorates.',
+  'button-name': 'with a screen reader, move to the button: it announces a name that says what the button does.',
+  'input-button-name': 'with a screen reader, move to the button: it announces a name that says what the button does.',
+  'link-name': 'with a screen reader, move to the link: it announces where the link goes.',
+  label: 'click the label text: focus moves into the field.',
+  'aria-valid-attr-value': 'open the element the attribute points to and check it is the right one.',
+  'sugam/focus-obscured': 'press Tab to reach it: the focused item is fully visible, not under the bar.',
+  'sugam/non-semantic-clickable': 'press Tab to reach it, then Enter or Space: it works like a real button.',
+  'sugam/duplicate-cta-label': 'with a screen reader, list the links and buttons: each name says where it goes.',
+  'sugam/vague-link-text': 'read each link on its own: it says where it goes.',
+  'label-content-name-mismatch': 'with voice control, say “click” and the visible words: it activates this control.',
+  'sugam/voice-name-not-first': 'with voice control, say “click” and the visible words: it activates this control.',
+  'sugam/looks-clickable': 'click it: it either does something or no longer looks clickable.',
+  'sugam/heading-structure': 'list the headings with a screen reader or browser extension: they read as an outline of the page.',
 };
+
+/** The three parts of an accessibility fix. Exported for tests. */
+export function fixParts(i: FixInput, r: Recipe = RECIPES[i.ruleId] || GENERIC, code?: FixSet['code']): FixParts {
+  const vps = i.viewports?.length ? i.viewports : ['desktop'];
+  const el = describeElement({ html: i.html, selector: i.selector, viewports: vps, count: i.instanceCount });
+  const cover = i.ruleId === 'sugam/focus-obscured' ? (i.detail || '').match(/covered by (.+?) \(position: (fixed|sticky)\)/) : null;
+  const element = `${el.phrase}. ${cover ? `When focused it sits under ${shortSelector(cover[1]) ?? 'a ' + cover[2] + ' bar'} (position: ${cover[2]}).` : observed(i)}`;
+  // Contrast: the measured colours are in the Element part; the change names the property and a verified fallback colour.
+  let change: string;
+  if (i.ruleId === 'color-contrast') {
+    const d = i.data || {}; const fg = String(d.fgColor || ''), bg = String(d.bgColor || ''); const need = Number(String(d.expectedContrastRatio || '4.5').replace(':1', '')) || 4.5;
+    const sug = fg && bg ? suggestForeground(fg, bg, need) : null;
+    change = `Change this text's colour (the color property, or the colour token it uses) to the closest colour in your palette that reaches ${need}:1 on ${bg || 'its background'}. Keep the background, size and weight.${sug ? ` If no palette colour passes, use ${sug.color} (${sug.ratio}:1).` : ''}`;
+  } else if (REMOVES_LABEL.has(i.ruleId) && i.nameCheck?.safe) change = 'Remove the aria-label, so the visible words name the control.';
+  else if (i.ruleId === 'label-content-name-mismatch') { const t = textOf(i.html).slice(0, 40); change = `Change the aria-label so it starts with the visible words${t ? ` “${t}”` : ''}, then add any extra context after them. Remove the aria-label only after checking with a screen reader that the control still has a clear name.`; }
+  else change = INSPECT[i.ruleId] ? [INSPECT[i.ruleId], EDIT[i.ruleId] ?? r.change].join(' ') : r.change;
+  if (i.instanceCount > 1) change += ' Change the shared component or class so every copy is fixed.';
+  const g = code ? gatePatch(i, r, code) : null;
+  const snippet = g?.text ? { language: code!.language, text: g.text, label: g.label } : null;
+  const at = viewportAt(vps);
+  // The rescan re-runs an axe rule at one viewport (desktop when it was seen there), the same one analysis/avara/build.ts records to verify.
+  const recheckAt = viewportAt([vps.includes('desktop') ? 'desktop' : 'mobile']);
+  const verify = i.source === 'axe'
+    ? `Rescan: Avara reruns the axe-core “${i.ruleId}” check on this ${el.role} ${recheckAt}, on the page as it first loads, and marks it Fixed only when it passes there.`
+    : `Avara cannot recheck this automatically yet, so a rescan shows “Couldn’t verify” for it.`;
+  const manual = VERIFY[i.ruleId] ?? (i.source === 'keyboard' ? `${at}, press Tab until you reach it and check the problem is gone.` : i.source !== 'axe' ? `${at}, look at it and check the problem is gone.` : null);
+  return { element, change: `${change} Change nothing else.`, code: snippet, verify, manual: manual ? manual.charAt(0).toUpperCase() + manual.slice(1) : null };
+}
+
+// Property fixes that cannot regress another width: a colour that passes the strictest measured threshold, a minimum tap size, a focus outline.
+// Every other CSS recipe needs the problem seen at every captured width, since the scan gives no breakpoint for it.
+const ANY_WIDTH = new Set(['color-contrast', 'target-size', 'sugam/focus-not-visible']);
+const COMPLETE_HTML = /^<([a-z][a-z0-9-]*)\b[^>]*>(?:[\s\S]*<\/\1>)?$/i;
+/** One standard for the prompt and the Plain code tab: the patch text when it is paste-ready, otherwise why not. */
+const REMOVES_LABEL = new Set(['label-content-name-mismatch', 'sugam/voice-name-not-first']);
+export function gatePatch(i: FixInput, r: Recipe, code: FixSet['code']): { text: string | null; why: string | null; label?: string } {
+  // Removing an aria-label is offered as code only when Avara tested the removal on a copy and the control kept a name containing its visible label.
+  if (REMOVES_LABEL.has(i.ruleId)) {
+    const removed = removeAttr(i.html, 'aria-label');
+    if (i.nameCheck?.safe && COMPLETE_HTML.test(i.html.trim()) && safeCode(removed, 200)) return { text: removed, why: null, label: `Tested on a copy of this element: ${i.nameCheck.reason}` };
+    if (i.ruleId === 'label-content-name-mismatch') return { text: null, why: i.nameCheck ? `Avara tested removing the aria-label on a copy: ${i.nameCheck.reason}, so removal is not offered.` : 'Avara could not test removing the aria-label on a copy, so removal is not offered.' };
+  }
+  if (!code.after) return { text: null, why: 'No paste-ready patch for this rule: follow the Change text.' };
+  if (code.language === 'jsx') return { text: null, why: 'This is a pattern, not a patch: it needs your own tab names and panels.' };
+  if (code.language === 'css') {
+    const both = !!i.viewports?.includes('desktop') && !!i.viewports?.includes('mobile');
+    if (!ANY_WIDTH.has(i.ruleId) && !both) return { text: null, why: `Avara saw this ${viewportAt(i.viewports)} only and the scan gives no breakpoint for it, so no code is given.` };
+    const usesSelector = code.after.includes(i.selector);
+    if (usesSelector && !i.stable) return { text: null, why: 'No short selector was confirmed to match only this element on the scanned page, so no code is given.' };
+    const text = usesSelector && r.css ? r.css({ ...i, selector: i.stable! }).after : code.after;
+    return safeCode(text) ? { text, why: null } : { text: null, why: 'The patch would need values only you can supply, so no code is given.' };
+  }
+  // HTML: a change to the element's own markup, as captured. Paste-ready only when that markup is complete and needs no wording from you.
+  if (!COMPLETE_HTML.test(i.html.trim()) || !COMPLETE_HTML.test(code.after.trim())) return { text: null, why: 'Avara captured only part of this element’s markup, so no code is given.' };
+  return safeCode(code.after, 200) ? { text: code.after, why: null } : { text: null, why: 'The patch needs wording only you can supply (what the element is called or does), so no code is given.' };
+}
 
 export function buildFixes(i: FixInput): FixSet {
   const r = RECIPES[i.ruleId] || GENERIC;
@@ -409,22 +497,14 @@ export function buildFixes(i: FixInput): FixSet {
   else if (r.after) code = { language: 'html', before: i.html, after: r.after(i.html, i), note: r.note ?? 'Text in [brackets] is wording only you can supply. In JSX, write className and htmlFor instead of class and for.' };
   else code = { language: 'html', before: i.html, after: '', note: 'No automatic patch for this rule. Follow "What to change" and the linked guidance.' };
 
-  const label = textOf(i.html).slice(0, 40);
-  const cover = i.ruleId === 'sugam/focus-obscured' ? (i.detail || '').match(/covered by (.+?) \(position: (fixed|sticky)\)/) : null;
-  const wcag = i.wcagText.match(/WCAG [\d.]+/)?.[0];
-  const target = code.after && code.after.length <= 280 ? `Target:\n\`\`\`${code.language}\n${code.after}\n\`\`\`` : '';
-  // Short on purpose: the element, what to change, and how to check it worked. The evidence (full selectors, measurements, the long
-  // code) stays in the report's Technical details, so the builder is not paid to read it on every prompt.
-  const body = i.ruleId === 'color-contrast' ? contrastBody(i) : [
-    `Fix: ${plainTitle(i.ruleId, i.title)}${wcag ? ` (${wcag})` : ''}.`,
-    `Element: ${label ? `\u201c${label}\u201d, ` : ''}${shortSelector(i.selector)}${i.instanceCount > 1 ? ` (and ${i.instanceCount - 1} more like it)` : ''}`,
-    cover ? `Covered by: ${cover[1]} (${cover[2]}).` : target ? '' : ['```html', compactHtml(i.html, 220), '```'].join('\n'),
-    `Change: ${r.change}`,
-    target ? target.replace('Target:', 'Make the element look like this:') : '',
-    `Verify: ${VERIFY[i.ruleId] || 'scan the page again with Sugam; this issue should be gone.'}`,
-    `Keep the visual design unchanged.${i.instanceCount > 1 ? ' Fix the shared component or style so every instance is covered.' : ''}`,
-  ].filter(Boolean).join('\n');
+  const body = formatFix(fixParts(i, r, code));
   const aiPrompt = Object.fromEntries(Object.entries(TOOLS).map(([k, pre]) => [k, `${pre}\n\n${body}`])) as FixSet['aiPrompt'];
-  return { aiPrompt, noCode: { framer: r.framer, webflow: r.webflow }, code };
+  // The Plain code tab follows the same standard: "before" stays as a locator (it may keep the long selector), "after" only when paste-ready.
+  const g = gatePatch(i, r, code);
+  const tab: FixSet['code'] = { ...code, after: g.text ?? '', note: g.label ? `${g.label}.` : g.text ? (code.language === 'css' && i.stable && code.after.includes(i.selector) ? `${defaultLabel(code.language)} (not tested by Avara): ${i.stable} matches only this element on the scanned page.${code.note ? ' ' + code.note : ''}` : `${defaultLabel(code.language)} (not tested by Avara).${code.note ? ' ' + code.note : ''}`) : g.why ?? '' };
+  // When the gate keeps the change back, the same change is kept as an example: the long generated selector becomes a readable placeholder.
+  if (!tab.after && code.after) tab.example = code.language === 'css' ? code.after.split(i.selector).join(`.your-${roleWord(i.html).replace(/\s+/g, '-')}`) : code.after;
+  return { aiPrompt, noCode: { framer: r.framer, webflow: r.webflow }, code: tab };
 }
 export { attrOf, textOf };
+export const FIX_RULES = Object.keys(RECIPES);

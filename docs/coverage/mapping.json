@@ -20,9 +20,9 @@
    "source": "mgifford",
    "check": "Form controls have names, autocomplete and input types",
    "category": "Accessibility",
-   "kind": "reused",
+   "kind": "improved",
    "ref": "A11Y-003",
-   "note": ""
+   "note": "An empty or whitespace aria-label, title or label no longer counts as a name, so a placeholder-only field is still caught (test/detector-pack-v3.mjs)."
   },
   {
    "source": "mgifford",
@@ -140,9 +140,9 @@
    "source": "vercel",
    "check": "Respect prefers-reduced-motion",
    "category": "Accessibility",
-   "kind": "reused",
+   "kind": "improved",
    "ref": "A11Y-016",
-   "note": "sugam/reduced-motion"
+   "note": "Flags any running animation that moves (transform, translate, scale, rotate) under reduced motion; a fade or colour change is counted as still (test/detector-pack-v3.mjs)."
   },
   {
    "source": "vercel",
@@ -172,9 +172,9 @@
    "source": "emil",
    "check": "Animations respect reduced motion",
    "category": "Accessibility",
-   "kind": "reused",
+   "kind": "improved",
    "ref": "A11Y-016",
-   "note": ""
+   "note": "Same probe as the Vercel row; evidence names the moving property. Sampled on desktop after load."
   },
   {
    "source": "emil",
@@ -719,6 +719,62 @@
    "kind": "new",
    "ref": "LOCAL-SOURCE",
    "note": "scripts/local-source-review.mjs; local code only, no network"
+  },
+  {
+   "source": "joao-ux",
+   "check": "A linked error message only says the value is wrong (H9)",
+   "category": "UX",
+   "kind": "new",
+   "ref": "UX-017",
+   "note": "ux/generic-error-message: reads aria-errormessage text already on the page; never submits a form. Phrases in UX-017 parameters (test/detector-pack-v3.mjs)."
+  },
+  {
+   "source": "vercel",
+   "check": "Invalid fields are linked to a description",
+   "category": "Accessibility",
+   "kind": "reused",
+   "ref": "A11Y-010",
+   "note": "sugam/form-error-not-linked."
+  },
+  {
+   "source": "vercel",
+   "check": "Tabs point to a panel that exists",
+   "category": "Accessibility",
+   "kind": "improved",
+   "ref": "A11Y-015",
+   "note": "sugam/aria-tablist: a missing panel alone is needs_review, not a confirmed failure (test/detector-pack-v3.mjs)."
+  },
+  {
+   "source": "anthropics-skills",
+   "check": "frontend-design, brand-guidelines, theme-factory: design and brand direction",
+   "category": "Design & Brand",
+   "kind": "guidance",
+   "ref": "GUIDANCE",
+   "note": "Authoring guidance. The measurable part (approved heading fonts) is DESIGN-012, blocked on the owner brand brief."
+  },
+  {
+   "source": "anthropics-skills",
+   "check": "webapp-testing: Playwright page checks",
+   "category": "Accessibility",
+   "kind": "guidance",
+   "ref": "GUIDANCE",
+   "note": "Method only; Avara's scanner already drives Playwright."
+  },
+  {
+   "source": "karanb192",
+   "check": "Directory of skills (no checks of its own)",
+   "category": "Directory",
+   "kind": "guidance",
+   "ref": "GUIDANCE",
+   "note": "No linked repo resolved to a new measurable check."
+  },
+  {
+   "source": "behisecc",
+   "check": "Directory of skills (no checks of its own)",
+   "category": "Directory",
+   "kind": "guidance",
+   "ref": "GUIDANCE",
+   "note": "Resolved entries are mapped under their own sources: aeo-check and anti-slop."
   }
  ]
 }

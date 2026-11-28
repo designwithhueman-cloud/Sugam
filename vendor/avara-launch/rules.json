@@ -1,0 +1,216 @@
+[
+  {
+    "ruleId": "DIFF-001",
+    "title": "Template Similarity Detection",
+    "version": "0.1.0",
+    "category": "Differentiation & Design Maturity",
+    "sourceType": "avara",
+    "source": "Avara editorial measurement informed by linked research",
+    "sourceUrl": "https://www.nngroup.com/articles/gestalt-similarity/",
+    "guidance": [
+      "https://www.nngroup.com/articles/gestalt-similarity/"
+    ],
+    "method": "template",
+    "parameters": {
+      "minimum": 3,
+      "threshold": 0.8
+    },
+    "recommendationTemplate": "Check whether this sequence supports the visitor’s task.",
+    "weight": 0,
+    "scoreEligible": false,
+    "sourceIds": [
+      "taste",
+      "impeccable",
+      "nng"
+    ]
+  },
+  {
+    "ruleId": "DIFF-002",
+    "title": "Visual Distinctiveness",
+    "version": "0.1.0",
+    "category": "Differentiation & Design Maturity",
+    "sourceType": "avara",
+    "source": "Avara editorial measurement informed by linked research",
+    "sourceUrl": "https://www.nngroup.com/articles/principles-visual-design/",
+    "guidance": [
+      "https://www.nngroup.com/articles/principles-visual-design/"
+    ],
+    "method": "hero",
+    "parameters": {},
+    "recommendationTemplate": "Compare hero composition with the named reference at this viewport.",
+    "weight": 0,
+    "scoreEligible": false,
+    "sourceIds": [
+      "taste",
+      "nng"
+    ]
+  },
+  {
+    "ruleId": "DIFF-003",
+    "title": "Brand Memorability",
+    "version": "0.1.0",
+    "category": "Differentiation & Design Maturity",
+    "sourceType": "avara",
+    "source": "Avara editorial measurement informed by linked research",
+    "sourceUrl": "https://www.nngroup.com/articles/recognition-and-recall/",
+    "guidance": [
+      "https://www.nngroup.com/articles/recognition-and-recall/"
+    ],
+    "method": "brand",
+    "parameters": {},
+    "recommendationTemplate": "Invite representative visitors to identify the brand after a short unrelated task.",
+    "weight": 0,
+    "scoreEligible": false,
+    "sourceIds": [
+      "uiux",
+      "voice"
+    ]
+  },
+  {
+    "ruleId": "DIFF-004",
+    "title": "Dashboard Sameness",
+    "version": "0.1.0",
+    "category": "Differentiation & Design Maturity",
+    "sourceType": "avara",
+    "source": "Avara editorial measurement informed by linked research",
+    "sourceUrl": "https://www.nngroup.com/articles/gestalt-similarity/",
+    "guidance": [
+      "https://www.nngroup.com/articles/gestalt-similarity/",
+      "https://www.nngroup.com/articles/common-region/"
+    ],
+    "method": "dashboard",
+    "parameters": {
+      "minimum": 3,
+      "threshold": 0.8
+    },
+    "recommendationTemplate": "Review familiar dashboard conventions in the context of the primary workflow.",
+    "weight": 0,
+    "scoreEligible": false,
+    "sourceIds": [
+      "shadcn",
+      "impeccable"
+    ]
+  },
+  {
+    "ruleId": "DIFF-005",
+    "title": "Layout Originality",
+    "version": "0.1.0",
+    "category": "Differentiation & Design Maturity",
+    "sourceType": "avara",
+    "source": "Avara editorial measurement informed by linked research",
+    "sourceUrl": "https://www.nngroup.com/articles/principles-visual-design/",
+    "guidance": [
+      "https://www.nngroup.com/articles/principles-visual-design/"
+    ],
+    "method": "layout",
+    "parameters": {
+      "minimum": 3
+    },
+    "recommendationTemplate": "Inspect the repeated layouts alongside the purpose of each section.",
+    "weight": 0,
+    "scoreEligible": false,
+    "sourceIds": [
+      "impeccable",
+      "nng"
+    ]
+  },
+  {
+    "ruleId": "DIFF-006",
+    "title": "Visual System Originality",
+    "version": "0.1.0",
+    "category": "Differentiation & Design Maturity",
+    "sourceType": "avara",
+    "source": "Avara editorial measurement informed by linked research",
+    "sourceUrl": "https://www.nngroup.com/articles/gestalt-similarity/",
+    "guidance": [
+      "https://www.nngroup.com/articles/gestalt-similarity/"
+    ],
+    "method": "system",
+    "parameters": {
+      "minimum": 3,
+      "threshold": 0.75
+    },
+    "recommendationTemplate": "Inspect matching component roles against the approved brand system.",
+    "weight": 0,
+    "scoreEligible": false,
+    "sourceIds": [
+      "tokens",
+      "uiux",
+      "shadcn",
+      "daisy"
+    ]
+  },
+  {
+    "ruleId": "DIFF-007",
+    "title": "Information Hierarchy Differentiation",
+    "version": "0.1.0",
+    "category": "Differentiation & Design Maturity",
+    "sourceType": "avara",
+    "source": "Avara editorial measurement informed by linked research",
+    "sourceUrl": "https://www.nngroup.com/articles/principles-visual-design/",
+    "guidance": [
+      "https://www.nngroup.com/articles/principles-visual-design/"
+    ],
+    "method": "hierarchy",
+    "parameters": {
+      "ratio": 1.5
+    },
+    "recommendationTemplate": "Check whether the intended next action stands out beside the larger alternative.",
+    "weight": 0,
+    "scoreEligible": false,
+    "sourceIds": [
+      "nng",
+      "vercel"
+    ]
+  },
+  {
+    "ruleId": "DIFF-008",
+    "title": "Trust Through Design",
+    "version": "0.1.0",
+    "category": "Differentiation & Design Maturity",
+    "sourceType": "avara",
+    "source": "Avara editorial measurement informed by linked research",
+    "sourceUrl": "https://credibility.stanford.edu/guidelines/",
+    "guidance": [
+      "https://credibility.stanford.edu/guidelines/",
+      "https://www.nngroup.com/articles/gestalt-proximity/"
+    ],
+    "method": "trust",
+    "parameters": {
+      "viewportGap": 1
+    },
+    "recommendationTemplate": "Check whether a visitor can verify this particular claim where they encounter it.",
+    "weight": 0,
+    "scoreEligible": false,
+    "sourceIds": [
+      "trust",
+      "marketing"
+    ]
+  },
+  {
+    "ruleId": "DIFF-009",
+    "title": "Feature Grid Saturation",
+    "version": "0.1.0",
+    "category": "Differentiation & Design Maturity",
+    "sourceType": "avara",
+    "source": "Avara editorial measurement informed by linked research",
+    "sourceUrl": "https://www.nngroup.com/articles/common-region/",
+    "guidance": [
+      "https://www.nngroup.com/articles/common-region/"
+    ],
+    "method": "grids",
+    "parameters": {
+      "minimumCards": 3,
+      "minimumSections": 2,
+      "share": 0.5
+    },
+    "recommendationTemplate": "Check whether each repeated group helps visitors make a different decision.",
+    "weight": 0,
+    "scoreEligible": false,
+    "sourceIds": [
+      "shadcn",
+      "daisy",
+      "impeccable"
+    ]
+  }
+]

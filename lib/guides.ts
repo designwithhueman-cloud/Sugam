@@ -15,7 +15,7 @@ export const GUIDES: Guide[] = [
     intro: 'AI builders produce pages that look finished quickly. Looking finished and working for everyone are different things, and the gaps tend to be the same ones.',
     sections: [
       { h: 'What goes wrong most often', list: ['Clickable boxes: a <div> with a click handler instead of a <button>, so a keyboard cannot reach it.', 'Icon buttons with no name, so a screen reader says only “button”.', 'Soft grey text on a white background that looks tasteful and is hard to read.', 'Images with no alt text, or alt text that just repeats a file name.', 'Form fields with a placeholder but no real label.', 'Animations that keep moving and ignore the “reduce motion” setting.'] },
-      { h: 'How to ask for better', p: ['Put your accessibility rules where your tool keeps standing instructions, so every prompt follows them. Sugam publishes a short rules file you can copy for free.'] },
+      { h: 'How to ask for better', p: ['Put your accessibility rules where your tool keeps standing instructions, so every prompt follows them. Avara publishes a short rules file you can copy for free.'] },
       { h: 'Check what you got', p: ['Press Tab through the page and see where focus goes. Zoom to 200%. Then scan the page and fix the findings one at a time, using the prompt written for each one.'] },
     ] },
   { slug: 'fix-low-contrast', title: 'Fixing low-contrast text', summary: 'The two numbers to remember, and how to fix a colour without changing your brand.',

@@ -47,7 +47,7 @@ export function accessibilityRule(ruleId: string, title: string, wcag: { sc: str
   return {
     id: ruleId, version: fromAxe ? `axe-core ${axeVersion}` : RULE_VERSION, category: 'accessibility', title,
     ...(first ? { sourceType: 'standard' as const, sourceUrl: wcagUrl(first.sc)!, sourceSection: `WCAG 2.2 SC ${first.sc} ${first.name}` }
-      : { sourceType: fromAxe ? 'tool_rule' as const : 'sugam_check' as const, sourceUrl: helpUrl || 'https://dequeuniversity.com/rules/axe/html', sourceSection: fromAxe ? `axe-core rule ${ruleId}` : `Sugam check ${ruleId}` }),
+      : { sourceType: fromAxe ? 'tool_rule' as const : 'sugam_check' as const, sourceUrl: helpUrl || 'https://dequeuniversity.com/rules/axe/html', sourceSection: fromAxe ? `axe-core rule ${ruleId}` : `Avara check ${ruleId}` }),
   };
 }
-export const SOURCE_LABEL: Record<SourceType, string> = { standard: 'Standard', vendor_guidance: 'Vendor guidance', tool_rule: 'Tool rule', usability_heuristic: 'Usability heuristic', sugam_check: 'Sugam check' };
+export const SOURCE_LABEL: Record<SourceType, string> = { standard: 'Standard', vendor_guidance: 'Vendor guidance', tool_rule: 'Tool rule', usability_heuristic: 'Usability heuristic', sugam_check: 'Avara check' };

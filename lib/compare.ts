@@ -2,11 +2,12 @@
 // key (rule + markup shape), so a fix to a shared component shows as one resolved issue.
 import { eq, inArray } from 'drizzle-orm';
 import { getDb, schema } from './db/index.ts';
+import { redactDeep } from './security/redact.ts';
 
 export type CompareRow = { componentKey: string; title: string; severity: string; before: number; after: number };
 export async function compareScans(beforeId: string, afterId: string) {
   const db = await getDb();
-  const scans = await db.select().from(schema.scans).where(inArray(schema.scans.id, [beforeId, afterId]));
+  const scans = redactDeep(await db.select().from(schema.scans).where(inArray(schema.scans.id, [beforeId, afterId])));
   const before = scans.find((s) => s.id === beforeId); const after = scans.find((s) => s.id === afterId);
   if (!before || !after) return null;
   const load = async (id: string) => (await db.select().from(schema.issues).where(eq(schema.issues.scanId, id))).filter((i) => i.bucket === 'confirmed_failure');

@@ -1,80 +1,135 @@
-// What we check, as four small scenes: each area of the review (product clarity, mobile, conversion, accessibility) is shown as a
-// tiny picture of the thing Sugam checks, failing and passing, with one line underneath saying what happens to them, then one strip for what still needs a
-// person. No tabs and no motion, so there is nothing to operate or pause. The pictures are decorative (aria-hidden); the
-// titles and the lines under them carry the meaning. Server-rendered.
+// "What else could get in their way?": the four areas every scan checks, as four cards built the same way. Each card has
+// a picture of one concrete problem Avara finds (decorative, aria-hidden), the question as its heading, the categories it
+// covers as tags, and one plain sentence on why visitors leave or get stuck. The cards fade up and the issue tags pop in once,
+// with the page's shared motion (components/landing/Reveal.tsx); reduced motion shows them still. Nothing to operate or pause.
+import { Reveal } from './Reveal.tsx';
 import { SHOW_PERSON_NOTE } from './flags.ts';
-import { Check, Contrast, MessageSquareText, MousePointerClick, Smartphone, ShieldCheck, UserCheck, X } from 'lucide-react';
+import { Check, KeyRound, Menu, UserCheck, Volume2, X } from 'lucide-react';
 
-const Chip = ({ pass, children }: { pass?: boolean; children: React.ReactNode }) => (
-  <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-sm font-semibold ${pass ? 'bg-[#d9f56e] text-ink' : 'bg-[#fde0dc] text-[#7a1710]'}`}>
-    {pass ? <Check aria-hidden className="size-3.5" strokeWidth={3} /> : <X aria-hidden className="size-3.5" strokeWidth={3} />}{children}
+// A red issue tag, the same in every picture
+const Flag = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+  <span className={`hs-pop [animation-delay:450ms] inline-flex items-center gap-1 whitespace-nowrap rounded-lg bg-[#b3261e] px-2.5 py-1 text-[0.8rem] font-semibold leading-none text-white shadow-sm ${className}`}>
+    <X aria-hidden className="size-3" strokeWidth={3} />{children}
   </span>
 );
+// A small page in a frame, so every picture reads as "a website"
+const Frame = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+  <div className={`relative w-full max-w-[13rem] rounded-xl border border-black/15 bg-white shadow-[4px_4px_0_0_rgba(17,17,17,0.08)] ${className}`}>
+    <div className="flex items-center gap-1 border-b border-black/10 px-2.5 py-1.5"><i className="size-1.5 rounded-full bg-[#e08f84]" /><i className="size-1.5 rounded-full bg-[#e3c273]" /><i className="size-1.5 rounded-full bg-[#8fcf9a]" /></div>
+    {children}
+  </div>
+);
 
-const Lines = ({ c }: { c: string }) => <span className="flex w-12 flex-col gap-1.5"><i className={`h-2 w-full rounded-full ${c}`} /><i className={`h-2 w-4/5 rounded-full ${c}`} /><i className={`h-2 w-3/5 rounded-full ${c}`} /></span>;
-function Read() {
+// Product clarity and trust: a headline that could be anyone's, and no way to check who is behind it
+function Offer() {
   return (
-    <div className="flex items-end gap-5">
-      <div className="flex flex-col items-center gap-2"><span className="grid size-[4.5rem] place-items-center rounded-2xl bg-white"><Lines c="bg-[#d4d4cf]" /></span><Chip>2.1 : 1</Chip></div>
-      <div className="flex flex-col items-center gap-2"><span className="grid size-[4.5rem] place-items-center rounded-2xl bg-white"><Lines c="bg-ink" /></span><Chip pass>7.8 : 1</Chip></div>
-    </div>
+    <Frame>
+      <div className="px-3 pb-3 pt-2.5">
+        <p className="text-[1.05rem] font-semibold leading-tight text-ink">Welcome to the future of work</p>
+        <i className="mt-2 block h-1.5 w-5/6 rounded-full bg-ink/15" />
+        <span className="mt-3 inline-block rounded-md bg-ink px-3 py-1.5 text-[0.7rem] font-semibold text-white">Learn more</span>
+      </div>
+      <Flag className="absolute -bottom-3 left-3">Doesn’t say what it does</Flag>
+    </Frame>
   );
 }
-function Clarity() {
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <span className="flex items-center gap-2.5"><span className="rounded-xl bg-white px-3.5 py-2 text-base font-semibold text-neutral-500">“Welcome”</span><Chip>Unclear</Chip></span>
-      <span className="flex items-center gap-2.5"><span className="rounded-xl bg-white px-3.5 py-2 text-base font-semibold text-ink">“Invoices in 2 clicks”</span></span>
-      <Chip pass>Says what it does</Chip>
-    </div>
-  );
-}
-function Phone() {
-  return (
-    <div className="flex items-end gap-5">
-      <div className="flex flex-col items-center gap-2"><span className="grid h-[4.5rem] w-11 place-items-center overflow-hidden rounded-xl bg-white"><span className="h-2 w-16 rounded-full bg-[#d4d4cf]" /></span><Chip>Scrolls sideways</Chip></div>
-      <div className="flex flex-col items-center gap-2"><span className="grid h-[4.5rem] w-11 place-items-center rounded-xl bg-white"><Lines c="bg-ink" /></span><Chip pass>Fits</Chip></div>
-    </div>
-  );
-}
+// UX and conversion: four buttons of equal weight, so there is no clear next step
 function Action() {
   return (
+    <Frame>
+      <div className="grid grid-cols-2 gap-1.5 px-3 pb-4 pt-3">
+        {['Learn more', 'Get started', 'Sign up', 'Book a demo'].map((b) => <span key={b} className="rounded-md bg-ink py-1.5 text-center text-[0.68rem] font-semibold text-white">{b}</span>)}
+      </div>
+      <Flag className="absolute -bottom-3 left-3">No clear next step</Flag>
+    </Frame>
+  );
+}
+// Mobile and accessibility: an icon-only menu button that a screen reader announces as just "button"
+function Everyone() {
+  return (
     <div className="flex flex-col items-center gap-3">
-      <span className="flex items-center gap-2.5"><span className="rounded-full bg-ink px-5 py-2.5 text-base font-semibold text-white">Start free</span><Chip pass>In view</Chip></span>
-      <Chip>Hidden behind a banner</Chip>
+      <div className="flex items-center gap-3">
+        <span className="grid size-14 place-items-center rounded-xl border-[3px] border-[#b3261e] bg-ink text-white"><Menu className="size-7" /></span>
+        <span className="relative rounded-2xl rounded-bl-sm border border-black/15 bg-white px-3.5 py-2 shadow-[3px_3px_0_0_rgba(17,17,17,0.08)]">
+          <span className="flex items-center gap-1.5 text-[0.72rem] font-semibold uppercase tracking-wide text-neutral-700"><Volume2 className="size-3.5" />Screen reader</span>
+          <span className="mt-0.5 block text-lg font-semibold italic text-ink">“Button”</span>
+        </span>
+      </div>
+      <Flag>No accessible name</Flag>
     </div>
   );
 }
+// Performance and design: the main content is still loading, the layout jumps, placeholder text is left in
+function Ready() {
+  return (
+    <Frame>
+      <div className="px-3 pb-4 pt-2.5">
+        <div className="flex items-center gap-2"><span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e4e1d8]"><span className="block h-full w-2/5 rounded-full bg-vio" /></span><span className="text-[0.75rem] font-semibold tabular-nums text-ink">4.8 s</span></div>
+        <span className="mt-3 block h-10 rounded-md bg-[#ecebe6]" />
+        <span className="mt-2 block h-2 w-3/4 rounded-full bg-[#ecebe6]" />
+      </div>
+      <Flag className="absolute -bottom-3 left-3">Still loading at 4.8 s</Flag>
+    </Frame>
+  );
+}
 
-const PILLARS = [
-  { icon: MessageSquareText, q: 'Product clarity', text: 'A first-time visitor can’t tell what you do, who it’s for or what to do next within a few seconds.', Scene: Clarity, tint: 'bg-[#f3fbd9]' },
-  { icon: Smartphone, q: 'Mobile', text: 'At phone width the page scrolls sideways, the text is tiny or a fixed bar covers the button.', Scene: Phone, tint: 'bg-[#efe9ff]' },
-  { icon: MousePointerClick, q: 'Usability', text: 'The main button is hard to find, hidden, or competes with too many others, so visitors give up.', Scene: Action, tint: 'bg-[#f3fbd9]' },
-  { icon: Contrast, q: 'Accessibility', text: 'Faint text, buttons a screen reader calls just “button”, or a page you can’t use by keyboard.', Scene: Read, tint: 'bg-[#efe9ff]' },
+// Security: a secret key sitting in the page's code, where anyone can read it
+function Leak() {
+  return (
+    <Frame>
+      <div className="px-3 pb-4 pt-2.5 font-mono text-[0.68rem] leading-relaxed text-neutral-700">
+        <p className="text-neutral-500">// in your page’s code</p>
+        <p className="flex items-center gap-1.5"><KeyRound aria-hidden className="size-3 shrink-0 text-[#b3261e]" /><span className="truncate">key = “sk_••••”</span></p>
+        <span className="mt-2 block h-1.5 w-2/3 rounded-full bg-[#ecebe6]" />
+      </div>
+      <Flag className="absolute -bottom-3 left-3">Anyone can read this key</Flag>
+    </Frame>
+  );
+}
+// Regression: the last fix worked, and something that used to work broke
+function Regress() {
+  const row = (ok: boolean, label: string, tag: string) => (
+    <p className="flex items-center justify-between gap-2 rounded-md bg-[#f4f3ee] px-2 py-1.5 text-[0.68rem] font-semibold text-ink">{label}<span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[0.6rem] ${ok ? 'bg-[#dcf3e7] text-[#174a32]' : 'bg-[#fbe0dc] text-[#8a1c14]'}`}>{ok ? <Check aria-hidden className="size-2.5" strokeWidth={3} /> : <X aria-hidden className="size-2.5" strokeWidth={3} />}{tag}</span></p>
+  );
+  return (
+    <Frame>
+      <div className="space-y-1.5 px-3 pb-4 pt-2.5">{row(true, 'Sign-up form', 'Fixed')}{row(false, 'Checkout', 'Newly broken')}</div>
+      <Flag className="absolute -bottom-3 left-3">Your fix broke checkout</Flag>
+    </Frame>
+  );
+}
+
+const CARDS = [
+  { q: 'Is the offer clear?', tags: ['Product clarity', 'Trust'], text: 'A first-time visitor can’t tell what you do or why to trust you, so they leave.', Scene: Offer, tint: 'bg-[#eef8cf]' },
+  { q: 'Can visitors take action?', tags: ['UX', 'Conversion'], text: 'The main button is hard to find or competes with others, so visitors give up.', Scene: Action, tint: 'bg-[#efe9ff]' },
+  { q: 'Can everyone use it?', tags: ['Mobile', 'Accessibility'], text: 'Faint text, unnamed buttons or no keyboard access shut people out before they start.', Scene: Everyone, tint: 'bg-[#eef8cf]' },
+  { q: 'Does the page feel ready?', tags: ['Performance', 'Design', 'Differentiation'], text: 'A slow, jumpy, unfinished or generic-looking page makes visitors doubt you and leave.', Scene: Ready, tint: 'bg-[#efe9ff]' },
+  { q: 'Is anything leaking?', tags: ['Security', 'Leaked keys', 'Open customer data'], text: 'Secret keys, private files or customer data that anyone can read. It only reads, and never changes your site.', Scene: Leak, tint: 'bg-[#fde9e6]' },
+  { q: 'Did your fix break anything?', tags: ['Regression', 'Check again'], text: 'Check again after every change. Avara compares with last time and lists what newly broke first.', Scene: Regress, tint: 'bg-[#eef8cf]' },
 ] as const;
 
+export const SCENES = { Offer, Action, Everyone, Ready, Leak, Regress };
 export function Pillars() {
   return (
-    <div>
-      <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {PILLARS.map((p) => (
-          <li key={p.q} className="flex flex-col rounded-[2rem] border border-black/10 bg-white p-4">
-            <div aria-hidden className={`grid h-36 place-items-center overflow-hidden sm:h-44 rounded-[1.5rem] px-3 ${p.tint}`}><p.Scene /></div>
-            <div className="px-3 pb-3 pt-5">
-              <h3 className="flex items-center gap-2.5 text-2xl font-semibold leading-tight tracking-tight text-ink"><p.icon aria-hidden className="size-6 shrink-0 text-vio-deep" />{p.q}</h3>
-              <p className="mt-2 text-lg leading-snug text-neutral-800">{p.text}</p>
+    <Reveal>
+      <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {CARDS.map((c, i) => (
+          <li key={c.q} className="hs-in flex flex-col rounded-[2rem] border border-black/10 bg-white p-3" style={{ animationDelay: `${i * 90}ms` }}>
+            <div aria-hidden className={`grid h-44 place-items-center overflow-hidden rounded-[1.5rem] px-4 pb-3 ${c.tint}`}><c.Scene /></div>
+            <div className="flex flex-1 flex-col px-3 pb-3 pt-5">
+              <h3 className="text-[1.6rem] font-bold leading-tight tracking-tight text-ink sm:min-h-[2.5em]">{c.q}</h3>
+              <div className="mt-2.5 flex flex-wrap gap-1.5"><span className="sr-only">Checks: </span>
+                {c.tags.map((t, k) => <span key={t} className="rounded-lg border border-vio-deep/25 bg-[#f6f3ff] px-2.5 py-0.5 text-sm font-semibold text-vio-deep">{t}{k < c.tags.length - 1 && <span className="sr-only">, </span>}</span>)}
+              </div>
+              <p className="mt-3 text-lg leading-snug text-neutral-800">{c.text}</p>
             </div>
           </li>
         ))}
       </ul>
-      <p className="mt-5 flex items-start gap-4 rounded-[1.75rem] bg-[#f3fbd9] px-6 py-5 text-lg leading-relaxed text-ink">
-        <ShieldCheck aria-hidden className="mt-0.5 size-7 shrink-0 text-vio-deep" />
-        <span><b>Trust and launch readiness:</b> placeholder text left in, missing privacy or contact details, and gaps that make a new visitor hesitate.</span>
-      </p>
-      {SHOW_PERSON_NOTE && (<p className="mt-3 flex items-start gap-4 rounded-[1.75rem] bg-[#efe9ff] px-6 py-5 text-lg leading-relaxed text-ink">
+      {SHOW_PERSON_NOTE && (<p className="mt-5 flex items-start gap-4 rounded-[1.75rem] bg-[#efe9ff] px-6 py-5 text-lg leading-relaxed text-ink">
         <UserCheck aria-hidden className="mt-0.5 size-7 shrink-0 text-vio-deep" />
         <span><b>Still needs a person:</b> whether your claims are true, whether the flow makes sense for a real task, whether alt text and captions are right, and text over photos.</span>
       </p>)}
-    </div>
+    </Reveal>
   );
 }
