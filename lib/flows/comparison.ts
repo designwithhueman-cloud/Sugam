@@ -7,6 +7,7 @@ import { FlowRun, parseFlow, type Flow } from '../../packages/contracts/index.ts
 import { compareEnvironments, retarget, type Side } from '../../packages/flow-engine/environments.ts';
 import { settleRun } from '../../packages/flow-engine/insights.ts';
 import { runOnWorker, WorkerError } from './worker.ts';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { getFlow } from './service.ts';
 import { logError, redactDeep } from '../security/redact.ts';
 
@@ -27,16 +28,25 @@ export async function startComparison(flowId: string, userId: string): Promise<{
   const [busy] = await db.select({ id: schema.flowRuns.id }).from(schema.flowRuns).where(and(eq(schema.flowRuns.flowId, flowId), eq(schema.flowRuns.status, 'running'))).limit(1);
   if (busy) return fail(409, 'already_running', 'This flow is already running.');
   mine.push(now); recent.set(userId, mine);
-  const version = f.version; const published = at === live ? parsed.flow : retarget(parsed.flow, staging, live); const preview = at === live ? retarget(parsed.flow, live, staging) : parsed.flow;   // one definition, read once: both halves are the same version
+  const version = f.version; const { published, preview } = sidesFor(parsed.flow, live, staging)!;   // one definition, read once: both halves are the same version
   const [row] = await db.insert(schema.flowComparisons).values({ flowId, version, publishedOrigin: live, previewOrigin: staging, createdBy: userId }).returning({ id: schema.flowComparisons.id });
   void finishComparison(row.id, flowId, userId, version, published, preview);
   return { ok: true, id: row.id };
 }
 
-async function half(flowId: string, userId: string, version: number, environment: 'published' | 'preview', flow: Flow): Promise<{ runId: string; side: Side }> {
+/** The same flow on the published and on the preview address, only the origin changed; null when the flow starts on neither. */
+export function sidesFor(flow: Flow, live: string, staging: string): { published: Flow; preview: Flow } | null {
+  const at = originOf(flow.startUrl); if (at !== live && at !== staging) return null;
+  return at === live ? { published: flow, preview: retarget(flow, live, staging) } : { published: retarget(flow, staging, live), preview: flow };
+}
+
+/** Runs one half on the worker. A comparison started by a deployment waits for a busy worker (a few tries) instead of calling the preview unusable. */
+const onWorker = (flow: Flow, wait: boolean) => async () => { for (let i = 0; ; i++) { try { return await runOnWorker(flow); } catch (e) { if (wait && e instanceof WorkerError && e.code === 'busy' && i < 6) { await sleep(Number(process.env.DEPLOY_BUSY_WAIT_MS) || 10_000); continue; } throw e; } } };
+
+async function half(flowId: string, userId: string | null, wait: boolean, version: number, environment: 'published' | 'preview', flow: Flow): Promise<{ runId: string; side: Side }> {
   const db = await getDb(); const [run] = await db.insert(schema.flowRuns).values({ flowId, createdBy: userId, status: 'running', version, environment }).returning({ id: schema.flowRuns.id });
   try {
-    const result = redactDeep(await settleRun(() => runOnWorker(flow)));   // a failure is repeated once, as an ordinary run is
+    const result = redactDeep(await settleRun(onWorker(flow, wait)));   // a failure is repeated once, as an ordinary run is
     await db.update(schema.flowRuns).set({ status: result.status, result: result as unknown as Record<string, unknown>, finishedAt: new Date() }).where(eq(schema.flowRuns.id, run.id));
     return { runId: run.id, side: { status: result.status, run: result, error: null } };
   } catch (e) {
@@ -46,11 +56,11 @@ async function half(flowId: string, userId: string, version: number, environment
   }
 }
 
-async function finishComparison(id: string, flowId: string, userId: string, version: number, published: Flow, preview: Flow): Promise<void> {
+export async function finishComparison(id: string, flowId: string, userId: string | null, version: number, published: Flow, preview: Flow, wait = false): Promise<void> {
   const db = await getDb();
   try {
-    const a = await half(flowId, userId, version, 'published', published); await db.update(schema.flowComparisons).set({ publishedRunId: a.runId }).where(eq(schema.flowComparisons.id, id));
-    const b = await half(flowId, userId, version, 'preview', preview); await db.update(schema.flowComparisons).set({ previewRunId: b.runId }).where(eq(schema.flowComparisons.id, id));
+    const a = await half(flowId, userId, wait, version, 'published', published); await db.update(schema.flowComparisons).set({ publishedRunId: a.runId }).where(eq(schema.flowComparisons.id, id));
+    const b = await half(flowId, userId, wait, version, 'preview', preview); await db.update(schema.flowComparisons).set({ previewRunId: b.runId }).where(eq(schema.flowComparisons.id, id));
     const c = compareEnvironments(a.side, b.side);
     await db.update(schema.flowComparisons).set({ status: 'done', verdict: c.verdict, detail: c as unknown as Record<string, unknown>, finishedAt: new Date() }).where(eq(schema.flowComparisons.id, id));
   } catch (e) {
@@ -60,12 +70,16 @@ async function finishComparison(id: string, flowId: string, userId: string, vers
   }
 }
 
+type CmpRow = typeof schema.flowComparisons.$inferSelect;
+/** One comparison with both runs' evidence, and the deployment that started it (null for a manual comparison). */
+export async function hydrateComparison(c: CmpRow) {
+  const db = await getDb();
+  const get = async (rid: string | null) => { if (!rid) return null; const [r] = await db.select().from(schema.flowRuns).where(eq(schema.flowRuns.id, rid)); return r ? { id: r.id, status: r.status, error: r.error, version: r.version, result: FlowRun.safeParse(r.result).success ? r.result : null } : null; };
+  let deploymentId: string | null = null; if (c.deploymentEventId) { const [e] = await db.select({ d: schema.deploymentEvents.deploymentId }).from(schema.deploymentEvents).where(eq(schema.deploymentEvents.id, c.deploymentEventId)); deploymentId = e?.d ?? null; }
+  return { id: c.id, flowId: c.flowId, version: c.version, status: c.status, verdict: c.verdict, detail: c.detail, publishedOrigin: c.publishedOrigin, previewOrigin: c.previewOrigin, createdAt: c.createdAt, deploymentId, published: await get(c.publishedRunId), preview: await get(c.previewRunId) };
+}
+
 export async function listComparisons(flowId: string, n = 5) {
   const db = await getDb(); const rows = await db.select().from(schema.flowComparisons).where(eq(schema.flowComparisons.flowId, flowId)).orderBy(desc(schema.flowComparisons.createdAt)).limit(n);
-  const out = [];
-  for (const c of rows) {
-    const get = async (rid: string | null) => { if (!rid) return null; const [r] = await db.select().from(schema.flowRuns).where(eq(schema.flowRuns.id, rid)); return r ? { id: r.id, status: r.status, error: r.error, version: r.version, result: FlowRun.safeParse(r.result).success ? r.result : null } : null; };
-    out.push({ id: c.id, version: c.version, status: c.status, verdict: c.verdict, detail: c.detail, publishedOrigin: c.publishedOrigin, previewOrigin: c.previewOrigin, createdAt: c.createdAt, published: await get(c.publishedRunId), preview: await get(c.previewRunId) });
-  }
-  return out;
+  const out = []; for (const c of rows) out.push(await hydrateComparison(c)); return out;
 }

@@ -76,6 +76,7 @@ export const projects = pgTable('projects', {
   name: text('name').notNull(),
   liveUrl: text('live_url'),
   stagingUrl: text('staging_url'),
+  deployTokenHash: text('deploy_token_hash'),   // sha256 of the bearer token for the preview-ready webhook; the token itself is shown once and never stored
   defaultStandard: complianceStandard('default_standard').notNull().default('wcag22aa'),
   createdAt: ts('created_at').notNull().defaultNow(),
 }, (t) => [index('projects_client_idx').on(t.clientId)]);
@@ -545,9 +546,21 @@ export const flowComparisons = pgTable('flow_comparisons', {
   verdict: text('verdict'),                         // see packages/flow-engine/environments.ts
   detail: jsonb('detail').$type<Record<string, unknown>>(),
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  deploymentEventId: uuid('deployment_event_id').references(() => deploymentEvents.id, { onDelete: 'cascade' }),   // set when a deployment event started it; status 'pending' = accepted, not yet dispatched
+  claimedBy: text('claimed_by'), claimedAt: ts('claimed_at'),   // which process is running it, and since when (a dead process's claim goes stale and the comparison is dispatched again)
   createdAt: ts('created_at').notNull().defaultNow(),
   finishedAt: ts('finished_at'),
-}, (t) => [index('flow_comparisons_flow_idx').on(t.flowId, t.createdAt)]);
+}, (t) => [index('flow_comparisons_flow_idx').on(t.flowId, t.createdAt), uniqueIndex('flow_comparisons_flow_deployment').on(t.flowId, t.deploymentEventId)]);
+
+/** A "preview is ready" notice for a project, accepted once per (project, deployment id). The flows it compares are pinned in flow_comparisons rows written in the same transaction. */
+export const deploymentEvents = pgTable('deployment_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  deploymentId: text('deployment_id').notNull(),
+  publishedOrigin: text('published_origin').notNull(), previewOrigin: text('preview_origin').notNull(),   // the addresses at the time it was received
+  skipped: jsonb('skipped').notNull().default([]).$type<{ flowId: string; name: string; reason: string; message: string }[]>(),
+  receivedAt: ts('received_at').notNull().defaultNow(),
+}, (t) => [uniqueIndex('deployment_events_project_deployment').on(t.projectId, t.deploymentId)]);
 
 // ---------- launch check (exposure checks and site ownership) ----------
 // A project's owner proves control of its live address once per origin. Only then do the extra read-only requests (files, source maps, tables) run.

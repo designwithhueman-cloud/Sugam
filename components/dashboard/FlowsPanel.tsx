@@ -12,9 +12,10 @@ type Row = { id: string; name: string; version: number; steps: number; startUrl:
 type Proposal = { id: string; flowId: string; kind: string; reason: string };
 type Disc = { id: string; status: string; error: string | null; startUrl: string; result: DiscoveryResult | null; saved: Record<string, { flowId: string; name: string }> };
 type Cond = { a: Assertion; keep: boolean };
+type Dep = { id: string; deploymentId: string; receivedAt: string; skipped: { flowId: string; name: string; reason: string; message: string }[]; comparisons: (Cmp & { name: string })[] };
 type CmpSide = { status: string; failedStep: string | null; failure: string | null; inconclusive: string | null };
 type CmpRun = { id: string; status: string; error: string | null; result: { steps: Step[] } | null } | null;
-type Cmp = { id: string; version: number; status: string; verdict: string | null; detail: { headline: string; detail: string; published: CmpSide; preview: CmpSide } | null; publishedOrigin: string; previewOrigin: string; published: CmpRun; preview: CmpRun };
+type Cmp = { id: string; deploymentId?: string | null; version: number; status: string; verdict: string | null; detail: { headline: string; detail: string; published: CmpSide; preview: CmpSide } | null; publishedOrigin: string; previewOrigin: string; published: CmpRun; preview: CmpRun };
 const PURPOSE: Record<string, string> = { booking: 'Booking', signup: 'Sign-up', pricing: 'Pricing', contact: 'Contact', login: 'Sign-in page (opened, never signed in)', other: 'Page' };
 type Step = { stepId: string; action: string; status: string; ms: number; urlAfter: string | null; error: string | null; assertions: { passed: boolean; observed: string; assertion: { type: string } }[] };
 type Run = { id: string; version?: number; status: string; error: string | null; startedAt: string; result: { attempts?: number; flaky?: boolean; steps: Step[]; consoleErrors: string[]; failedRequests: { url: string; status: number | null }[]; ms: number } | null };
@@ -23,6 +24,7 @@ const EXAMPLE = JSON.stringify({ name: 'Open the pricing page', startUrl: 'https
 
 export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [], siteUrl = null, canCompare = false }: { projectId: string; canDelete: boolean; initial: Row[]; initialProposals?: Proposal[]; siteUrl?: string | null; canCompare?: boolean }) {
   const [cmp, setCmp] = React.useState<Record<string, Cmp | undefined>>({}); const [cmpBusy, setCmpBusy] = React.useState<string | null>(null);
+  const [deps, setDeps] = React.useState<Dep[]>([]);
   const [rows, setRows] = React.useState(initial); const [proposals, setProposals] = React.useState<Proposal[]>(initialProposals);
   const [disc, setDisc] = React.useState<Disc | null>(null); const [finding, setFinding] = React.useState(false); const [conds, setConds] = React.useState<Record<string, Cond[]>>({}); const [extra, setExtra] = React.useState<Record<string, string>>({}); const [jname, setJname] = React.useState<Record<string, string>>({});
   const [json, setJson] = React.useState(EXAMPLE); const [msg, setMsg] = React.useState<string | null>(null); const [busy, setBusy] = React.useState<string | null>(null);
@@ -53,7 +55,22 @@ export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [
   }
   async function decide(p: Proposal, decision: 'accept' | 'dismiss') { setBusy(`p-${p.id}`); const r = await api('POST', `/api/proposals/${p.id}`, { decision }); setBusy(null); setMsg(r.ok ? (decision === 'accept' ? 'The change was approved as a new version.' : 'The change was dismissed. The approved flow is unchanged.') : (r.data?.message ?? 'Could not apply that.')); await reload(); }
 
+
+  // ---- deployments reported by the preview-ready webhook: shown here without a click, and refreshed while any comparison is still waiting or running ----
+  React.useEffect(() => { if (!canCompare) return; let off = false; let t: ReturnType<typeof setTimeout>; const poll = async () => { const g = await api('GET', `/api/projects/${projectId}/deployments`); if (off) return; const d = (g.data?.deployments as Dep[] | undefined) ?? []; setDeps(d); if (d.some((x) => x.comparisons.some((c) => c.status !== 'done'))) t = setTimeout(poll, 3000); }; void poll(); const again = setInterval(poll, 15000); return () => { off = true; clearTimeout(t); clearInterval(again); }; // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId, canCompare]);
+
   // ---- compare the same approved version on the published site and on the preview (manual) ----
+  const compareCard = (c: Cmp) => { const d = c.detail!; const tone = c.verdict === 'preview_regression' ? 'bg-red-50 text-red-900' : c.verdict === 'passed_both' ? 'bg-emerald-50 text-emerald-900' : c.verdict === 'inconclusive' ? 'bg-amber-50 text-amber-900' : 'bg-slate-50 text-slate-800';
+                return <div data-testid="env-compare" data-verdict={c.verdict} className="mt-3 rounded-lg border border-slate-200 p-3 text-sm">
+                  <div className={`rounded-lg p-3 ${tone}`}><p className="font-semibold">Published vs preview, version {c.version}: {d.headline}</p><p className="mt-1">{d.detail}</p>{c.deploymentId && <p data-testid="triggered-by" className="mt-1 text-xs">Triggered by deployment {c.deploymentId}. The preview address is the project’s fixed staging address, so it may have changed since the deployment was reported.</p>}</div>
+                  <div className="mt-3 grid gap-3 lg:grid-cols-2">{(['published', 'preview'] as const).map((env) => { const run = c[env]; const sd = d[env]; return (
+                    <div key={env} data-testid={`env-${env}`} data-status={sd.status} className="min-w-0 rounded-lg border border-slate-200 p-3">
+                      <p className="flex flex-wrap items-center gap-2 font-semibold text-ink">{env === 'published' ? 'Published' : 'Preview'}<Badge s={run?.status ?? 'error'} /></p><p className="break-all text-xs text-slate-600">{env === 'published' ? c.publishedOrigin : c.previewOrigin}</p>
+                      {sd.inconclusive && <p data-testid="env-inconclusive" className="mt-2 rounded-lg bg-amber-50 p-2 text-amber-900">Not usable as evidence: {sd.inconclusive}</p>}
+                      {run?.result ? <div className="mt-2"><StepList steps={run.result.steps} /></div> : <p className="mt-2 text-slate-600">{run?.error ?? 'No result.'}</p>}
+                    </div>); })}</div>
+                </div>; };
   async function loadCmp(id: string) { const g = await api('GET', `/api/flows/${id}/comparisons`); const c = (g.data?.comparisons as Cmp[] | undefined)?.[0]; if (c) setCmp((x) => ({ ...x, [id]: c })); return c; }
   async function compare(id: string) {
     setMsg(null); setCmpBusy(id); const r = await api('POST', `/api/flows/${id}/comparisons`); if (!r.ok) { setCmpBusy(null); setMsg(r.data?.message ?? 'Could not start the comparison.'); return; }
@@ -81,6 +98,11 @@ export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
       <section aria-labelledby="flows-h" className="min-w-0">
+        {deps.length > 0 && <div data-testid="deployments" className="mb-6 space-y-3">{deps.map((d) => <div key={d.id} data-testid="deployment" data-deployment={d.deploymentId} className="rounded-xl border border-slate-200 bg-white p-4">
+          <p className="font-semibold text-ink">Triggered by deployment {d.deploymentId}</p><p className="text-xs text-slate-600">Reported {new Date(d.receivedAt).toLocaleString()}. Compared on the project’s fixed preview address, {d.comparisons[0]?.previewOrigin ?? ''}.</p>
+          {d.comparisons.map((c) => <div key={c.id} data-testid="deployment-comparison" data-status={c.status} className="mt-3"><p className="text-sm font-semibold text-ink">{c.name}</p>{c.status === 'done' && c.detail ? compareCard(c) : <p data-testid="deploy-waiting" className="mt-1 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{c.status === 'running' ? 'Comparing now…' : 'Waiting to compare…'}</p>}</div>)}
+          {d.skipped.length > 0 && <div data-testid="deploy-skipped" className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"><p className="font-semibold">{d.skipped.length} flow{d.skipped.length === 1 ? ' was' : 's were'} not compared</p><ul className="mt-1 list-disc pl-5">{d.skipped.map((x) => <li key={x.flowId} data-reason={x.reason}><span className="font-medium">{x.name}</span>: {x.message}</li>)}</ul></div>}
+        </div>)}</div>}
         <h2 id="flows-h" className="mb-3 text-lg font-semibold text-ink">Your flows</h2>
         {rows.length === 0 && <p className="rounded-xl border border-dashed border-slate-300 bg-white p-5 text-slate-600">No flows yet. Paste one on the right to start.</p>}
         <ul className="space-y-3">
@@ -95,16 +117,7 @@ export function FlowsPanel({ projectId, canDelete, initial, initialProposals = [
                   {canDelete && <Button size="sm" variant="ghost" onClick={() => remove(f.id)} aria-label={`Delete ${f.name}`}>Delete</Button>}</div>
               </div>
               {proposals.filter((p) => p.flowId === f.id).map((p) => <div key={p.id} data-testid="flow-proposal" data-kind={p.kind} className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"><p className="font-semibold">{p.kind === 'changed' ? 'Your site changed: review the proposed change' : 'This journey was not found on your site'}</p><p className="mt-1">{p.reason}</p><p className="mt-1">Your approved flow (version {f.version}) keeps running until you accept a change.</p><div className="mt-2 flex gap-2">{p.kind === 'changed' && <Button size="sm" disabled={busy === `p-${p.id}`} onClick={() => decide(p, 'accept')}>Approve as version {f.version + 1}</Button>}<Button size="sm" variant="outline" disabled={busy === `p-${p.id}`} onClick={() => decide(p, 'dismiss')}>Keep the approved flow</Button></div></div>)}
-              {cmp[f.id]?.status === 'done' && cmp[f.id]!.detail && (() => { const c = cmp[f.id]!; const d = c.detail!; const tone = c.verdict === 'preview_regression' ? 'bg-red-50 text-red-900' : c.verdict === 'passed_both' ? 'bg-emerald-50 text-emerald-900' : c.verdict === 'inconclusive' ? 'bg-amber-50 text-amber-900' : 'bg-slate-50 text-slate-800';
-                return <div data-testid="env-compare" data-verdict={c.verdict} className="mt-3 rounded-lg border border-slate-200 p-3 text-sm">
-                  <div className={`rounded-lg p-3 ${tone}`}><p className="font-semibold">Published vs preview, version {c.version}: {d.headline}</p><p className="mt-1">{d.detail}</p></div>
-                  <div className="mt-3 grid gap-3 lg:grid-cols-2">{(['published', 'preview'] as const).map((env) => { const run = c[env]; const sd = d[env]; return (
-                    <div key={env} data-testid={`env-${env}`} data-status={sd.status} className="min-w-0 rounded-lg border border-slate-200 p-3">
-                      <p className="flex flex-wrap items-center gap-2 font-semibold text-ink">{env === 'published' ? 'Published' : 'Preview'}<Badge s={run?.status ?? 'error'} /></p><p className="break-all text-xs text-slate-600">{env === 'published' ? c.publishedOrigin : c.previewOrigin}</p>
-                      {sd.inconclusive && <p data-testid="env-inconclusive" className="mt-2 rounded-lg bg-amber-50 p-2 text-amber-900">Not usable as evidence: {sd.inconclusive}</p>}
-                      {run?.result ? <div className="mt-2"><StepList steps={run.result.steps} /></div> : <p className="mt-2 text-slate-600">{run?.error ?? 'No result.'}</p>}
-                    </div>); })}</div>
-                </div>; })()}
+              {cmp[f.id]?.status === 'done' && cmp[f.id]!.detail && compareCard(cmp[f.id]!)}
               {open === f.id && <div className="mt-4 border-t border-slate-200 pt-3" data-testid="flow-result">
                 {!r ? <p className="text-sm text-slate-600">No runs yet.</p> : <>
                   <p className="mb-2 flex items-center gap-2 text-sm text-slate-700"><Badge s={r.status} /><span data-testid="run-version" className="text-slate-600">version {r.version ?? 1}</span>{r.result ? `${(r.result.ms / 1000).toFixed(1)} s` : ''}{r.error ? ` ${r.error}` : ''}</p>

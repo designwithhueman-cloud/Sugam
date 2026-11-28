@@ -8,6 +8,7 @@ import { getDb, schema } from './db/index.ts';
 import { enqueueScan } from './queue.ts';
 import { purgeExpiredScans } from './deletion.ts';
 import { logError } from './security/redact.ts';
+import { resumeDeployments, requeueStale, dispatchPending } from './flows/deployments.ts';
 
 export const REQUEUE_WINDOW_MS = 6 * 3600_000;
 const UNFINISHED = ['queued', 'running', 'analyzing'] as const;
@@ -29,6 +30,8 @@ const g = globalThis as unknown as { __avaraStarted?: boolean };
 export function startBackgroundWork() {
   if (g.__avaraStarted) return; g.__avaraStarted = true;
   void recoverScans().then((r) => { if (r.requeued || r.interrupted) console.log(`scans after restart: ${r.requeued} queued again, ${r.interrupted} marked interrupted`); }, (e) => logError('scan recovery failed', e));
+  void resumeDeployments().then((n) => { if (n) console.log(`deployment comparisons after restart: ${n} dispatched again`); }, (e) => logError('deployment resume failed', e));
+  setInterval(() => { void requeueStale().then(() => dispatchPending()).catch((e) => logError('deployment resume failed', e)); }, 120_000).unref();
   const purge = () => purgeExpiredScans().then((n) => { if (n) console.log(`retention: deleted ${n} expired anonymous scans`); }, (e) => logError('retention run failed', e));
   setTimeout(purge, 30_000).unref();
   setInterval(purge, 3600_000).unref();

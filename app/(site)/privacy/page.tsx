@@ -63,6 +63,14 @@ export default function Privacy() {
           'Shared (read-only) reports do not record anything.',
         ]} />
       </section>
+      <section><H>Deployment notices</H>
+        <p className="mb-3">If you turn on the preview-ready webhook for a project, your build system can tell Avara that a preview is ready. Avara stores only what it needs to run and show the comparison.</p>
+        <UL items={[
+          'Each notice holds the project, the deployment name or number your system sent (up to 120 characters), the live and preview addresses saved on the project, which flows were or were not compared, and the time.',
+          'The access token is shown once. Only a one-way fingerprint of it is stored, so Avara cannot show it again. Creating a new token makes the old one stop working.',
+          'Notices and their results are deleted when the project, workspace or account is deleted.',
+        ]} />
+      </section>
       <section><H>What is public</H>
         <p>Avara publishes overall patterns across all scans, such as the share of scanned pages where a check failed. These contain percentages and rule names only: no addresses, page content, screenshots or account details.</p>
       </section>
