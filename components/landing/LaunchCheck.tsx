@@ -31,7 +31,7 @@ export function LaunchCheck() {
         <h3 className="mt-3 max-w-3xl text-3xl font-semibold leading-tight tracking-[-0.02em] text-ink sm:text-4xl">Fixed it? Find out <span className="text-vio-deep">what else broke</span>.</h3>
         <p className="mt-4 max-w-3xl text-xl leading-relaxed text-ink">Avara runs the same checks every time and compares with the last one, so a fix can’t quietly break something else.</p>
         <div className="mt-10 lg:mt-14"><LaunchCheckLoop /></div>
-        <p className="mt-12 flex gap-3 text-lg leading-relaxed text-ink"><CheckCircle2 aria-hidden className="mt-1 size-5 shrink-0 text-[#3b7a00]" /><span>A single <strong className="font-semibold">Ready to launch?</strong> page joins your scan, your launch check and your saved flows into one answer, with the newly broken things first. Creator and Agency can also save short flows, like opening a menu or reaching a form, and see exactly which step fails.</span></p>
+        <p className="mt-12 flex gap-3 text-lg leading-relaxed text-ink"><CheckCircle2 aria-hidden className="mt-1 size-5 shrink-0 text-[#3b7a00]" /><span>A single <strong className="font-semibold">Ready to launch?</strong> page joins your scan, your launch check and your saved flows into one answer, with the newly broken things first. Creator and Agency can also save short flows, like opening a menu or reaching a form, and see exactly which step fails. If a safety rule stops a flow, Avara shows which steps passed and what still needs checking.</span></p>
       </div>
     </section>
   );

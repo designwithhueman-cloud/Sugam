@@ -3,23 +3,24 @@
 // (plan, membership, policy); this component only calls /api/projects/:id/flows and /api/flows/:id.
 import * as React from 'react';
 import { Button } from '@/components/ui/button.tsx';
-import { compareRuns, plainStep } from '@/packages/flow-engine/insights.ts';
+import { blockedSummary, compareRuns, plainStep } from '@/packages/flow-engine/insights.ts';
 
 type Row = { id: string; name: string; steps: number; startUrl: string; lastRun: { status: string; at: string } | null };
 type Step = { stepId: string; action: string; status: string; ms: number; urlAfter: string | null; error: string | null; assertions: { passed: boolean; observed: string; assertion: { type: string } }[] };
 type Run = { id: string; status: string; error: string | null; startedAt: string; result: { attempts?: number; flaky?: boolean; steps: Step[]; consoleErrors: string[]; failedRequests: { url: string; status: number | null }[]; ms: number } | null };
 
 const EXAMPLE = JSON.stringify({ name: 'Open the pricing page', startUrl: 'https://example.com/', steps: [{ id: 'pricing', action: 'click', selector: 'a[href="/pricing"]', expect: [{ type: 'url_contains', value: '/pricing' }, { type: 'visible', selector: 'h1' }] }] }, null, 2);
-const LABEL: Record<string, string> = { passed: 'Passed', failed: 'Failed', blocked: 'Blocked by safety rules', error: 'Could not run', running: 'Running', skipped: 'Skipped' };
+const LABEL: Record<string, string> = { passed: 'Passed', failed: 'Failed', blocked: 'Could not verify', error: 'Could not run', running: 'Running', skipped: 'Skipped' };
+const STEP_LABEL: Record<string, string> = { blocked: 'Skipped for safety', skipped: 'Not checked' };   // a step label never says “Failed” for a step Avara chose not to do
 const TONE: Record<string, string> = { passed: 'bg-emerald-50 text-emerald-900', failed: 'bg-red-50 text-red-900', blocked: 'bg-amber-50 text-amber-900', error: 'bg-slate-100 text-slate-800', running: 'bg-blue-50 text-blue-900', skipped: 'bg-slate-100 text-slate-600' };
-const Badge = ({ s }: { s: string }) => <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONE[s] ?? TONE.error}`}>{LABEL[s] ?? s}</span>;
+const Badge = ({ s, step }: { s: string; step?: boolean }) => <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONE[s] ?? TONE.error}`}>{(step && STEP_LABEL[s]) || LABEL[s] || s}</span>;
 
 export function FlowsPanel({ projectId, canDelete, initial }: { projectId: string; canDelete: boolean; initial: Row[] }) {
   const [rows, setRows] = React.useState(initial);
   const [json, setJson] = React.useState(EXAMPLE); const [msg, setMsg] = React.useState<string | null>(null); const [busy, setBusy] = React.useState<string | null>(null);
   const [runs, setRuns] = React.useState<Record<string, Run | undefined>>({}); const [prev, setPrev] = React.useState<Record<string, Run | undefined>>({}); const [open, setOpen] = React.useState<string | null>(null);
   // the newest run, and the finished run before it, which a before/after comparison needs
-  function take(id: string, list: Run[] | undefined) { const latest = list?.[0]; if (latest) setRuns((x) => ({ ...x, [id]: latest })); setPrev((x) => ({ ...x, [id]: list?.slice(1).find((r) => r.result && (r.status === 'passed' || r.status === 'failed')) })); }
+  function take(id: string, list: Run[] | undefined) { const latest = list?.[0]; if (latest) setRuns((x) => ({ ...x, [id]: latest })); setPrev((x) => ({ ...x, [id]: list?.slice(1).find((r) => r.result && (r.status === 'passed' || r.status === 'failed' || r.status === 'blocked')) })); }
 
   async function api(method: string, path: string, body?: unknown) {
     const r = await fetch(path, { method, headers: { 'content-type': 'application/json' }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
@@ -63,8 +64,9 @@ export function FlowsPanel({ projectId, canDelete, initial }: { projectId: strin
                 {!r ? <p className="text-sm text-slate-600">No runs yet.</p> : <>
                   <p className="mb-2 flex items-center gap-2 text-sm text-slate-700"><Badge s={r.status} />{r.result ? `${(r.result.ms / 1000).toFixed(1)} s` : ''}{r.error ? ` ${r.error}` : ''}</p>
                   {r.result?.flaky && <p data-testid="flaky" className="mb-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">This flow did not give the same answer twice, so Avara ran it again. {r.status === 'passed' ? 'It passed on the second try, which means it works sometimes. Treat it as unreliable.' : 'It failed at a different step each time, so the cause is unclear.'}</p>}
-                  {r.result && prev[f.id]?.result && r.status !== 'running' && (() => { const c = compareRuns(prev[f.id]!.result as never, r.result as never); return <div data-testid="flow-compare" data-result={c.result} className={`mb-3 rounded-lg p-3 text-sm ${c.result === 'regressed' ? 'bg-red-50 text-red-900' : c.result === 'fixed' ? 'bg-emerald-50 text-emerald-900' : 'bg-slate-50 text-slate-800'}`}><p className="font-semibold">Compared with the run before</p><p className="mt-1">{c.summary}</p>{c.newConsoleErrors.length > 0 && <p className="mt-1">{c.newConsoleErrors.length} new error(s) on the page.</p>}{c.newFailedRequests.length > 0 && <p className="mt-1">{c.newFailedRequests.length} new request(s) failed.</p>}</div>; })()}
-                  <ol className="space-y-2">{r.result?.steps.map((s) => { const plain = plainStep(s as never); return <li key={s.stepId} className="rounded-lg bg-slate-50 p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium text-ink">{s.stepId} <span className="font-normal text-slate-600">({s.action})</span></span><Badge s={s.status} /></div>
+                  {r.status === 'blocked' && r.result && (() => { const b = blockedSummary(r.result as never); return b ? <div data-testid="flow-unverified" className="mb-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"><p className="font-semibold">Could not verify this flow</p><p className="mt-1">{b.sentence}</p>{b.notChecked > 0 && <p className="mt-1">{b.notChecked} later step{b.notChecked === 1 ? '' : 's'} not checked. Check this part by hand, or on a copy of your site.</p>}</div> : null; })()}
+                  {r.result && prev[f.id]?.result && r.status !== 'running' && (() => { const c = compareRuns(prev[f.id]!.result as never, r.result as never); return <div data-testid="flow-compare" data-result={c.result} className={`mb-3 rounded-lg p-3 text-sm ${c.result === 'regressed' ? 'bg-red-50 text-red-900' : c.result === 'fixed' || c.result === 'now_verified' ? 'bg-emerald-50 text-emerald-900' : c.result.startsWith('could_not_verify') ? 'bg-amber-50 text-amber-900' : 'bg-slate-50 text-slate-800'}`}><p className="font-semibold">Compared with the run before</p><p className="mt-1">{c.result === 'could_not_verify' ? 'No regression or recovery can be reported, because the flow did not run to the end.' : c.summary}</p>{c.newConsoleErrors.length > 0 && <p className="mt-1">{c.newConsoleErrors.length} new error(s) on the page.</p>}{c.newFailedRequests.length > 0 && <p className="mt-1">{c.newFailedRequests.length} new request(s) failed.</p>}</div>; })()}
+                  <ol className="space-y-2">{r.result?.steps.map((s) => { const plain = plainStep(s as never); return <li key={s.stepId} className="rounded-lg bg-slate-50 p-3 text-sm"><div className="flex items-center justify-between gap-2"><span className="font-medium text-ink">{s.stepId} <span className="font-normal text-slate-600">({s.action})</span></span><Badge s={s.status} step /></div>
                     {plain && <p data-testid="plain-step" className="mt-1 text-slate-800">{plain}</p>}
                     {s.error && <details className="mt-1 text-slate-600"><summary className="cursor-pointer">Technical detail</summary><p className="mt-1 break-words">{s.error}</p></details>}
                     {s.assertions.map((a, i) => <p key={i} className="mt-1 text-slate-600">{a.passed ? '✓' : '✗'} {a.assertion.type.replace('_', ' ')}: {a.observed}</p>)}</li>; })}</ol>
@@ -76,7 +78,7 @@ export function FlowsPanel({ projectId, canDelete, initial }: { projectId: strin
       </section>
       <section aria-labelledby="new-h" className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
         <h2 id="new-h" className="text-lg font-semibold text-ink">New flow</h2>
-        <p className="mt-1 text-sm text-slate-600">Steps are open, click, fill, press and wait. A flow never signs in, submits forms, buys, deletes or leaves your site; those steps are blocked and recorded.</p>
+        <p className="mt-1 text-sm text-slate-600">Steps are open, click, fill, press and wait. A flow never signs in, submits forms, buys, deletes or leaves your site. If a safety rule stops a flow, Avara shows which steps passed and what still needs checking.</p>
         <label className="mt-3 block text-sm font-medium text-ink" htmlFor="flow-json">Flow (JSON)</label>
         <textarea id="flow-json" value={json} onChange={(e) => setJson(e.target.value)} spellCheck={false} rows={14} className="mt-1 w-full rounded-lg border border-slate-300 p-3 font-mono text-xs text-ink focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-pine-600" />
         <div className="mt-3 flex items-center gap-3"><Button onClick={create} disabled={busy === 'create'}>{busy === 'create' ? 'Saving…' : 'Save flow'}</Button><Button variant="ghost" onClick={() => setJson(EXAMPLE)}>Reset example</Button></div>

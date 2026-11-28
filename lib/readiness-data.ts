@@ -6,7 +6,7 @@ import { latestRuns } from './security/service.ts';
 import { listFlows, listRuns } from './flows/service.ts';
 import { hasFeature, type PlanId } from './plans.ts';
 import { compareExposure } from '../packages/security-exposure/index.ts';
-import { compareRuns } from '../packages/flow-engine/insights.ts';
+import { blockedSummary, compareRuns } from '../packages/flow-engine/insights.ts';
 import { buildReadiness, type Readiness, type ReadinessInput } from './readiness.ts';
 import type { FlowRun } from '../packages/contracts/index.ts';
 
@@ -29,7 +29,7 @@ export async function loadReadiness(project: { id: string }, org: string, plan: 
     const rs = await listRuns(f.id); const cur = rs[0]; if (!cur) { items.push({ name: f.name, status: 'never_run', flaky: false, at: null, regressed: false }); continue; }
     const prev = rs.slice(1).find((r) => r.result && (r.status === 'passed' || r.status === 'failed'));
     const res = cur.result as unknown as FlowRun | null;
-    items.push({ name: f.name, status: cur.status as ReadinessInput['flows']['items'][number]['status'], flaky: !!res?.flaky, at: cur.finishedAt ?? cur.startedAt, regressed: !!(res && prev?.result && cur.status === 'failed' && compareRuns(prev.result as unknown as FlowRun, res).result === 'regressed') });
+    items.push({ name: f.name, status: cur.status as ReadinessInput['flows']['items'][number]['status'], flaky: !!res?.flaky, at: cur.finishedAt ?? cur.startedAt, note: cur.status === 'blocked' && res ? [blockedSummary(res)?.sentence, prev?.status === 'failed' ? 'The previous run failed, and this run could not check whether it was fixed.' : ''].filter(Boolean).join(' ') : undefined, regressed: !!(res && prev?.result && cur.status === 'failed' && compareRuns(prev.result as unknown as FlowRun, res).result === 'regressed') });
   }
   return buildReadiness({ now: new Date(), scan, exposure, flows: { available, items }, hrefs: { scan: scanHref, exposure: `${base}/launch-check`, flows: `${base}/flows` } });
 }

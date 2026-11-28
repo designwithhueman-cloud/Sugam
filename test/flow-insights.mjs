@@ -1,5 +1,5 @@
 // Pure checks for settleRun, compareRuns and plainStep. Run: node --experimental-strip-types test/flow-insights.mjs
-const { settleRun, compareRuns, plainStep } = await import('../packages/flow-engine/insights.ts');
+const { settleRun, compareRuns, plainStep, blockedSummary } = await import('../packages/flow-engine/insights.ts');
 let pass = 0, fail = 0; const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
 const st = (stepId, status, extra = {}) => ({ stepId, action: 'click', status, ms: 5, urlAfter: null, error: null, assertions: [], screenshot: null, ...extra });
 const run = (status, steps, extra = {}) => ({ flowId: 'f', status, startedAt: 'x', ms: 1000, steps, consoleErrors: [], failedRequests: [], attempts: 1, flaky: false, ...extra });
@@ -34,5 +34,26 @@ const seq = (...rs) => { let i = 0; const f = async () => rs[i++]; f.calls = () 
   ok(/should have said “Customer saved”/.test(plainStep(st('a', 'failed', { error: 'Expected text contains was not true: ', assertions: [{ passed: false, observed: 'nothing', assertion: { type: 'text_contains', text: 'Customer saved' } }] }))), 'a failed assertion says what should have happened');
   ok(/returned an error \(500\)/.test(plainStep(st('a', 'failed', { action: 'goto', error: 'The page answered 500.' }))), 'an HTTP error is explained');
   ok(plainStep(st('a', 'failed', { error: 'weird' })) === 'This step did not work.', 'unknown errors fall back to a plain sentence'); }
+
+// blocked runs: a safety rule is not a failure and not a recovery
+{ const POL = 'Blocked by policy (submit): “Buy now” submits a form (POST).';
+  const start = () => st('start', 'passed', { action: 'goto' });
+  const BLK3 = () => run('blocked', [start(), st('a', 'passed'), st('b', 'passed'), st('c', 'passed'), st('buy', 'blocked', { error: POL }), st('after', 'skipped')]);
+  const BLK0 = () => run('blocked', [start(), st('buy', 'blocked', { error: POL }), st('after', 'skipped')]);
+  const b = blockedSummary(BLK3()); ok(b.verified === 3 && b.stoppedAt === 'Buy now' && b.notChecked === 1, 'blocked summary counts the steps that passed (not the start page) and names the blocked step');
+  ok(b.sentence === 'Avara verified 3 steps, then stopped before ‘Buy now’ because of a safety rule. The flow outcome is unknown.', 'the sentence is exactly the agreed copy, with the count taken from the results');
+  ok(blockedSummary(run('blocked', [start(), st('a', 'passed'), st('buy', 'blocked', { error: POL })])).sentence.startsWith('Avara verified 1 step, then'), 'one step is singular');
+  ok(blockedSummary(BLK0()).verified === 0 && /Nothing was verified/.test(blockedSummary(BLK0()).sentence), 'a first-ever blocked run with zero passed steps says nothing was verified');
+  ok(blockedSummary(PASS()) === null && blockedSummary(FAILB()) === null, 'no summary for runs that were not blocked');
+  ok(blockedSummary(run('blocked', [start(), st('login', 'blocked', { error: 'Password fields cannot be filled by a saved flow.' })])).stoppedAt === 'login', 'a blocked step with no quoted label is named by its id');
+  const pb = compareRuns(PASS(), BLK3()); ok(pb.result === 'could_not_verify' && pb.result !== 'regressed' && /^Avara verified 3 steps/.test(pb.summary), 'passed → blocked: could not verify, never a regression');
+  ok(!pb.steps.some((x) => x.outcome === 'newly_failing' || x.outcome === 'still_failing') && pb.steps.some((x) => x.stepId === 'buy' && x.outcome === 'skipped_for_safety') && pb.steps.some((x) => x.stepId === 'after' && x.outcome === 'not_checked'), '…the blocked step is “skipped for safety” and the later one “not checked”');
+  const fb = compareRuns(FAILB(), BLK3()); ok(fb.result === 'could_not_verify_after_failure' && /^The previous run failed\. This run couldn’t verify whether it was fixed\./.test(fb.summary), 'failed → blocked: the previous failure is kept, and nothing is said to be fixed');
+  ok(fb.result !== 'fixed' && !fb.steps.some((x) => x.outcome === 'fixed'), '…never reported as fixed');
+  const bb = compareRuns(BLK3(), BLK0()); ok(bb.result === 'could_not_verify', 'blocked → blocked: still could not verify');
+  const bf = compareRuns(BLK3(), FAILB()); ok(bf.result === 'failing_unbaselined' && !/regress|new/i.test(bf.summary.replace('not known whether this is new', '')) && bf.result !== 'regressed', 'blocked → failed: the observed failure is reported, not called a regression');
+  ok(!bf.steps.some((x) => x.outcome === 'newly_failing'), '…and no step is called newly failing');
+  const bp = compareRuns(BLK3(), run('passed', [start(), st('a', 'passed'), st('b', 'passed'), st('c', 'passed'), st('buy', 'passed'), st('after', 'passed')])); ok(bp.result === 'now_verified', 'blocked → passed: now verified (not “fixed”, because it was never known to be broken)');
+  ok(plainStep(st('buy', 'blocked', { error: POL })).startsWith('Skipped for safety:'), 'a blocked step is explained as skipped for safety'); }
 
 console.log(`${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

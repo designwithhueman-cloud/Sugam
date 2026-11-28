@@ -10,7 +10,7 @@ export type ReadinessInput = {
   now: Date; staleDays?: number;
   scan: null | { at: Date; score: number | null; critical: number; high: number; introduced: number | null };
   exposure: null | { at: Date; active: boolean; results: { id: string; title: string; status: 'pass' | 'flag' | 'unverified'; severity: string | null }[]; changes: { id: string; title: string; outcome: string }[] };
-  flows: { available: boolean; items: { name: string; status: 'passed' | 'failed' | 'blocked' | 'error' | 'running' | 'never_run'; flaky: boolean; at: Date | null; regressed: boolean }[] };
+  flows: { available: boolean; items: { name: string; status: 'passed' | 'failed' | 'blocked' | 'error' | 'running' | 'never_run'; flaky: boolean; at: Date | null; regressed: boolean; note?: string }[] };
   hrefs: Record<Area, string>;
 };
 export type Readiness = { level: Level; headline: string; detail: string; reasons: Reason[]; areas: AreaState[]; next: { label: string; href: string } | null };
@@ -57,7 +57,7 @@ export function buildReadiness(i: ReadinessInput): Readiness {
       else if (f.status === 'error') add('flows', 'partial', `“${f.name}” could not be run. Try again.`);
       else if (f.status === 'running') add('flows', 'partial', `“${f.name}” is still running.`);
       else if (f.status === 'never_run') add('flows', 'partial', `“${f.name}” has not been run yet.`);
-      else if (f.status === 'blocked') add('flows', 'partial', `“${f.name}” stopped at a step Avara will not do for safety. It was not fully checked.`);
+      else if (f.status === 'blocked') add('flows', 'partial', `“${f.name}” could not be verified. ${f.note ?? 'It stopped at a step Avara will not do for safety.'} Check it by hand before launch.`);
     }
     if (latest) old(latest, 'flow run', 'flows');
     const mine = reasons.slice(n0); const bad = mine.some((r) => r.kind !== 'partial');

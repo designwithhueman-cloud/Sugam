@@ -15,34 +15,55 @@ export async function settleRun(runOnce: () => Promise<FlowRun>, o: { maxMs?: nu
   return { ...second, attempts: 2, flaky: second.status === 'failed' && failedStep(first) !== failedStep(second) };
 }
 
-export type StepChange = { stepId: string; outcome: 'fixed' | 'still_failing' | 'newly_failing' | 'not_reached' };
+export type StepChange = { stepId: string; outcome: 'fixed' | 'still_failing' | 'newly_failing' | 'not_reached' | 'failing_unbaselined' | 'skipped_for_safety' | 'not_checked' };
 export type RunComparison = {
-  result: 'fixed' | 'still_failing' | 'regressed' | 'still_passing' | 'unreliable';
+  result: 'fixed' | 'still_failing' | 'regressed' | 'still_passing' | 'unreliable' | 'could_not_verify' | 'could_not_verify_after_failure' | 'now_verified' | 'failing_unbaselined';
   summary: string; steps: StepChange[]; newConsoleErrors: string[]; newFailedRequests: string[];
 };
-const bad = (s: StepResult['status']) => s === 'failed' || s === 'blocked';
 const reqKey = (r: FlowRun['failedRequests'][number]) => `${r.status ?? r.reason} ${r.url.replace(/[?#].*$/, '')}`;
 
-/** Compares two runs of the same flow. A step that passed before and fails now is "newly failing": something the last change broke. */
+/** What a blocked run did and did not check, from its actual results. The engine's own first page load ("start") is not one of the flow's steps and is not counted. */
+export function blockedSummary(run: FlowRun): { verified: number; stoppedAt: string; notChecked: number; sentence: string } | null {
+  const i = run.steps.findIndex((s) => s.status === 'blocked'); if (i < 0) return null;
+  const verified = run.steps.filter((s) => s.stepId !== 'start' && s.status === 'passed').length;
+  const notChecked = run.steps.filter((s) => s.status === 'skipped').length;
+  const stoppedAt = /^Blocked by policy \([^)]+\): .*?“([^”]{1,60})”/.exec(run.steps[i].error ?? '')?.[1] ?? run.steps[i].stepId;
+  const sentence = verified === 0 ? `Avara stopped at the first step, ‘${stoppedAt}’, because of a safety rule. Nothing was verified, so the flow outcome is unknown.`
+    : `Avara verified ${verified} step${verified === 1 ? '' : 's'}, then stopped before ‘${stoppedAt}’ because of a safety rule. The flow outcome is unknown.`;
+  return { verified, stoppedAt, notChecked, sentence };
+}
+
+/** Compares two runs of the same flow. A step that passed before and fails now is "newly failing": something the last change broke.
+ *  A blocked run is never a failure and never a recovery: Avara did not do the step, so it knows nothing about it. */
 export function compareRuns(before: FlowRun, after: FlowRun): RunComparison {
+  const empty = { newConsoleErrors: [] as string[], newFailedRequests: [] as string[] };
+  if (after.status === 'blocked') {
+    const b = blockedSummary(after)!; const steps: StepChange[] = after.steps.flatMap((s): StepChange[] => s.status === 'blocked' ? [{ stepId: s.stepId, outcome: 'skipped_for_safety' }] : s.status === 'skipped' ? [{ stepId: s.stepId, outcome: 'not_checked' }] : []);
+    if (before.status === 'failed') return { result: 'could_not_verify_after_failure', summary: 'The previous run failed. This run couldn’t verify whether it was fixed.', steps, ...empty };
+    return { result: 'could_not_verify', summary: b.sentence, steps, ...empty };
+  }
   const was = new Map(before.steps.map((s) => [s.stepId, s.status])); const steps: StepChange[] = [];
   for (const s of after.steps) {
     const w = was.get(s.stepId); if (!w) continue;
-    if (bad(w) && s.status === 'passed') steps.push({ stepId: s.stepId, outcome: 'fixed' });
-    else if (bad(w) && bad(s.status)) steps.push({ stepId: s.stepId, outcome: 'still_failing' });
-    else if (w === 'passed' && bad(s.status)) steps.push({ stepId: s.stepId, outcome: 'newly_failing' });
+    if (before.status === 'blocked' && s.status === 'failed') steps.push({ stepId: s.stepId, outcome: 'failing_unbaselined' });   // the earlier run never finished, so a failure now is observed, not a known regression
+    else if (w === 'failed' && s.status === 'passed') steps.push({ stepId: s.stepId, outcome: 'fixed' });
+    else if (w === 'failed' && s.status === 'failed') steps.push({ stepId: s.stepId, outcome: 'still_failing' });
+    else if (w === 'passed' && s.status === 'failed') steps.push({ stepId: s.stepId, outcome: 'newly_failing' });
     else if (w === 'passed' && s.status === 'skipped') steps.push({ stepId: s.stepId, outcome: 'not_reached' });
   }
   const seenErr = new Set(before.consoleErrors), seenReq = new Set(before.failedRequests.map(reqKey));
   const newConsoleErrors = after.consoleErrors.filter((e) => !seenErr.has(e)); const newFailedRequests = [...new Set(after.failedRequests.map(reqKey).filter((k) => !seenReq.has(k)))];
-  const wasOk = before.status === 'passed', isOk = after.status === 'passed';
-  const result: RunComparison['result'] = after.flaky ? 'unreliable' : !wasOk && isOk ? 'fixed' : !wasOk && !isOk ? 'still_failing' : wasOk && !isOk ? 'regressed' : 'still_passing';
+  const wasBlocked = before.status === 'blocked', wasOk = before.status === 'passed', isOk = after.status === 'passed';
+  const result: RunComparison['result'] = after.flaky ? 'unreliable' : wasBlocked ? (isOk ? 'now_verified' : 'failing_unbaselined') : !wasOk && isOk ? 'fixed' : !wasOk && !isOk ? 'still_failing' : wasOk && !isOk ? 'regressed' : 'still_passing';
   const summary = {
     unreliable: 'This flow gives different answers on repeat runs, so the comparison cannot be trusted yet. Run it again.',
     fixed: 'The flow failed last time and passes now.',
     still_failing: 'The flow still fails.',
     regressed: 'Something that worked last time is broken now. Fix this first.',
     still_passing: newConsoleErrors.length || newFailedRequests.length ? 'The flow still passes, but new errors appeared on the page.' : 'The flow still passes and nothing new went wrong.',
+    now_verified: 'Last time a safety rule stopped this flow before it finished. This time every step ran and passed.',
+    failing_unbaselined: 'This run observed a failure. Last time a safety rule stopped the flow before it finished, so it is not known whether this is new.',
+    could_not_verify: '', could_not_verify_after_failure: '',
   }[result];
   return { result, summary, steps, newConsoleErrors, newFailedRequests };
 }
@@ -51,7 +72,7 @@ export function compareRuns(before: FlowRun, after: FlowRun): RunComparison {
 export function plainStep(s: StepResult): string | null {
   if (s.status === 'blocked') {
     const m = /^Blocked by policy \(([^)]+)\): (.*)$/.exec(s.error ?? '');
-    return m ? `Avara did not do this step on purpose: ${m[2].replace(/\.$/, '')}. Flows never submit forms, sign in, spend money or leave your site.` : 'Avara did not do this step on purpose, because it could change something on your site.';
+    return m ? `Skipped for safety: Avara did not do this step on purpose: ${m[2].replace(/\.$/, '')}. Flows never submit forms, sign in, spend money or leave your site.` : 'Skipped for safety: Avara did not do this step on purpose, because it could change something on your site.';
   }
   if (s.status !== 'failed') return null;
   const e = s.error ?? '';
