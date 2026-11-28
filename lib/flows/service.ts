@@ -8,7 +8,7 @@ import { settleRun } from '../../packages/flow-engine/insights.ts';
 import { logError, redactDeep, sensitiveFillProblem } from '../security/redact.ts';
 
 export const MAX_FLOWS_PER_PROJECT = 25;
-const RUN_WINDOW_MS = 600_000, MAX_RUNS_PER_WINDOW = 10;
+const RUN_WINDOW_MS = 600_000, MAX_RUNS_PER_WINDOW = Number(process.env.FLOW_RUNS_PER_WINDOW) || 10;
 const recent = new Map<string, number[]>();   // per user, in this process
 
 export type Created = { ok: true; id: string } | { ok: false; status: number; error: string; message: string };
@@ -55,7 +55,7 @@ export async function startRun(flowId: string, userId: string): Promise<{ ok: tr
   if (active) return { ok: false, status: 409, error: 'already_running', message: 'This flow is already running.' };
   const parsed = parseFlow(f.definition); if (!parsed.ok) return { ok: false, status: 422, error: 'invalid_flow', message: parsed.error };
   mine.push(now); recent.set(userId, mine);
-  const [run] = await db.insert(schema.flowRuns).values({ flowId, createdBy: userId, status: 'running' }).returning({ id: schema.flowRuns.id });
+  const [run] = await db.insert(schema.flowRuns).values({ flowId, createdBy: userId, status: 'running', version: f.version }).returning({ id: schema.flowRuns.id });   // the run keeps this definition and this version even if a newer one is approved before it finishes
   void finishRun(run.id, parsed.flow);
   return { ok: true, runId: run.id };
 }
@@ -83,9 +83,12 @@ export async function approveVersion(flowId: string, userId: string, definition:
   const sensitive = sensitiveFillProblem(parsed.flow as unknown as Parameters<typeof sensitiveFillProblem>[0]); if (sensitive) return { ok: false, status: 400, error: 'sensitive_value', message: sensitive.reason };
   try { parsed.flow.startUrl = (await checkUrl(parsed.flow.startUrl)).toString(); } catch (e) { if (e instanceof BlockedUrlError) return { ok: false, status: 400, error: 'blocked_url', message: e.message }; throw e; }
   const flow = redactDeep(parsed.flow); const db = await getDb(); const version = f.version + 1;
-  await db.transaction(async (tx) => {
-    await tx.insert(schema.flowVersions).values({ flowId: f.id, version, definition: flow as unknown as Record<string, unknown>, note, approvedBy: userId });
-    await tx.update(schema.flows).set({ definition: flow as unknown as Record<string, unknown>, name: flow.name, version, updatedAt: new Date() }).where(eq(schema.flows.id, f.id));
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx.insert(schema.flowVersions).values({ flowId: f.id, version, definition: flow as unknown as Record<string, unknown>, note, approvedBy: userId });   // (flow, version) is unique: two approvals of the same next version cannot both succeed
+      const moved = await tx.update(schema.flows).set({ definition: flow as unknown as Record<string, unknown>, name: flow.name, version, updatedAt: new Date() }).where(and(eq(schema.flows.id, f.id), eq(schema.flows.version, f.version))).returning({ id: schema.flows.id });
+      if (!moved.length) throw new Error('version_conflict');
+    });
+  } catch (e) { if (/version_conflict|duplicate key|unique/i.test(String((e as Error).message))) return { ok: false, status: 409, error: 'version_conflict', message: 'The flow changed while this was being approved. Reload and try again.' }; throw e; }
   return { ok: true, version };
 }

@@ -8,7 +8,7 @@ const shell = (title, body, book = '/book') => `<!doctype html><html lang="en"><
 <footer><a href="${book}/">Book a call</a> <a href="${book}?ref=footer">Book a call</a> <a href="/delete">Delete account</a> <a href="/logout">Log out</a> <a href="https://example.org/partner">Partner site</a> <a href="mailto:hi@acme.test">Email us</a> <a href="/brochure.pdf">Brochure</a></footer></body></html>`;
 
 export function createJourneySite({ mode = 'ok' } = {}) {
-  const state = { mode }; const hits = [];
+  const state = { mode, slowCalendarMs: 0 }; const hits = [];   // slowCalendarMs: the calendar page answers that many milliseconds late (to start a run, then approve a new version while it is in flight) const hits = [];
   const server = http.createServer((req, res) => {
     const u = new URL(req.url, 'http://x'); const p = u.pathname; hits.push(p); const send = (code, html) => { res.writeHead(code, { 'content-type': 'text/html; charset=utf-8' }); res.end(html); };
     const changed = state.mode === 'changed'; const book = changed ? '/schedule' : '/book'; const bookText = changed ? 'Schedule a demo' : 'Book a call';
@@ -17,7 +17,7 @@ export function createJourneySite({ mode = 'ok' } = {}) {
     if (p === '/pricing') return send(200, nav(shell('Pricing', '<h1>Pricing</h1><p>Simple plans.</p>', book)));
     if (p === '/about') return send(200, nav(shell('About', '<h1>About us</h1><p>A small team.</p>', book)));
     if (p === '/book' || p === '/book/' || p === '/schedule') return send(200, nav(shell(bookText, `<h1>${bookText}</h1><p>Pick a slot with our team.</p><a href="${p.startsWith('/sch') ? '/schedule' : '/book'}/${state.mode === 'broken-link' ? 'missing' : 'calendar'}">Choose a time</a>`, book)));
-    if (p === '/book/calendar' || p === '/schedule/calendar') return send(200, nav(shell('Pick a time', state.mode === 'broken-calendar' ? '<h1>Pick a time</h1><p>Sorry, no times are available.</p>' : '<h1>Pick a time</h1><div id="booking-calendar" role="grid" aria-label="Booking calendar"><button type="button">Mon 10:00</button><button type="button">Tue 14:00</button></div>', book)));
+    if (p === '/book/calendar' || p === '/schedule/calendar') return (state.slowCalendarMs ? (fn) => setTimeout(fn, state.slowCalendarMs) : (fn) => fn())(() => send(200, nav(shell('Pick a time', state.mode === 'broken-calendar' ? '<h1>Pick a time</h1><p>Sorry, no times are available.</p>' : '<h1>Pick a time</h1><div id="booking-calendar" role="grid" aria-label="Booking calendar"><button type="button">Mon 10:00</button><button type="button">Tue 14:00</button></div>', book))));
     if (p === '/delete' || p === '/logout' || p === '/brochure.pdf') return send(200, '<h1>Done</h1>');
     return send(404, '<h1>Not found</h1>');
   });

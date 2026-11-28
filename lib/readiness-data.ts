@@ -27,7 +27,7 @@ export async function loadReadiness(project: { id: string }, org: string, plan: 
   const available = hasFeature(plan, 'saved_flows'); const items: ReadinessInput['flows']['items'] = [];
   if (available) for (const f of (await listFlows(project.id)).slice(0, MAX_FLOWS)) {
     const rs = await listRuns(f.id); const cur = rs[0]; if (!cur) { items.push({ name: f.name, status: 'never_run', flaky: false, at: null, regressed: false }); continue; }
-    const prev = rs.slice(1).find((r) => r.result && (r.status === 'passed' || r.status === 'failed'));
+    const prev = rs.slice(1).find((r) => r.result && (r.status === 'passed' || r.status === 'failed') && r.version === cur.version);   // a new approved version starts a fresh baseline
     const res = cur.result as unknown as FlowRun | null;
     items.push({ name: f.name, status: cur.status as ReadinessInput['flows']['items'][number]['status'], flaky: !!res?.flaky, at: cur.finishedAt ?? cur.startedAt, note: cur.status === 'blocked' && res ? [blockedSummary(res)?.sentence, prev?.status === 'failed' ? 'The previous run failed, and this run could not check whether it was fixed.' : ''].filter(Boolean).join(' ') : undefined, regressed: !!(res && prev?.result && cur.status === 'failed' && compareRuns(prev.result as unknown as FlowRun, res).result === 'regressed') });
   }

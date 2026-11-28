@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const a = await flowAccess((await ctx.params).id); if ('res' in a) return a.res;
   const runs = await listRuns(a.flow.id);
-  return NextResponse.json({ runs: runs.map((r) => ({ id: r.id, status: r.status, error: r.error, startedAt: r.startedAt, finishedAt: r.finishedAt, result: r.result })) });
+  return NextResponse.json({ runs: runs.map((r) => ({ id: r.id, version: r.version, status: r.status, error: r.error, startedAt: r.startedAt, finishedAt: r.finishedAt, result: r.result })) });
 }
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {

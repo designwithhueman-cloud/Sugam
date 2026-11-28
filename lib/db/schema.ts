@@ -510,6 +510,7 @@ export const flowProposals = pgTable('flow_proposals', {
   flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
   discoveryId: uuid('discovery_id').references(() => flowDiscoveries.id, { onDelete: 'set null' }),
   kind: text('kind').notNull(),                          // changed | missing
+  baseVersion: integer('base_version').notNull().default(1),   // the flow version this was proposed against; a proposal for an older version cannot be applied
   proposed: jsonb('proposed').$type<Record<string, unknown>>(),   // the new definition, for `changed`
   reason: text('reason').notNull(),
   status: text('status').notNull().default('pending'),   // pending | accepted | dismissed
@@ -522,6 +523,7 @@ export const flowRuns = pgTable('flow_runs', {
   id: uuid('id').primaryKey().defaultRandom(),
   flowId: uuid('flow_id').notNull().references(() => flows.id, { onDelete: 'cascade' }),
   status: text('status').notNull().default('running'),   // running | passed | failed | blocked | error
+  version: integer('version').notNull().default(1),   // the approved flow version this run was started with; it never changes, even if a newer version is approved while the run is in flight
   result: jsonb('result').$type<Record<string, unknown>>(),
   error: text('error'),
   createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),

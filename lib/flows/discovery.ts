@@ -101,7 +101,7 @@ export async function proposeChanges(projectId: string, discoveryId: string, res
       proposed = { ...cur.flow, steps }; reason = `The way to this journey changed. Before: ${cur.flow.steps.map((s) => `‘${s.label ?? (s as { selector?: string }).selector}’`).join(' → ')}. Now: ${match.steps.map((s) => `‘${s.label ?? (s as { selector?: string }).selector}’`).join(' → ')}. Your approved success conditions are kept.`;
     }
     await db.delete(schema.flowProposals).where(and(eq(schema.flowProposals.flowId, f.id), eq(schema.flowProposals.status, 'pending')));
-    if (kind) await db.insert(schema.flowProposals).values({ flowId: f.id, discoveryId, kind, proposed: proposed ? (redactDeep(proposed) as Record<string, unknown>) : null, reason });
+    if (kind) await db.insert(schema.flowProposals).values({ flowId: f.id, discoveryId, kind, baseVersion: f.version, proposed: proposed ? (redactDeep(proposed) as Record<string, unknown>) : null, reason });
   }
 }
 
@@ -114,11 +114,16 @@ export async function pendingProposals(flowIds: string[]) {
 export async function decideProposal(proposalId: string, userId: string, decision: 'accept' | 'dismiss'): Promise<{ ok: true; version?: number } | Fail> {
   if (!/^[0-9a-f-]{36}$/i.test(proposalId)) return fail(404, 'not_found', 'Proposal not found.');
   const db = await getDb(); const [p] = await db.select().from(schema.flowProposals).where(eq(schema.flowProposals.id, proposalId)); if (!p || p.status !== 'pending') return fail(404, 'not_found', 'Proposal not found.');
-  let version: number | undefined;
   if (decision === 'accept') {
     if (p.kind !== 'changed' || !p.proposed) return fail(400, 'nothing_to_apply', 'There is nothing to apply. Dismiss this, or delete the flow if the journey is gone.');
-    const r = await approveVersion(p.flowId, userId, p.proposed, 'Accepted a change found on the site'); if (!r.ok) return r; version = r.version;
+    const f = await getFlow(p.flowId); if (!f) return fail(404, 'not_found', 'Flow not found.');
+    if (f.version !== p.baseVersion) return fail(409, 'stale_proposal', `This change was found for version ${p.baseVersion}, and the flow is now version ${f.version}. Look again to get a fresh one.`);
   }
-  await db.update(schema.flowProposals).set({ status: decision === 'accept' ? 'accepted' : 'dismissed', decidedBy: userId, decidedAt: new Date() }).where(eq(schema.flowProposals.id, proposalId));
-  return { ok: true, version };
+  // Claim the proposal first, in one statement: of any number of simultaneous or repeated approvals, exactly one gets past this line.
+  const claimed = await db.update(schema.flowProposals).set({ status: decision === 'accept' ? 'accepted' : 'dismissed', decidedBy: userId, decidedAt: new Date() }).where(and(eq(schema.flowProposals.id, proposalId), eq(schema.flowProposals.status, 'pending'))).returning({ id: schema.flowProposals.id });
+  if (!claimed.length) return fail(409, 'already_decided', 'This change was already decided.');
+  if (decision === 'dismiss') return { ok: true };
+  const r = await approveVersion(p.flowId, userId, p.proposed, 'Accepted a change found on the site');
+  if (!r.ok) { await db.update(schema.flowProposals).set({ status: 'pending', decidedBy: null, decidedAt: null }).where(eq(schema.flowProposals.id, proposalId)); return r; }   // nothing was approved, so the proposal can be tried again
+  return { ok: true, version: r.version };
 }
