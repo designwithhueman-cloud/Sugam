@@ -33,7 +33,7 @@ check('an oversized body is refused (413)', (await ctx.request.post(`${base}/api
 
 // a failing counter never breaks the page or the copy
 await p.route('**/api/scans/*/events', (r) => r.abort()); await p.reload(); await openFix();
-const errs = []; p.on('pageerror', (e) => errs.push(e.message)); await p.getByRole('button', { name: /Copy prompt/ }).first().click(); await p.getByText('Copied').first().waitFor({ timeout: 10000 }).then(() => check('with the counting request blocked, the copy still works and the page shows no error', errs.length === 0 && (await p.getByText('Copy failed').count()) === 0, errs.join(';'))).catch(() => check('with the counting request blocked, the copy still works', false));
+const errs = []; p.on('pageerror', (e) => errs.push(e.message)); await p.getByRole('button', { name: /Copy prompt/ }).first().click(); await p.getByText('Copied').first().waitFor({ timeout: 10000 }).then(async () => check('with the counting request blocked, the copy still works and the page shows no error', errs.length === 0 && (await p.getByText('Copy failed').count()) === 0, errs.join(';'))).catch(() => check('with the counting request blocked, the copy still works', false));
 await p.unroute('**/api/scans/*/events');
 
 // the privacy page, in the same change
